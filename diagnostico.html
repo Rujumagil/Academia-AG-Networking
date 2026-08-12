@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#1E293B">
+  <title>Diagnóstico de Academia AG</title>
+  <link rel="stylesheet" href="styles.css?v=1.0.0">
+  <style>
+    .diagnostic-list{display:grid;gap:10px;margin:18px 0;text-align:left}
+    .diagnostic-item{padding:13px;border-radius:13px;background:rgba(255,255,255,.65);border:1px solid rgba(10,36,69,.09)}
+    .diagnostic-item strong{display:block;margin-bottom:4px}
+    .ok{color:#287248}.bad{color:#a13f3f}.pending{color:#7b6b42}
+    .diagnostic-code{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;overflow-wrap:anywhere}
+  </style>
+</head>
+<body>
+  <main class="login-screen">
+    <section class="login-card glass" style="width:min(620px,100%)">
+      <img class="official-lockup" src="logo-completo-oficial.png" alt="AG Business Networking">
+      <h1>Diagnóstico</h1>
+      <p>Esta pantalla revisa los archivos básicos y la conexión pública.</p>
+
+      <div class="diagnostic-list">
+        <div class="diagnostic-item" id="config"><strong>Configuración</strong><span class="pending">Revisando…</span></div>
+        <div class="diagnostic-item" id="cdn"><strong>Librería de Supabase</strong><span class="pending">Revisando…</span></div>
+        <div class="diagnostic-item" id="api"><strong>Proyecto Supabase</strong><span class="pending">Revisando…</span></div>
+        <div class="diagnostic-item" id="worker"><strong>Versión guardada</strong><span class="pending">Revisando…</span></div>
+      </div>
+
+      <div class="bootstrap-actions">
+        <a class="btn btn-primary" href="./?diagnostico=ok">Regresar a Academia AG</a>
+        <a class="btn btn-secondary" href="limpiar-cache.html">Limpiar caché</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="supabase-config.js?v=1.0.0"></script>
+  <script>
+    const setResult = (id, ok, message) => {
+      document.querySelector(`#${id} span`).className = ok ? 'ok' : 'bad';
+      document.querySelector(`#${id} span`).textContent = message;
+    };
+
+    (async () => {
+      const config = window.SUPABASE_CONFIG;
+      const configOk = Boolean(config?.url && config?.publishableKey);
+      setResult('config', configOk, configOk ? 'Correcta' : 'Falta URL o publishable key');
+
+      let cdnOk = false;
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+          setTimeout(() => reject(new Error('timeout')), 12000);
+        });
+        cdnOk = Boolean(window.supabase?.createClient);
+        setResult('cdn', cdnOk, cdnOk ? 'Cargó correctamente' : 'Cargó sin createClient');
+      } catch {
+        setResult('cdn', false, 'El navegador no pudo cargar el CDN');
+      }
+
+      if (configOk) {
+        try {
+          const response = await fetch(`${config.url}/auth/v1/settings`, {
+            headers: { apikey: config.publishableKey }
+          });
+          setResult('api', response.ok, response.ok ? `Proyecto accesible (${response.status})` : `Respondió con ${response.status}`);
+        } catch (error) {
+          setResult('api', false, `No fue posible conectar: ${error.message}`);
+        }
+      } else {
+        setResult('api', false, 'No se puede probar sin configuración');
+      }
+
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        setResult('worker', true, registrations.length ? `${registrations.length} service worker registrado` : 'Sin versión anterior activa');
+      } else {
+        setResult('worker', true, 'El navegador no usa service worker');
+      }
+    })();
+  </script>
+</body>
+</html>
