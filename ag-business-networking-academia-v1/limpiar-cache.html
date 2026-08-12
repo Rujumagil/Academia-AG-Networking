@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#1E293B">
+  <title>Limpiar Academia AG</title>
+  <link rel="stylesheet" href="styles.css?v=1.0.0">
+</head>
+<body>
+  <main class="login-screen">
+    <section class="login-card glass loading-card">
+      <img class="official-lockup" src="logo-completo-oficial.png" alt="AG Business Networking">
+      <h1>Actualizando Academia AG</h1>
+      <p id="status">Eliminando archivos guardados de la versión anterior…</p>
+      <div class="spinner" id="spinner"></div>
+      <a class="btn btn-primary hide" id="return-link" href="./">Regresar a Academia AG</a>
+    </section>
+  </main>
+  <script>
+    (async () => {
+      const status = document.querySelector('#status');
+      const spinner = document.querySelector('#spinner');
+      const link = document.querySelector('#return-link');
+
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(registration => registration.unregister()));
+        }
+
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        }
+
+        localStorage.removeItem('aula_v2_logged_in');
+        localStorage.removeItem('academia_ag_logged_in');
+        sessionStorage.clear();
+
+        status.textContent = 'La versión anterior fue eliminada correctamente.';
+      } catch (error) {
+        console.error(error);
+        status.textContent = 'Se limpió lo posible. Ya puedes regresar a Academia AG.';
+      }
+
+      spinner.classList.add('hide');
+      link.classList.remove('hide');
+      setTimeout(() => location.replace('./?actualizacion=1.0.0'), 1800);
+    })();
+  </script>
+</body>
+</html>
