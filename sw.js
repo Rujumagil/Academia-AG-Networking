@@ -1,12 +1,15 @@
-const CACHE = 'academia-ag-v1.0.0';
+const CACHE = 'academia-ag-v20260817.6';
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './academia.html',
   './404.html',
-  './styles.css?v=1.0.0',
-  './app.js?v=1.0.0',
-  './bootstrap.js?v=1.0.0',
-  './supabase-config.js?v=1.0.0',
+  './styles.css?v=20260817.6',
+  './app.js?v=20260817.6',
+  './bootstrap.js?v=20260817.6',
+  './lesson-experience.js?v=20260817.6',
+  './quiz-randomizer.js?v=20260817.6',
+  './supabase-config.js?v=20260817.6',
   './manifest.json',
   './diagnostico.html',
   './limpiar-cache.html',
@@ -57,7 +60,7 @@ self.addEventListener('fetch', event => {
           if (response.ok && sameOrigin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
           return response;
         })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./academia.html') || caches.match('./index.html')))
     );
     return;
   }
