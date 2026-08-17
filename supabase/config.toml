@@ -1,0 +1,19 @@
+project_id = "academia-ag-networking"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
