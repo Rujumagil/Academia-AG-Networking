@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260817.8';
+  const RELEASE = '20260817.9';
   let timer = null;
 
   function isWixVideoUrl(src = '') {
@@ -13,37 +13,38 @@
     const style = document.createElement('style');
     style.id = 'academia-ag-video-fix-styles';
     style.textContent = `
+      .lesson-layout{align-items:start!important}
+      .lesson-layout>.module-panel{align-self:start!important}
+      .module summary>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+      .module summary>div>span{display:block;line-height:1.2}
       .video-shell.native-video-active{
-        background:#05080d!important;
+        position:relative!important;
+        width:100%!important;
+        aspect-ratio:16 / 9!important;
+        height:auto!important;
         min-height:0!important;
+        max-height:none!important;
+        background:#05080d!important;
+        contain:layout paint!important;
+        overflow:hidden!important;
       }
-      .video-shell.native-video-active::after{
-        display:none!important;
-        content:none!important;
-        pointer-events:none!important;
-      }
+      .video-shell.native-video-active::after{display:none!important;content:none!important;pointer-events:none!important}
       .video-shell.native-video-active .lesson-native-video,
       .video-shell.native-video-active video{
-        position:relative!important;
+        position:absolute!important;
+        inset:0!important;
         z-index:10!important;
         width:100%!important;
-        height:auto!important;
-        min-height:360px!important;
-        max-height:76vh!important;
+        height:100%!important;
+        min-height:0!important;
+        max-height:none!important;
         display:block!important;
         object-fit:contain!important;
         background:#05080d!important;
         pointer-events:auto!important;
       }
       .video-shell.native-video-active .video-center,
-      .video-shell.native-video-active .video-bar{
-        display:none!important;
-        pointer-events:none!important;
-      }
-      @media(max-width:700px){
-        .video-shell.native-video-active .lesson-native-video,
-        .video-shell.native-video-active video{min-height:220px!important;max-height:68vh!important}
-      }
+      .video-shell.native-video-active .video-bar{display:none!important;pointer-events:none!important}
     `;
     document.head.appendChild(style);
   }
@@ -57,19 +58,16 @@
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     video.setAttribute('aria-label', title);
-
     const source = document.createElement('source');
     source.src = src;
     source.type = 'video/mp4';
     video.appendChild(source);
-
     video.appendChild(document.createTextNode('Tu navegador no puede reproducir este video.'));
     return video;
   }
 
   function activateShell(shell) {
     if (!shell) return;
-
     let video = shell.querySelector('video');
     if (!video) {
       const frame = shell.querySelector('iframe.lesson-frame, iframe');
@@ -80,13 +78,11 @@
         video.load();
       }
     }
-
     if (!video) return;
     shell.classList.add('native-video-active');
     video.controls = true;
     video.playsInline = true;
     video.style.pointerEvents = 'auto';
-
     const fallback = shell.parentElement?.querySelector('.lesson-video-fallback');
     const clearFallback = () => fallback?.classList.remove('show');
     video.addEventListener('loadedmetadata', clearFallback, { once: true });
@@ -105,10 +101,6 @@
 
   window.addEventListener('hashchange', schedule);
   window.addEventListener('pageshow', schedule);
-  document.addEventListener('click', event => {
-    if (event.target.closest('.video-shell')) schedule();
-  }, true);
-
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, { childList: true, subtree: true });
 
