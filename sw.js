@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   './app.js?v=20260817.6',
   './bootstrap.js?v=20260817.6',
   './lesson-experience.js?v=20260817.6',
+  './quiz-randomizer.js?v=20260817.6',
   './supabase-config.js?v=20260817.6',
   './manifest.json',
   './diagnostico.html',
