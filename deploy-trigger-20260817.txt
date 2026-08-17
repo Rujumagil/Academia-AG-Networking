@@ -1,0 +1,1 @@
+Forzar un nuevo despliegue de GitHub Pages después de errores temporales 503 del servicio. Fecha: 2026-08-17.
