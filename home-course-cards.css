@@ -1,0 +1,139 @@
+/* Academia AG · tarjetas limpias para "Continúa aprendiendo" */
+
+.card-row{
+  grid-auto-columns:minmax(250px,280px);
+  gap:18px;
+  padding:6px 2px 14px;
+  align-items:stretch;
+}
+
+.course-card{
+  min-height:0;
+  height:292px;
+  display:grid;
+  grid-template-rows:156px 1fr;
+  position:relative;
+  overflow:hidden;
+  border-radius:22px;
+  background:#fff;
+  border:1px solid rgba(30,41,59,.09);
+  box-shadow:0 14px 34px rgba(31,53,75,.09);
+  transform:translateZ(0);
+}
+
+.course-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(0,81,52,.28);
+  box-shadow:0 20px 42px rgba(31,53,75,.13);
+}
+
+.course-card::after{
+  display:none;
+}
+
+.course-card > img{
+  position:relative;
+  inset:auto;
+  width:100%;
+  height:156px;
+  object-fit:cover;
+  object-position:center;
+  background:#eef3f1;
+  border-bottom:1px solid rgba(30,41,59,.07);
+}
+
+.course-card .card-content{
+  position:relative;
+  left:auto;
+  right:auto;
+  bottom:auto;
+  z-index:2;
+  min-width:0;
+  display:grid;
+  grid-template-rows:auto minmax(44px,auto) auto auto;
+  gap:8px;
+  padding:13px 15px 14px;
+  background:linear-gradient(180deg,#ffffff 0%,#fbfcfb 100%);
+}
+
+.course-card .card-badges{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  overflow:hidden;
+  min-height:23px;
+}
+
+.course-card .card-badges .badge,
+.course-card .card-badges .status-pill{
+  flex:0 0 auto;
+  max-width:48%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:.61rem;
+  line-height:1;
+  letter-spacing:.06em;
+  padding:6px 8px;
+}
+
+.course-card .card-content h3{
+  min-width:0;
+  margin:0;
+  color:#1E293B;
+  font-size:1rem;
+  line-height:1.22;
+  font-weight:650;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+
+.course-card .card-meta{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  color:#6B7280;
+  font-size:.7rem;
+  line-height:1.2;
+}
+
+.course-card .card-meta span{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.course-card .card-meta strong{
+  color:#3f4b5a;
+  font-size:.7rem;
+  font-weight:750;
+}
+
+.course-card .mini-progress{
+  align-self:end;
+  height:5px;
+  margin-top:0;
+  background:#e7ece9;
+}
+
+.course-card .mini-progress span{
+  background:linear-gradient(90deg,#005134,#3C8066);
+}
+
+@media (min-width:1350px){
+  .card-row{grid-auto-columns:minmax(250px,1fr)}
+}
+
+@media (max-width:760px){
+  .card-row{grid-auto-columns:minmax(245px,82vw);gap:14px}
+  .course-card{height:284px;grid-template-rows:150px 1fr}
+  .course-card > img{height:150px}
+  .course-card .card-content{padding:12px 14px 13px}
+}
