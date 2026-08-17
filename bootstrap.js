@@ -71,6 +71,7 @@
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260817.6');
       await loadScript('lesson-experience.js?v=20260817.6');
+      await loadScript('quiz-randomizer.js?v=20260817.6');
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
         if (stillLoading) renderStatus('No pudimos iniciar la academia','La aplicación tardó más de lo esperado. Abre el diagnóstico para identificar el punto exacto.',true);
