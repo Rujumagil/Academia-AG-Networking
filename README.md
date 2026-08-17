@@ -1,6 +1,6 @@
 # Academia AG Business Networking · v1.0
 
-Plataforma académica web inspirada en la estructura de Aula Compás, adaptada a **AG Business Networking** y preparada para operar con Supabase, GitHub Pages, Cloudflare Pages u otro hosting estático compatible.
+Plataforma académica web inspirada en la estructura de Aula Compás, adaptada a **AG Business Networking** y preparada para operar con Supabase y GitHub Pages.
 
 **Lema:** “Sueña, conéctate y triunfa”.
 
@@ -51,49 +51,71 @@ La interfaz utiliza la identidad entregada para AG:
 
 Se incluyen el monograma y el lockup de AG Business Networking. Las fuentes comerciales originales no se redistribuyen dentro del proyecto; la interfaz usa familias de respaldo compatibles y puede enlazarse posteriormente con las licencias tipográficas correspondientes.
 
-## Instalación
+## Supabase y despliegue
 
-Lee **`GUIA-INSTALACION.md`** antes de publicar.
+El repositorio ya usa la estructura oficial de Supabase:
 
-Resumen:
+```text
+supabase/
+├── config.toml
+└── migrations/
+```
 
-1. Crea un proyecto nuevo de Supabase para Academia AG.
-2. Ejecuta `01-esquema-base-academia-ag.sql`.
-3. Coloca la URL y publishable key en `supabase-config.js`.
-4. Publica temporalmente la academia y registra la cuenta que será administradora.
-5. En `02-parche-seguridad-y-permisos.sql`, sustituye `TU_CORREO_ADMIN@EJEMPLO.COM` por el correo real de esa cuenta y ejecuta el archivo.
-6. Ejecuta `03` a `15` en orden.
-7. Configura en Supabase las URLs de autenticación y recuperación de contraseña.
-8. Prueba cada rol antes del lanzamiento.
+La integración GitHub ↔ Supabase está configurada para desplegar las migraciones de `main` al proyecto de producción conectado.
 
-## Archivos SQL
+La URL pública del proyecto Supabase ya está configurada en `supabase-config.js`. Falta colocar únicamente la **publishable key** pública del proyecto para activar el frontend.
 
-- `01-esquema-base-academia-ag.sql` — esquema base y RLS.
-- `02-parche-seguridad-y-permisos.sql` — bootstrap del administrador.
-- `03-datos-iniciales.sql` — cursos y recursos iniciales.
-- `04-corregir-rutas-imagenes.sql`
-- `05-acceso-privado-libros-y-roles.sql`
-- `06-plataforma-profesional-e-instructores.sql`
-- `07-fotografias-perfil-storage.sql`
-- `08-portadas-y-eliminacion-contenido.sql`
-- `09-editor-profesional-por-bloques.sql`
-- `10-archivos-directos-editor-bloques.sql`
-- `11-espacios-de-trabajo-carpetas.sql`
-- `12-reparar-administrador-espacios.sql`
-- `13-centro-accesos-productos.sql`
-- `14-evaluaciones-soporte-certificados-seguridad.sql`
-- `15-evaluacion-inicial-utah-driver.sql`
+### Primer administrador
+
+Las migraciones pueden desplegarse aunque todavía no exista ningún usuario.
+
+Después de registrar la primera cuenta que será administradora, ejecuta desde Supabase SQL Editor:
+
+```sql
+select private.bootstrap_admin_by_email('correo-real@ejemplo.com');
+```
+
+Ese bootstrap:
+
+- promueve el perfil a `admin`;
+- activa la cuenta;
+- crea o recupera el workspace `AG Business Networking`;
+- asigna al administrador como `owner`;
+- organiza el contenido existente dentro del workspace.
+
+También se incluye el archivo `16-bootstrap-admin-workspace.sql` como guía manual.
+
+## Migraciones
+
+Las migraciones productivas se encuentran en `supabase/migrations/` y se ejecutan en orden:
+
+1. esquema base;
+2. seguridad y permisos;
+3. datos iniciales;
+4. rutas de imágenes;
+5. acceso privado y roles;
+6. plataforma e instructores;
+7. fotografías y Storage;
+8. portadas y eliminación de contenido;
+9. editor profesional por bloques;
+10. archivos directos del editor;
+11. espacios de trabajo;
+12. políticas administrativas y bootstrap diferido;
+13. centro de accesos y productos;
+14. evaluaciones, soporte, certificados y seguridad;
+15. evaluación inicial Utah Driver;
+16. bootstrap automatizado de administrador + workspace.
 
 ## Seguridad
 
 Nunca coloques en este repositorio:
 
-- `service_role` de Supabase.
-- contraseña de base de datos.
-- secretos de webhooks.
+- `service_role` de Supabase;
+- contraseña de base de datos;
+- secretos de webhooks;
 - access tokens privados de Meta, Mercado Pago u otros proveedores.
 
-El navegador solo debe recibir la **publishable/anon key** de Supabase. Las operaciones sensibles están protegidas por RLS y funciones `security definer` con validación de rol.
+El navegador solo debe recibir la **publishable key** de Supabase. Las operaciones sensibles están protegidas por RLS y funciones `security definer` con validación de rol.
 
 La eliminación permanente de una cuenta de **Supabase Auth** no se expone en el navegador. Desde el panel se puede suspender o inactivar una cuenta. Si se requiere borrado definitivo de Auth, debe realizarse desde un entorno servidor/Edge Function con credenciales privadas y un flujo de confirmación.
 
@@ -103,4 +125,4 @@ La plataforma está construida con estructura, seguridad, administración y áre
 
 ## Antes de lanzamiento
 
-Revisa `CHECKLIST-LANZAMIENTO.md` y `MATRIZ-PERMISOS.md`.
+Lee `GUIA-INSTALACION.md`, `CHECKLIST-LANZAMIENTO.md` y `MATRIZ-PERMISOS.md`.
