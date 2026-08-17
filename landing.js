@@ -86,5 +86,20 @@
     renderCalendar();
   });
 
+  function loadCompasOneAgent() {
+    if (document.querySelector('script[data-ag-compas-agent]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://app.proyectocompas.com/compas-chat.js';
+    script.dataset.key = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
+    script.dataset.agCompasAgent = 'v1';
+    script.async = true;
+    script.onerror = () => {
+      console.warn('No fue posible cargar temporalmente el agente de Compás One.');
+    };
+    document.body.appendChild(script);
+  }
+
   renderCalendar();
+  loadCompasOneAgent();
 })();
