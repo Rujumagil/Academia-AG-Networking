@@ -11,8 +11,8 @@
           ${showActions ? `
             <div class="bootstrap-actions">
               <button class="btn btn-primary" id="retry-app">Volver a intentar</button>
-              <a class="btn btn-secondary" href="diagnostico.html?v=20260817.11">Abrir diagnóstico</a>
-              <a class="auth-link" href="limpiar-cache.html?v=20260817.11">Limpiar versión anterior</a>
+              <a class="btn btn-secondary" href="diagnostico.html?v=20260817.12">Abrir diagnóstico</a>
+              <a class="auth-link" href="limpiar-cache.html?v=20260817.12">Limpiar versión anterior</a>
             </div>` : '<div class="spinner" aria-label="Cargando"></div>'}
         </section>
       </main>`;
@@ -69,13 +69,14 @@
         return;
       }
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260817.11');
-      await loadScript('lesson-experience.js?v=20260817.11');
-      await loadScript('video-fix.js?v=20260817.11');
-      await loadScript('quiz-randomizer.js?v=20260817.11');
-      await loadScript('course-structure.js?v=20260817.11');
-      await loadScript('premium-learning.js?v=20260817.11');
-      await loadScript('lesson-cleanup.js?v=20260817.11');
+      await loadScript('app.js?v=20260817.12');
+      await loadScript('lesson-experience.js?v=20260817.12');
+      await loadScript('video-fix.js?v=20260817.12');
+      await loadScript('quiz-randomizer.js?v=20260817.12');
+      await loadScript('course-structure.js?v=20260817.12');
+      await loadScript('premium-learning.js?v=20260817.12');
+      await loadScript('lesson-cleanup.js?v=20260817.12');
+      await loadScript('module-exam.js?v=20260817.12');
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
         if (stillLoading) renderStatus('No pudimos iniciar la academia','La aplicación tardó más de lo esperado. Abre el diagnóstico para identificar el punto exacto.',true);
