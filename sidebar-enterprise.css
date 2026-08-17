@@ -1,0 +1,234 @@
+/* Academia AG · Sidebar empresarial v20260817.14 */
+
+.sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:22px 16px 18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.97) 0%,rgba(246,248,247,.98) 100%);
+  border-right:1px solid rgba(30,41,59,.08);
+  box-shadow:10px 0 34px rgba(24,39,57,.055);
+  backdrop-filter:blur(18px);
+  z-index:30;
+}
+
+.sidebar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(0,81,52,.055),transparent 27%),
+    radial-gradient(circle at 100% 100%,rgba(30,41,59,.035),transparent 24%);
+  z-index:-1;
+  opacity:1;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:0 4px 22px;
+  padding:0 4px 18px;
+  border-bottom:1px solid rgba(30,41,59,.075);
+}
+
+.brand img{
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  border-radius:13px;
+  padding:6px;
+  background:#fff;
+  border:1px solid rgba(30,41,59,.08);
+  box-shadow:0 8px 20px rgba(31,53,75,.075);
+}
+
+.brand strong{
+  display:block;
+  color:#17324a;
+  font-family:Georgia,"Times New Roman",serif;
+  font-weight:600;
+  font-size:1.13rem;
+  line-height:1.08;
+  letter-spacing:-.01em;
+}
+
+.brand span{
+  display:block;
+  margin-top:5px;
+  color:#627386;
+  font-size:.68rem;
+  line-height:1.25;
+}
+
+.sidebar-label{
+  margin:8px 12px 12px;
+  padding-top:2px;
+  font-size:.61rem;
+  font-weight:850;
+  letter-spacing:.18em;
+  color:#8c9aab;
+  text-transform:uppercase;
+}
+
+.sidebar-nav{
+  display:grid;
+  gap:7px;
+}
+
+.nav-link{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:47px;
+  padding:11px 13px 11px 15px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#4d596c;
+  font-weight:560;
+  transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+
+.nav-link::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:3px;
+  border-radius:999px;
+  background:transparent;
+  transition:background .2s ease;
+}
+
+.nav-link:hover{
+  background:rgba(255,255,255,.88);
+  border-color:rgba(30,41,59,.075);
+  color:#17324a;
+  box-shadow:0 9px 22px rgba(31,53,75,.055);
+  transform:translateX(2px);
+}
+
+.nav-link.active{
+  background:linear-gradient(180deg,#fff 0%,#f8faf9 100%);
+  border-color:rgba(0,81,52,.19);
+  color:#17324a;
+  box-shadow:0 11px 25px rgba(31,53,75,.075);
+}
+
+.nav-link.active::before{
+  background:linear-gradient(180deg,#005134,#3C8066);
+}
+
+.nav-icon{
+  width:29px;
+  height:29px;
+  flex:0 0 29px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:rgba(0,81,52,.075);
+  color:#005134;
+  font-size:.9rem;
+  transition:background .2s ease,color .2s ease,box-shadow .2s ease;
+}
+
+.nav-link:hover .nav-icon{
+  background:rgba(0,81,52,.11);
+}
+
+.nav-link.active .nav-icon{
+  background:linear-gradient(135deg,#005134,#3C8066);
+  color:#fff;
+  box-shadow:0 7px 16px rgba(0,81,52,.18);
+}
+
+.nav-link-secondary{
+  margin-top:14px;
+  border:1px solid rgba(181,145,70,.27);
+  background:linear-gradient(180deg,rgba(255,252,246,.98),rgba(252,248,238,.96));
+  color:#4c5667;
+  font-weight:720;
+}
+
+.nav-link-secondary:hover,
+.nav-link-secondary.active{
+  background:linear-gradient(180deg,#fffaf0,#fbf3df);
+  border-color:rgba(181,145,70,.42);
+}
+
+.nav-link-secondary .nav-icon{
+  background:rgba(181,145,70,.11);
+  color:#896a28;
+}
+
+.admin-nav-link{
+  margin-top:10px;
+  border:1px solid rgba(30,41,59,.085);
+  background:rgba(255,255,255,.68);
+  color:#17324a;
+  font-weight:650;
+}
+
+.admin-nav-link .nav-icon{
+  background:rgba(0,81,52,.08);
+}
+
+.sidebar-bottom{
+  position:static;
+  margin-top:auto;
+  padding-top:18px;
+  border-top:1px solid rgba(30,41,59,.075);
+}
+
+.user-mini{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+  padding:11px;
+  border-radius:17px;
+  background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(250,250,248,.97));
+  border:1px solid rgba(30,41,59,.075);
+  box-shadow:0 9px 22px rgba(31,53,75,.055);
+}
+
+.user-mini img{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  object-fit:cover;
+  border-radius:12px;
+  padding:4px;
+  background:#fff;
+  border:1px solid rgba(30,41,59,.075);
+}
+
+.user-mini > span{min-width:0}
+
+.user-mini strong{
+  display:block;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:#223047;
+  font-size:.8rem;
+  line-height:1.2;
+}
+
+.user-mini span span{
+  display:block;
+  margin-top:2px;
+  color:#7c8998;
+  font-size:.65rem;
+  line-height:1.25;
+}
+
+@media (max-width:980px){
+  .sidebar{padding:18px 14px 16px}
+  .brand{margin-bottom:18px;padding-bottom:14px}
+  .nav-link{min-height:45px;padding:10px 12px 10px 14px}
+  .user-mini{padding:10px}
+}
