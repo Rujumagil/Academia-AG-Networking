@@ -1,78 +1,97 @@
 # Guía de instalación · Academia AG Business Networking
 
-## 1. Crear Supabase
+## 1. Estado actual
 
-Crea un proyecto **nuevo** y exclusivo para Academia AG. No reutilices el proyecto de Aula Compás ni el de otra academia.
+Academia AG ya utiliza un proyecto Supabase independiente y el repositorio `Rujumagil/Academia-AG-Networking` está conectado mediante la integración oficial de GitHub.
 
-En **SQL Editor**, ejecuta primero:
+La rama de producción es `main` y las migraciones productivas viven en:
 
-`01-esquema-base-academia-ag.sql`
+```text
+supabase/migrations/
+```
 
-Esto crea perfiles, cursos, módulos, lecciones, inscripciones, progreso, notas, recursos, funciones de seguridad y las políticas RLS base.
+No ejecutes los SQL `01` a `16` manualmente si la integración GitHub ↔ Supabase ya está activa y el despliegue de `main` funciona. Los archivos SQL de la raíz se conservan como referencia/manual.
 
 ## 2. Conectar el frontend
 
-Abre `supabase-config.js` y sustituye únicamente los valores públicos:
+`supabase-config.js` ya contiene la URL pública del proyecto Supabase de Academia AG.
+
+Falta sustituir únicamente:
 
 ```js
-window.SUPABASE_CONFIG = {
-  url: "https://TU-PROYECTO.supabase.co",
-  publishableKey: "TU_SUPABASE_PUBLISHABLE_KEY",
-  adminEmail: "correo@agbusinessnetworking.com",
-  whatsappNumber: "",
-  publicSiteUrl: "https://tu-sitio.com/",
-  academyUrl: "https://academia.tu-sitio.com/",
-  legalVersion: "2026-08",
-  organizationName: "AG Business Networking"
-};
+publishableKey: "TU_SUPABASE_PUBLISHABLE_KEY"
 ```
 
-No agregues `service_role`.
+por la **publishable key** del proyecto en Supabase → Settings → API Keys.
 
-## 3. Publicar temporalmente y crear al primer administrador
+La publishable key puede estar en el navegador. Nunca agregues `service_role`, contraseña de base de datos ni secretos privados al repositorio.
 
-Publica los archivos en el hosting elegido. Entra a la academia y crea la cuenta que será administradora.
+Mientras la key siga como placeholder, la academia debe mostrar un estado de configuración pendiente en vez de intentar autenticarse con credenciales inválidas.
 
-Después abre `02-parche-seguridad-y-permisos.sql`, cambia:
+## 3. Crear el primer administrador
 
-`TU_CORREO_ADMIN@EJEMPLO.COM`
+Las migraciones están preparadas para desplegarse aunque todavía no exista ningún usuario.
 
-por el correo que acabas de registrar y ejecuta el SQL.
+Cuando el frontend ya tenga la publishable key:
 
-## 4. Ejecutar el resto de la base
+1. Abre `academia.html`.
+2. Registra la cuenta que será administradora principal.
+3. Confirma el correo si Auth lo requiere.
+4. En Supabase SQL Editor ejecuta:
 
-Ejecuta los archivos siguientes, en orden:
+```sql
+select private.bootstrap_admin_by_email('CORREO-REAL-DEL-ADMIN');
+```
 
-`03` → `04` → `05` → `06` → `07` → `08` → `09` → `10` → `11` → `12` → `13` → `14` → `15`.
+El bootstrap promueve la cuenta a `admin`, la activa, crea el workspace principal de AG, asigna al administrador como `owner` y organiza el contenido existente.
 
-Si una migración indica un error, detén el proceso y corrige antes de continuar.
+El archivo `16-bootstrap-admin-workspace.sql` contiene una plantilla de verificación.
+
+## 4. Migraciones
+
+La cadena productiva debe quedar registrada en Supabase en este orden:
+
+`001` esquema base → `002` seguridad → `003` datos iniciales → `004` imágenes → `005` acceso privado → `006` instructores → `007` Storage de perfiles → `008` portadas → `009` editor → `010` archivos → `011` workspaces → `012` políticas administrativas → `013` productos/accesos → `014` evaluaciones/soporte/certificados → `015` evaluación Utah Driver → `016` bootstrap administrador/workspace.
+
+Si una migración falla, no agregues manualmente las siguientes. Corrige primero el SQL en GitHub y deja que Supabase reintente desde la migración pendiente.
 
 ## 5. Configurar Auth
 
 En Supabase configura:
 
-- Site URL: la URL pública de Academia AG.
-- Redirect URLs: agrega la URL de la academia y sus variantes de producción necesarias.
-- Recuperación de contraseña: valida que el enlace regrese al dominio de la academia.
+- **Site URL:** `https://rujumagil.github.io/Academia-AG-Networking/` mientras usamos la página muestra.
+- **Redirect URLs:** agrega la URL anterior y la ruta de `academia.html`.
+- Recuperación de contraseña: valida que regrese a la academia.
 - Confirmación de correo: actívala para producción y prueba altas reales.
-- Política de contraseña: configura en Supabase una longitud mínima coherente con la interfaz (8 caracteres o más).
-- Correo: para producción conviene usar un proveedor SMTP propio y revisar remitente, SPF, DKIM y DMARC.
+- Política de contraseña: 8 caracteres o más como mínimo.
+- Para producción comercial, configura SMTP propio y revisa SPF, DKIM y DMARC.
+
+Cuando AG use su nuevo dominio oficial, sustituye las URLs de GitHub Pages por el dominio definitivo en Auth y en `supabase-config.js`.
 
 ## 6. Storage
 
-Las migraciones crean/configuran los buckets que necesita el proyecto, entre ellos:
+Las migraciones crean/configuran los buckets necesarios para:
 
 - contenido digital privado;
 - fotografías de perfil;
 - medios de curso/editor.
 
-Verifica que los buckets privados continúen privados y que las políticas RLS no hayan sido desactivadas.
+Verifica que los buckets privados continúen privados y que sus políticas no se hayan desactivado.
 
 ## 7. Hosting
 
-La aplicación es estática. Puede publicarse desde GitHub y Cloudflare Pages. Mantén todos los archivos del paquete en la raíz del proyecto para conservar las rutas de imágenes tal como están configuradas.
+La página muestra se publica actualmente con GitHub Pages desde `main`.
 
-No agregues un `CNAME` hasta conocer el dominio definitivo.
+Arquitectura pública provisional:
+
+```text
+/                         → Landing oficial AG
+/academia.html            → Academia AG
+/academia.html#catalog    → Catálogo
+/academia.html#verify     → Verificación de constancias
+```
+
+No agregues un `CNAME` hasta definir el dominio que sustituirá o complementará al sitio oficial actual.
 
 ## 8. Pruebas obligatorias
 
@@ -82,36 +101,36 @@ Crea tres cuentas de prueba:
 - instructor;
 - administrador.
 
-Valida con cada una:
+Valida:
 
-- que el alumno solo vea sus cursos, intentos y recursos;
-- que el instructor solo gestione contenido autorizado y únicamente los cursos que creó o que un administrador le asignó;
-- que el administrador gestione usuarios, roles, accesos, soporte y productos;
-- que una cuenta suspendida pierda acceso académico;
-- que una evaluación no revele `is_correct` en el navegador;
-- que la constancia solo se emita con lecciones completas y evaluaciones aprobadas;
-- que el folio pueda verificarse desde `#verify`;
-- que los archivos privados no tengan una URL pública permanente;
-- que un aviso global y uno dirigido aparezcan solo a quienes corresponda;
-- que retirar una asignación de instructor elimine su permiso de gestión del curso.
+- alumno: solo sus cursos, intentos y recursos;
+- instructor: solo cursos creados o asignados;
+- administrador: usuarios, roles, accesos, soporte y productos;
+- cuenta suspendida: sin acceso académico;
+- evaluación: no expone `is_correct` al navegador;
+- constancia: solo con lecciones y evaluaciones completas;
+- folio: verificable públicamente;
+- archivos privados: sin URL pública permanente;
+- notificaciones: segmentación correcta;
+- revocar instructor: elimina su permiso de gestión.
 
-## 9. Personalización antes de producción
+## 9. Integración con Compás One
 
-Actualiza:
+La landing ya carga el agente web de Compás One. La academia debe mantener su base académica separada y sincronizar eventos relevantes con Compás One mediante API/eventos, por ejemplo:
 
-- teléfono/WhatsApp;
-- dominio principal y dominio de academia;
-- correo de soporte;
-- datos legales definitivos;
-- reglas de reembolso;
-- fechas de eventos de ejemplo;
-- contenido oficial de cada curso;
-- precios y enlaces de pago cuando corresponda.
+- `student.created`;
+- `enrollment.created`;
+- `course.completed`;
+- `event.registered`;
+- `certificate.issued`;
+- `support.created`.
+
+No compartas claves `service_role` entre proyectos. La integración debe utilizar un endpoint privado o Edge Function con autenticación propia.
 
 ## 10. Verificación técnica
 
 Usa:
 
-- `diagnostico.html` para revisar Supabase y el navegador;
-- `verificar-imagenes.html` para validar recursos gráficos;
-- `limpiar-cache.html` después de actualizaciones importantes de la PWA.
+- `diagnostico.html` para revisar Supabase y navegador;
+- `verificar-imagenes.html` para recursos gráficos;
+- `limpiar-cache.html` después de cambios importantes de PWA.
