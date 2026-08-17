@@ -4,7 +4,7 @@
 window.SUPABASE_CONFIG = {
   url: "https://wtxlvmpolxacxnibaexj.supabase.co",
   publishableKey: "TU_SUPABASE_PUBLISHABLE_KEY",
-  adminEmail: "",
+  adminEmail: "proyectocompas.info@gmail.com",
   whatsappNumber: "",
   publicSiteUrl: "https://rujumagil.github.io/Academia-AG-Networking/",
   academyUrl: "https://rujumagil.github.io/Academia-AG-Networking/academia.html",
