@@ -3,7 +3,7 @@
 // Nunca coloques service_role, contraseñas de base de datos ni secretos privados aquí.
 window.SUPABASE_CONFIG = {
   url: "https://wtxlvmpolxacxnibaexj.supabase.co",
-  publishableKey: "TU_SUPABASE_PUBLISHABLE_KEY",
+  publishableKey: "sb_publishable_zyQF2HTfErzNQ9oWAQPNaA_nxdxuGiA",
   adminEmail: "proyectocompas.info@gmail.com",
   whatsappNumber: "",
   publicSiteUrl: "https://rujumagil.github.io/Academia-AG-Networking/",
