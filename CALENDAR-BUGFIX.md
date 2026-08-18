@@ -1,0 +1,1 @@
+Diagnóstico temporal: el efecto de círculos/píldoras repetidas en Calendario provenía de selectores que también alcanzaban los <span> internos insertados por calendario-premium.js. El MutationObserver volvía a envolver esos elementos y generaba anidamiento recursivo. La corrección limita JS/CSS a hijos directos del contenedor de metadatos y actualiza la versión del aula.
