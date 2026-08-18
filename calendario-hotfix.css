@@ -1,0 +1,53 @@
+/* Academia AG · Calendar hotfix v20260817.22
+   Evita que las etiquetas internas de los metadatos hereden el estilo de píldora
+   del contenedor externo. Complementa calendario-premium.js v20260817.22. */
+
+.calendar-featured-meta > span > .calendar-meta-label{
+  display:inline !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  color:inherit !important;
+  font:inherit !important;
+  font-weight:inherit !important;
+  letter-spacing:inherit !important;
+}
+
+.calendar-event-meta > span > .calendar-meta-label{
+  display:inline !important;
+  min-height:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:inherit !important;
+  font:inherit !important;
+  font-weight:inherit !important;
+}
+
+.calendar-featured-meta > span,
+.calendar-event-meta > span{
+  width:auto;
+  max-width:100%;
+}
+
+.calendar-featured-event{
+  min-height:270px;
+  height:auto;
+}
+
+.calendar-featured-copy,
+.calendar-featured-date{
+  align-self:center;
+}
+
+@media(max-width:680px){
+  .calendar-featured-event{min-height:0}
+}
