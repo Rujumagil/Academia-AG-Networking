@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1E293B">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Importar alumnos | Academia AG</title>
+  <link rel="icon" href="icon-192.png">
+  <style>
+    :root{--navy:#1E293B;--green:#005134;--ink:#16213c;--muted:#6b7280;--line:#dfe7e4;--cream:#f9faf9;--warn:#9a6a00;--danger:#a13737;--success:#087a55}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 92% 0%,rgba(0,81,52,.12),transparent 28%),#f5f8f7;color:var(--ink);font-family:Montserrat,Arial,sans-serif}
+    .shell{width:min(1180px,calc(100% - 32px));margin:34px auto 70px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.brand img{width:46px;height:46px;object-fit:contain;background:white;border:1px solid var(--line);border-radius:14px;padding:6px}.brand strong{display:block;font-family:Georgia,serif;font-size:20px}.brand span{font-size:12px;color:var(--muted)}a.back{color:var(--green);text-decoration:none;font-weight:800;font-size:14px}
+    .hero{display:grid;grid-template-columns:1fr auto;gap:26px;align-items:end;background:linear-gradient(120deg,#171b45 0%,#173750 50%,#006246 100%);color:white;border-radius:28px;padding:30px 32px;box-shadow:0 24px 55px rgba(24,39,57,.15)}.eyebrow{font-size:11px;letter-spacing:.17em;font-weight:900;text-transform:uppercase;color:#c5f2df}.hero h1{margin:10px 0 8px;font:500 clamp(34px,5vw,58px)/.95 Georgia,serif}.hero p{margin:0;max-width:760px;color:rgba(255,255,255,.76);line-height:1.55}.hero-stat{min-width:150px;border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:18px;text-align:center;background:rgba(255,255,255,.08);backdrop-filter:blur(10px)}.hero-stat strong{display:block;font:500 42px Georgia,serif}.hero-stat span{font-size:12px;color:rgba(255,255,255,.72)}
+    .grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px;margin-top:18px}.card{background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 14px 34px rgba(24,39,57,.07)}.card h2{margin:0 0 8px;font:500 25px Georgia,serif}.card p{margin:0;color:var(--muted);line-height:1.5}.drop{margin-top:18px;border:1.5px dashed #b9cbc5;border-radius:20px;padding:26px;text-align:center;background:#fbfdfc;transition:.2s}.drop.is-ready{border-color:#62a68e;background:#f1faf6}.drop input{width:100%;max-width:420px}.hint{font-size:12px;color:var(--muted);margin-top:10px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{appearance:none;border:0;border-radius:14px;padding:12px 17px;font-weight:800;cursor:pointer}.btn.primary{background:var(--navy);color:white}.btn.primary:disabled{opacity:.45;cursor:not-allowed}.btn.secondary{background:white;border:1px solid var(--line);color:var(--ink)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.stat{padding:14px;border:1px solid var(--line);border-radius:16px;background:#fbfcfc}.stat strong{display:block;font:500 28px Georgia,serif}.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}.notice{margin-top:16px;border-radius:16px;padding:14px 16px;font-size:13px;line-height:1.5}.notice.warn{background:#fff8e7;color:#725000;border:1px solid #efdfa8}.notice.info{background:#eef8f5;color:#175a48;border:1px solid #cde9df}.notice.danger{background:#fff1f1;color:#822f2f;border:1px solid #efcccc}.hidden{display:none!important}
+    .result{margin-top:18px}.result h3{margin:0 0 12px;font:500 22px Georgia,serif}.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.result-box{padding:14px;border-radius:16px;background:#fbfcfc;border:1px solid var(--line)}.result-box strong{display:block;font-size:25px}.result-box small{color:var(--muted)}
+    .table-wrap{margin-top:14px;overflow:auto;border:1px solid var(--line);border-radius:18px;background:white}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{text-align:left;padding:11px 12px;border-bottom:1px solid #edf1ef;font-size:12px;vertical-align:top}.table th{position:sticky;top:0;background:#f7faf8;color:#556170;text-transform:uppercase;letter-spacing:.06em;font-size:10px}.badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900}.badge.ok{background:#e4f6ee;color:#087a55}.badge.warn{background:#fff5d8;color:#8c6200}.badge.error{background:#fde9e9;color:#9c3434}.credentials{margin-top:18px;padding:18px;border-radius:18px;background:#17223d;color:white}.credentials strong{display:block;margin-bottom:6px}.credentials p{color:rgba(255,255,255,.72);font-size:13px}.credentials .btn{background:white;color:#17223d}
+    @media(max-width:850px){.hero,.grid{grid-template-columns:1fr}.hero-stat{justify-self:start}.result-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.shell{width:min(100% - 20px,1180px);margin-top:18px}.top{align-items:flex-start}.hero{padding:24px 20px}.card{padding:18px}.stats{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="brand"><img src="icono-oficial.png" alt="AG"><div><strong>Academia AG</strong><span>Administración académica</span></div></div>
+      <a class="back" href="academia.html#admin">← Volver al dashboard</a>
+    </header>
+
+    <section class="hero">
+      <div><div class="eyebrow">Alta académica segura</div><h1>Importar alumnos</h1><p>Crea las cuentas en Supabase Auth, asigna el acceso al UTAH DRIVER SUCCESS PROGRAM™ y obliga a cada alumno nuevo a definir su propia contraseña en el primer ingreso.</p></div>
+      <div class="hero-stat"><strong id="hero-count">0</strong><span>alumnos preparados</span></div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Archivo de alumnos</h2>
+        <p>Selecciona el CSV original. Solo se enviarán nombre, apellido, correo principal y teléfono; direcciones, fechas de nacimiento y otros campos no se importan.</p>
+        <div class="drop" id="drop-zone">
+          <input id="csv-file" type="file" accept=".csv,text/csv">
+          <div class="hint">Columnas esperadas: Nombre · Apellido · Email 1 · Teléfono 1</div>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="count-total">0</strong><span>registros</span></div>
+          <div class="stat"><strong id="count-unique">0</strong><span>correos únicos</span></div>
+          <div class="stat"><strong id="count-review">0</strong><span>a revisar</span></div>
+        </div>
+        <div id="review-notice" class="notice warn hidden"></div>
+        <div id="session-notice" class="notice info">Validando sesión de administrador…</div>
+        <div class="actions">
+          <button class="btn primary" id="import-btn" disabled>Registrar y dar acceso</button>
+          <button class="btn secondary" id="clear-btn" type="button">Limpiar</button>
+        </div>
+      </article>
+
+      <aside class="card">
+        <h2>Qué hará la importación</h2>
+        <p>El proceso es idempotente: si una cuenta ya existe como alumno, no reemplaza su contraseña y únicamente asegura su acceso académico.</p>
+        <div class="notice info" style="margin-top:18px"><strong>Curso:</strong><br>UTAH DRIVER SUCCESS PROGRAM™<br><small>11111111-1111-4111-8111-111111111111</small></div>
+        <div class="notice warn"><strong>Contraseñas temporales</strong><br>Se generan dentro de Supabase y solo se muestran una vez en el resultado. Descarga el archivo de credenciales y guárdalo de forma segura. Nunca lo subas a GitHub.</div>
+      </aside>
+    </section>
+
+    <section id="result" class="card result hidden">
+      <h3>Resultado de la importación</h3>
+      <div class="result-grid">
+        <div class="result-box"><strong id="r-created">0</strong><small>Nuevos</small></div>
+        <div class="result-box"><strong id="r-existing">0</strong><small>Ya existentes</small></div>
+        <div class="result-box"><strong id="r-skipped">0</strong><small>Omitidos</small></div>
+        <div class="result-box"><strong id="r-errors">0</strong><small>Errores</small></div>
+      </div>
+      <div id="credentials-panel" class="credentials hidden"><strong>Credenciales temporales listas</strong><p>Este archivo contiene información sensible. Descárgalo ahora y compártelo individualmente con cada alumno.</p><button id="download-credentials" class="btn" type="button">Descargar credenciales CSV</button></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Alumno</th><th>Correo</th><th>Estado</th><th>Detalle</th></tr></thead><tbody id="result-body"></tbody></table></div>
+    </section>
+  </main>
+
+  <script src="supabase-config.js?v=20260817.13"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (()=>{
+    const COURSE_ID='11111111-1111-4111-8111-111111111111';
+    const cfg=window.SUPABASE_CONFIG||{};
+    const db=window.supabase.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+    const fileInput=document.querySelector('#csv-file'); const importBtn=document.querySelector('#import-btn'); const clearBtn=document.querySelector('#clear-btn');
+    const reviewNotice=document.querySelector('#review-notice'); const sessionNotice=document.querySelector('#session-notice'); const drop=document.querySelector('#drop-zone');
+    let students=[]; let session=null; let credentials=[];
+
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    function parseCSV(text){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'){if(quoted&&next==='"'){field+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(field);field='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(field);field='';if(row.some(v=>v!==''))rows.push(row);row=[];}else field+=ch;}if(field||row.length){row.push(field);if(row.some(v=>v!==''))rows.push(row);}if(!rows.length)return[];const headers=rows.shift().map(h=>h.replace(/^\uFEFF/,'').trim());return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]??'').trim()])));}
+    function suspicious(email){const d=(email.split('@')[1]||'').toLowerCase();const common=new Set(['gmail.com','hotmail.com','icloud.com','outlook.com','yahoo.com','live.com','msn.com']);return d&&!common.has(d);}
+    function updateCounts(rows){const emails=rows.map(x=>x.email).filter(Boolean);const unique=new Set(emails);const review=rows.filter(x=>suspicious(x.email));document.querySelector('#hero-count').textContent=rows.length;document.querySelector('#count-total').textContent=rows.length;document.querySelector('#count-unique').textContent=unique.size;document.querySelector('#count-review').textContent=review.length;if(review.length){reviewNotice.classList.remove('hidden');reviewNotice.innerHTML='<strong>Correos que conviene revisar antes de compartir accesos:</strong><br>'+review.map(x=>esc(x.email)).join(' · ')+'<br><small>No se corregirán automáticamente; se importarán exactamente como aparecen en el CSV.</small>';}else reviewNotice.classList.add('hidden');}
+    async function validateSession(){const {data:{session:s}}=await db.auth.getSession();session=s;if(!session){sessionNotice.className='notice danger';sessionNotice.textContent='No hay una sesión activa. Entra primero a Academia AG como administrador.';return;}const {data:profile}=await db.from('profiles').select('role,account_status').eq('id',session.user.id).maybeSingle();if(profile?.role!=='admin'||profile?.account_status!=='active'){sessionNotice.className='notice danger';sessionNotice.textContent='La sesión actual no tiene permisos de administrador.';session=null;return;}sessionNotice.className='notice info';sessionNotice.textContent='Administrador validado. Puedes realizar la importación.';importBtn.disabled=!students.length;}
+    fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;const text=await file.text();const rows=parseCSV(text);students=rows.map(r=>({first_name:r['Nombre']||'',last_name:r['Apellido']||'',email:(r['Email 1']||'').trim().toLowerCase(),phone:r['Teléfono 1']||''})).filter(x=>x.email);updateCounts(students);drop.classList.toggle('is-ready',students.length>0);importBtn.disabled=!session||!students.length;});
+    clearBtn.addEventListener('click',()=>{fileInput.value='';students=[];credentials=[];updateCounts([]);drop.classList.remove('is-ready');importBtn.disabled=true;reviewNotice.classList.add('hidden');document.querySelector('#result').classList.add('hidden');});
+    importBtn.addEventListener('click',async()=>{if(!session||!students.length)return;const confirmed=confirm(`Se crearán o actualizarán ${students.length} alumnos y se les dará acceso al UTAH DRIVER SUCCESS PROGRAM™. ¿Continuar?`);if(!confirmed)return;importBtn.disabled=true;importBtn.textContent='Registrando alumnos…';try{const response=await fetch(`${cfg.url}/functions/v1/bulk-import-students`,{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.publishableKey,'Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({students,course_id:COURSE_ID,source:'csv_admin_import'})});const payload=await response.json();if(!response.ok)throw new Error(payload.error||'No fue posible completar la importación.');renderResult(payload);}catch(error){alert(error.message||String(error));}finally{importBtn.disabled=false;importBtn.textContent='Registrar y dar acceso';}});
+    function badge(status){if(status==='created'||status==='existing_access_granted')return'ok';if(status==='error')return'error';return'warn';}
+    function renderResult(payload){document.querySelector('#result').classList.remove('hidden');document.querySelector('#r-created').textContent=payload.summary?.created||0;document.querySelector('#r-existing').textContent=payload.summary?.existing||0;document.querySelector('#r-skipped').textContent=payload.summary?.skipped||0;document.querySelector('#r-errors').textContent=payload.summary?.errors||0;credentials=(payload.results||[]).filter(x=>x.status==='created'&&x.temporary_password);const panel=document.querySelector('#credentials-panel');panel.classList.toggle('hidden',!credentials.length);document.querySelector('#result-body').innerHTML=(payload.results||[]).map(x=>`<tr><td>${esc(x.full_name||'')}</td><td>${esc(x.email||'')}</td><td><span class="badge ${badge(x.status)}">${esc(x.status)}</span></td><td>${esc(x.message||'')}</td></tr>`).join('');document.querySelector('#result').scrollIntoView({behavior:'smooth',block:'start'});}
+    document.querySelector('#download-credentials').addEventListener('click',()=>{if(!credentials.length)return;const q=v=>'"'+String(v??'').replaceAll('"','""')+'"';const lines=[['Nombre','Email','Contraseña temporal','Cambio obligatorio'].map(q).join(',')];credentials.forEach(x=>lines.push([x.full_name,x.email,x.temporary_password,'Sí'].map(q).join(',')));const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`credenciales-academia-ag-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);});
+    validateSession();
+  })();
+  </script>
+</body>
+</html>
