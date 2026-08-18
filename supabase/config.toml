@@ -17,3 +17,6 @@ enabled = true
 
 [auth]
 enabled = true
+
+[functions.bulk-import-students]
+verify_jwt = true
