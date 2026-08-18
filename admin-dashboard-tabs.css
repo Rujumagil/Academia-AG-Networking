@@ -1,0 +1,134 @@
+/* Academia AG · Pestañas ejecutivas del panel admin v20260818.2 */
+
+.adminexec-nav.adminexec-tabs{
+  position:sticky;
+  top:66px;
+  z-index:18;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  border-radius:18px;
+  border:1px solid rgba(23,35,63,.08);
+  background:rgba(249,250,249,.94);
+  box-shadow:0 14px 36px rgba(23,35,63,.07);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+
+.adminexec-nav.adminexec-tabs::-webkit-scrollbar{display:none}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab{
+  position:relative;
+  min-height:42px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding:0 18px;
+  border:1px solid transparent;
+  border-radius:13px;
+  background:transparent;
+  color:#657187;
+  font-size:.74rem;
+  font-weight:850;
+  letter-spacing:.005em;
+  white-space:nowrap;
+  cursor:pointer;
+  outline:none;
+  transition:background .2s ease,color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:5px;
+  height:2px;
+  border-radius:999px;
+  background:transparent;
+  transition:background .2s ease,transform .2s ease;
+  transform:scaleX(.35);
+}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab:hover{
+  background:#fff;
+  color:#17233f;
+  border-color:rgba(23,35,63,.07);
+  box-shadow:0 7px 16px rgba(23,35,63,.045);
+}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab.is-active{
+  background:linear-gradient(135deg,#17233f 0%,#1f3b4f 52%,#005134 100%);
+  color:#fff;
+  border-color:rgba(0,81,52,.22);
+  box-shadow:0 11px 24px rgba(23,35,63,.17);
+}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab.is-active::after{
+  background:#8bd9ba;
+  transform:scaleX(1);
+}
+
+.adminexec-nav.adminexec-tabs .adminexec-tab:focus-visible{
+  box-shadow:0 0 0 3px rgba(0,81,52,.16),0 11px 24px rgba(23,35,63,.13);
+}
+
+.adminexec-shell [data-adminexec-tab-panel][hidden],
+.adminexec-shell .adminexec-two-tables[hidden],
+.adminexec-shell .adminexec-bottom-grid[hidden]{
+  display:none !important;
+}
+
+.adminexec-shell [data-adminexec-tab-panel].is-adminexec-tab-active{
+  animation:adminexec-tab-enter .22s ease both;
+}
+
+.adminexec-two-tables[data-adminexec-single="true"],
+.adminexec-bottom-grid[data-adminexec-single="true"]{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+
+.adminexec-two-tables[data-adminexec-single="true"] > .adminexec-panel,
+.adminexec-bottom-grid[data-adminexec-single="true"] > .adminexec-panel{
+  width:100%;
+}
+
+@keyframes adminexec-tab-enter{
+  from{opacity:.35;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media (max-width:980px){
+  .adminexec-nav.adminexec-tabs{
+    top:58px;
+    margin-inline:-2px;
+    padding:7px;
+  }
+  .adminexec-nav.adminexec-tabs .adminexec-tab{
+    min-height:40px;
+    padding-inline:15px;
+  }
+}
+
+@media (max-width:680px){
+  .adminexec-nav.adminexec-tabs{
+    top:54px;
+    gap:6px;
+    border-radius:16px;
+  }
+  .adminexec-nav.adminexec-tabs .adminexec-tab{
+    min-height:39px;
+    padding-inline:14px;
+    font-size:.71rem;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .adminexec-shell [data-adminexec-tab-panel].is-adminexec-tab-active{animation:none}
+  .adminexec-nav.adminexec-tabs .adminexec-tab{transition:none}
+}

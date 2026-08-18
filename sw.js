@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260818.1';
+const CACHE = 'academia-ag-v20260818.2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,8 +17,9 @@ const STATIC_ASSETS = [
   './calendario-premium.css?v=20260817.21',
   './calendario-hotfix.css?v=20260817.22',
   './admin-dashboard-ejecutivo.css?v=20260818.1',
+  './admin-dashboard-tabs.css?v=20260818.2',
   './app.js?v=20260817.12',
-  './bootstrap.js?v=20260818.1',
+  './bootstrap.js?v=20260818.2',
   './lesson-experience.js?v=20260817.12',
   './video-fix.js?v=20260817.12',
   './quiz-randomizer.js?v=20260817.12',
@@ -31,6 +32,7 @@ const STATIC_ASSETS = [
   './perfil-premium.js?v=20260817.20',
   './calendario-premium.js?v=20260817.22',
   './admin-dashboard-ejecutivo.js?v=20260818.1',
+  './admin-dashboard-tabs.js?v=20260818.2',
   './supabase-config.js?v=20260817.13',
   './manifest.json',
   './diagnostico.html',
