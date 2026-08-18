@@ -1,0 +1,98 @@
+/* AG Business Networking — aplicación exclusiva de logotipos oficiales.
+   Este archivo no recrea ni altera el logotipo: únicamente posiciona
+   los archivos oficiales existentes del repositorio sobre los visuales. */
+
+.official-visual-brand{
+  position:absolute;
+  z-index:8;
+  top:18px;
+  left:18px;
+  width:clamp(168px,17vw,232px);
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:15px;
+  background:rgba(255,255,255,.97);
+  border:1px solid rgba(7,24,45,.10);
+  box-shadow:0 12px 32px rgba(7,24,45,.16);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  isolation:isolate;
+}
+
+.official-visual-brand::before{
+  content:'';
+  position:absolute;
+  z-index:-1;
+  inset:-7px -10px;
+  border-radius:19px;
+  background:rgba(255,255,255,.92);
+}
+
+.official-visual-brand img,
+.visual-frame:hover .official-visual-brand img{
+  width:100%;
+  height:auto;
+  max-height:42px;
+  object-fit:contain;
+  object-position:left center;
+  transform:none!important;
+  filter:none!important;
+  transition:none!important;
+}
+
+/* Los visuales generados funcionan como fotografía/composición.
+   La identidad visible siempre se sustituye por el archivo oficial. */
+.hero-frame .official-visual-brand{
+  top:20px;
+  left:22px;
+  width:clamp(178px,18vw,245px);
+}
+
+.process-frame .official-visual-brand,
+.academy-frame .official-visual-brand{
+  top:18px;
+  left:20px;
+}
+
+.contact-visual .official-visual-brand{
+  top:20px;
+  left:20px;
+  width:clamp(160px,15vw,205px);
+}
+
+.contact-visual .official-visual-brand img{
+  position:static;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  object-fit:contain;
+}
+
+/* Refuerza el uso del recurso oficial en header y footer sin deformación. */
+.brand img,
+.footer-brand img{
+  object-fit:contain;
+  transform:none!important;
+  filter:none!important;
+}
+
+@media(max-width:760px){
+  .official-visual-brand,
+  .hero-frame .official-visual-brand,
+  .process-frame .official-visual-brand,
+  .academy-frame .official-visual-brand,
+  .contact-visual .official-visual-brand{
+    top:10px;
+    left:10px;
+    width:132px;
+    min-height:40px;
+    padding:7px 9px;
+    border-radius:11px;
+  }
+  .official-visual-brand::before{inset:-4px -6px;border-radius:14px}
+  .official-visual-brand img,
+  .visual-frame:hover .official-visual-brand img{max-height:30px}
+}
