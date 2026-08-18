@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260817.21';
+  const RELEASE = '20260817.22';
   let timer = null;
 
   const icons = {
@@ -18,42 +18,59 @@
     return route === 'calendar' || route === 'agenda';
   }
 
+  function metaMarkup(icon, label) {
+    return `${icon}<span class="calendar-meta-label">${label}</span>`;
+  }
+
   function replaceMetaIcons(page) {
-    page.querySelectorAll('.calendar-featured-meta span, .calendar-event-meta span').forEach(node => {
-      if (node.dataset.premiumIcon) return;
-      const text = node.textContent.trim();
-      if (/60 minutos/i.test(text)) node.innerHTML = `${icons.clock}<span>60 minutos</span>`;
-      else if (/zoom/i.test(text)) node.innerHTML = `${icons.video}<span>Zoom</span>`;
-      else if (/en línea/i.test(text)) node.innerHTML = `${icons.pin}<span>En línea</span>`;
-      else if (/utah/i.test(text) && /en línea/i.test(text)) node.innerHTML = `${icons.pin}<span>Utah · En línea</span>`;
-      else if (/^▣/.test(text)) node.innerHTML = `${icons.calendar}<span>${text.replace(/^▣\s*/, '')}</span>`;
-      else if (/^◷/.test(text)) node.innerHTML = `${icons.clock}<span>${text.replace(/^◷\s*/, '')}</span>`;
-      else if (/^⌖/.test(text)) node.innerHTML = `${icons.pin}<span>${text.replace(/^⌖\s*/, '')}</span>`;
-      node.dataset.premiumIcon = 'true';
+    page.querySelectorAll('.calendar-featured-meta > span, .calendar-event-meta > span').forEach(node => {
+      if (node.dataset.premiumIcon === RELEASE) return;
+
+      const text = (node.dataset.originalLabel || node.textContent || '').trim();
+      if (!text) return;
+      node.dataset.originalLabel = text;
+
+      if (/utah/i.test(text) && /en línea/i.test(text)) {
+        node.innerHTML = metaMarkup(icons.pin, 'Utah · En línea');
+      } else if (/60 minutos/i.test(text)) {
+        node.innerHTML = metaMarkup(icons.clock, '60 minutos');
+      } else if (/zoom/i.test(text)) {
+        node.innerHTML = metaMarkup(icons.video, 'Zoom');
+      } else if (/en línea/i.test(text)) {
+        node.innerHTML = metaMarkup(icons.pin, 'En línea');
+      } else if (/^▣/.test(text)) {
+        node.innerHTML = metaMarkup(icons.calendar, text.replace(/^▣\s*/, ''));
+      } else if (/^◷/.test(text)) {
+        node.innerHTML = metaMarkup(icons.clock, text.replace(/^◷\s*/, ''));
+      } else if (/^⌖/.test(text)) {
+        node.innerHTML = metaMarkup(icons.pin, text.replace(/^⌖\s*/, ''));
+      }
+
+      node.dataset.premiumIcon = RELEASE;
     });
   }
 
   function replaceSupportIcons(page) {
     const info = page.querySelectorAll('.calendar-info-card .calendar-info-icon');
-    if (info[0] && !info[0].dataset.premiumIcon) {
+    if (info[0] && info[0].dataset.premiumIcon !== RELEASE) {
       info[0].innerHTML = icons.timezone;
-      info[0].dataset.premiumIcon = 'true';
+      info[0].dataset.premiumIcon = RELEASE;
     }
-    if (info[1] && !info[1].dataset.premiumIcon) {
+    if (info[1] && info[1].dataset.premiumIcon !== RELEASE) {
       info[1].innerHTML = icons.help;
-      info[1].dataset.premiumIcon = 'true';
+      info[1].dataset.premiumIcon = RELEASE;
     }
 
     const empty = page.querySelector('.calendar-empty-icon');
-    if (empty && !empty.dataset.premiumIcon) {
+    if (empty && empty.dataset.premiumIcon !== RELEASE) {
       empty.innerHTML = icons.clock;
-      empty.dataset.premiumIcon = 'true';
+      empty.dataset.premiumIcon = RELEASE;
     }
 
     const emptyList = page.querySelector('.calendar-empty-list > span');
-    if (emptyList && !emptyList.dataset.premiumIcon) {
+    if (emptyList && emptyList.dataset.premiumIcon !== RELEASE) {
       emptyList.innerHTML = icons.calendar;
-      emptyList.dataset.premiumIcon = 'true';
+      emptyList.dataset.premiumIcon = RELEASE;
     }
   }
 
@@ -61,6 +78,7 @@
     if (!onCalendar()) return;
     const page = document.querySelector('#page');
     if (!page) return;
+
     page.classList.add('calendar-premium-page');
     replaceMetaIcons(page);
     replaceSupportIcons(page);
@@ -75,7 +93,11 @@
   }
 
   window.addEventListener('hashchange', schedule);
-  new MutationObserver(schedule).observe(document.querySelector('#app') || document.body, { childList:true, subtree:true });
+  new MutationObserver(schedule).observe(document.querySelector('#app') || document.body, {
+    childList: true,
+    subtree: true
+  });
+
   window.ACADEMIA_AG_CALENDAR_PREMIUM = { release: RELEASE, enhance };
   schedule();
 })();
