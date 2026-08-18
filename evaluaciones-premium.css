@@ -1,0 +1,444 @@
+/* Academia AG · Evaluaciones premium v20260817.17 */
+
+.evaluations-premium-page{
+  --eval-navy:#17233f;
+  --eval-green:#005134;
+  --eval-green-2:#16805d;
+  --eval-gold:#b48a32;
+  --eval-muted:#68758a;
+  --eval-line:rgba(23,35,63,.09);
+  --eval-surface:rgba(255,255,255,.92);
+}
+
+.evaluations-premium-page .courses-page-heading{
+  align-items:center;
+  margin-bottom:24px;
+  padding-bottom:4px;
+}
+
+.evaluations-premium-page .courses-page-heading>div{
+  min-width:0;
+}
+
+.evaluations-premium-page .page-title{
+  margin:4px 0 8px;
+  font-size:clamp(3rem,5.2vw,5rem);
+  line-height:.92;
+  letter-spacing:-.035em;
+  color:var(--eval-navy);
+}
+
+.evaluations-premium-page .page-subtitle{
+  max-width:760px;
+  color:#67748a;
+  font-size:1rem;
+  line-height:1.6;
+}
+
+.evaluations-premium-page .courses-page-heading>.btn{
+  min-height:44px;
+  padding:0 18px;
+  border-radius:14px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(23,35,63,.10);
+  box-shadow:0 8px 22px rgba(23,35,63,.045);
+  color:var(--eval-navy);
+  white-space:nowrap;
+}
+
+.evaluations-premium-page .courses-page-heading>.btn::before{
+  content:"?";
+  display:inline-grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  margin-right:8px;
+  border-radius:50%;
+  background:rgba(0,81,52,.08);
+  color:var(--eval-green);
+  font-size:.72rem;
+  font-weight:900;
+}
+
+.evaluation-overview{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin:0 0 24px;
+}
+
+.evaluation-overview article{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+  padding:16px 18px;
+  border:1px solid var(--eval-line);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,251,249,.88));
+  box-shadow:0 12px 30px rgba(23,35,63,.055);
+  overflow:hidden;
+}
+
+.evaluation-overview article::after{
+  content:"";
+  position:absolute;
+  width:90px;
+  height:90px;
+  right:-35px;
+  bottom:-48px;
+  border-radius:50%;
+  background:rgba(0,81,52,.045);
+}
+
+.evaluation-overview-icon{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  color:var(--eval-green);
+  background:linear-gradient(145deg,#f7fbf9,#e7f3ee);
+  border:1px solid rgba(0,81,52,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.evaluation-overview-icon svg{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.evaluation-overview strong{
+  display:block;
+  color:var(--eval-navy);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1.42rem;
+  line-height:1;
+  font-weight:600;
+}
+
+.evaluation-overview small{
+  display:block;
+  margin-top:4px;
+  color:#778398;
+  font-size:.72rem;
+  letter-spacing:.015em;
+}
+
+.evaluations-premium-page .evaluation-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(680px,100%),1fr));
+  gap:20px;
+  width:100%;
+  align-items:stretch;
+}
+
+.evaluations-premium-page .evaluation-card{
+  --card-accent:var(--eval-green);
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:
+    "top top"
+    "title action"
+    "description action"
+    "meta meta";
+  column-gap:30px;
+  row-gap:10px;
+  width:100%;
+  min-height:278px;
+  padding:26px 28px 24px;
+  border-radius:24px;
+  border:1px solid rgba(23,35,63,.09);
+  background:
+    radial-gradient(circle at 96% 0%,rgba(0,81,52,.08),transparent 28%),
+    linear-gradient(145deg,rgba(255,255,255,.98),rgba(250,248,241,.88));
+  box-shadow:0 20px 48px rgba(23,35,63,.09);
+  overflow:hidden;
+  transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+
+.evaluations-premium-page .evaluation-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  width:4px;
+  background:linear-gradient(180deg,var(--card-accent),rgba(0,81,52,.18));
+}
+
+.evaluations-premium-page .evaluation-card[data-evaluation-state="approved"]{
+  --card-accent:#2f8c68;
+}
+
+.evaluations-premium-page .evaluation-card[data-evaluation-state="attempted"]{
+  --card-accent:#b48a32;
+}
+
+.evaluations-premium-page .evaluation-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(0,81,52,.18);
+  box-shadow:0 25px 58px rgba(23,35,63,.115);
+}
+
+.evaluations-premium-page .evaluation-card-top{
+  grid-area:top;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(23,35,63,.075);
+}
+
+.evaluations-premium-page .evaluation-card-top .status-pill{
+  min-height:26px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eef1f5;
+  color:#68758a;
+  font-size:.64rem;
+  font-weight:850;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+
+.evaluations-premium-page .evaluation-card-top .status-pill.complete{
+  background:#e8f5ef;
+  color:#137052;
+}
+
+.evaluations-premium-page .evaluation-card-top small{
+  max-width:60%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#67748a;
+  font-size:.68rem;
+  font-weight:750;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+}
+
+.evaluations-premium-page .evaluation-card>h2{
+  grid-area:title;
+  align-self:end;
+  margin:8px 0 0;
+  max-width:780px;
+  color:var(--eval-navy);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(1.55rem,2.2vw,2rem);
+  line-height:1.08;
+  font-weight:500;
+  letter-spacing:-.015em;
+}
+
+.evaluations-premium-page .evaluation-card>p{
+  grid-area:description;
+  max-width:760px;
+  margin:0;
+  color:#667286;
+  font-size:.93rem;
+  line-height:1.55;
+}
+
+.evaluations-premium-page .evaluation-card>.btn{
+  grid-area:action;
+  align-self:center;
+  justify-self:end;
+  min-width:185px;
+  min-height:46px;
+  border-radius:14px;
+  padding:0 18px;
+  box-shadow:0 11px 24px rgba(23,35,63,.13);
+}
+
+.evaluations-premium-page .evaluation-meta{
+  grid-area:meta;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:8px;
+}
+
+.evaluations-premium-page .evaluation-meta>span{
+  min-width:0;
+  padding:12px 14px;
+  border-radius:15px;
+  border:1px solid rgba(23,35,63,.075);
+  background:rgba(255,255,255,.70);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92);
+}
+
+.evaluations-premium-page .evaluation-meta small{
+  display:block;
+  margin-bottom:4px;
+  color:#8a94a5;
+  font-size:.65rem;
+  line-height:1.2;
+}
+
+.evaluations-premium-page .evaluation-meta strong{
+  display:block;
+  color:var(--eval-navy);
+  font-size:1rem;
+  font-weight:800;
+  line-height:1.1;
+}
+
+/* Vista interna del examen */
+.evaluations-premium-page .back-link{
+  display:inline-flex;
+  margin-bottom:16px;
+  color:var(--eval-green);
+  font-weight:750;
+}
+
+.evaluations-premium-page .evaluation-heading{
+  padding:30px 32px;
+  border-radius:26px;
+  border:1px solid rgba(23,35,63,.09);
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(248,251,249,.91));
+  box-shadow:0 18px 46px rgba(23,35,63,.07);
+}
+
+.evaluations-premium-page .evaluation-heading h1{
+  max-width:900px;
+  margin:8px 0 10px;
+  color:var(--eval-navy);
+  font-size:clamp(2.2rem,4vw,4rem);
+  line-height:1;
+  letter-spacing:-.025em;
+}
+
+.evaluations-premium-page .assessment-form{
+  display:grid;
+  gap:16px;
+  margin-top:22px;
+}
+
+.evaluations-premium-page .assessment-question{
+  padding:22px 24px 24px;
+  border-radius:20px;
+  border:1px solid rgba(23,35,63,.08);
+  background:rgba(255,255,255,.90);
+  box-shadow:0 12px 30px rgba(23,35,63,.055);
+}
+
+.evaluations-premium-page .assessment-question legend{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  max-width:95%;
+  color:var(--eval-navy);
+  font-weight:750;
+  line-height:1.4;
+}
+
+.evaluations-premium-page .assessment-question legend>span{
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  border-radius:9px;
+  background:#e8f4ef;
+  color:var(--eval-green);
+  font-size:.75rem;
+  font-weight:900;
+}
+
+.evaluations-premium-page .assessment-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+
+.evaluations-premium-page .assessment-options label{
+  min-width:0;
+  padding:13px 14px;
+  border-radius:14px;
+  border:1px solid rgba(23,35,63,.08);
+  background:#fbfcfc;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+
+.evaluations-premium-page .assessment-options label:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,81,52,.22);
+  background:#f6fbf8;
+}
+
+.evaluations-premium-page .assessment-submit{
+  position:sticky;
+  bottom:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  padding:18px 20px;
+  border-radius:18px;
+  border:1px solid rgba(0,81,52,.16);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 18px 42px rgba(23,35,63,.12);
+  backdrop-filter:blur(16px);
+}
+
+.evaluations-premium-page .assessment-submit p{
+  margin:3px 0 0;
+  color:#748095;
+  font-size:.8rem;
+}
+
+@media(max-width:900px){
+  .evaluation-overview{grid-template-columns:1fr 1fr 1fr}
+  .evaluations-premium-page .evaluation-card{
+    grid-template-columns:1fr;
+    grid-template-areas:"top" "title" "description" "meta" "action";
+  }
+  .evaluations-premium-page .evaluation-card>.btn{
+    justify-self:start;
+    margin-top:4px;
+  }
+  .evaluations-premium-page .assessment-options{grid-template-columns:1fr}
+}
+
+@media(max-width:650px){
+  .evaluations-premium-page .courses-page-heading{
+    align-items:flex-start;
+    gap:14px;
+  }
+  .evaluations-premium-page .page-title{font-size:3rem}
+  .evaluation-overview{grid-template-columns:1fr}
+  .evaluations-premium-page .evaluation-card{
+    padding:21px 18px 20px;
+    border-radius:20px;
+  }
+  .evaluations-premium-page .evaluation-card-top{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .evaluations-premium-page .evaluation-card-top small{
+    max-width:100%;
+    white-space:normal;
+  }
+  .evaluations-premium-page .evaluation-meta{grid-template-columns:1fr}
+  .evaluations-premium-page .evaluation-card>.btn{width:100%}
+  .evaluations-premium-page .evaluation-heading{padding:23px 19px}
+  .evaluations-premium-page .assessment-question{padding:19px 16px 20px}
+  .evaluations-premium-page .assessment-submit{
+    position:static;
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .evaluations-premium-page .assessment-submit .btn{width:100%}
+}
