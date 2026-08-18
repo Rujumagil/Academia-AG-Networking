@@ -9,6 +9,8 @@
   const form = document.querySelector('#driver-registration-form');
   const resultBox = document.querySelector('#driver-registration-result');
   const submitButton = form?.querySelector('button[type="submit"]');
+  const referrerWrap = document.querySelector('#referrer-wrap');
+  const referrerInput = form?.elements?.namedItem('referrerName');
   const year = document.querySelector('#year');
   if (year) year.textContent = new Date().getFullYear();
 
@@ -27,9 +29,29 @@
     form?.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
   }
 
+  function selectedSource() {
+    return String(form?.querySelector('input[name="heardFrom"]:checked')?.value || '').trim();
+  }
+
+  function updateReferrerVisibility() {
+    const recommendation = selectedSource() === 'Recomendación';
+    if (referrerWrap) referrerWrap.hidden = !recommendation;
+    if (referrerInput) {
+      referrerInput.required = recommendation;
+      if (!recommendation) {
+        referrerInput.value = '';
+        referrerInput.classList.remove('is-invalid');
+      }
+    }
+  }
+
+  form?.querySelectorAll('input[name="heardFrom"]').forEach(input => {
+    input.addEventListener('change', updateReferrerVisibility);
+  });
+
   function validate(data) {
     clearValidation();
-    const required = ['firstName', 'lastName', 'email', 'phone'];
+    const required = ['firstName', 'lastName', 'email', 'phone', 'occupation', 'address', 'city', 'state', 'zip'];
     let valid = true;
 
     required.forEach(name => {
@@ -49,6 +71,17 @@
     const phone = String(data.get('phone') || '').replace(/\D/g, '');
     if (phone.length < 7) {
       form?.elements?.namedItem('phone')?.classList.add('is-invalid');
+      valid = false;
+    }
+
+    const heardFrom = selectedSource();
+    if (!heardFrom) {
+      form?.querySelector('.source-group')?.classList.add('is-invalid');
+      valid = false;
+    }
+
+    if (heardFrom === 'Recomendación' && !String(data.get('referrerName') || '').trim()) {
+      referrerInput?.classList.add('is-invalid');
       valid = false;
     }
 
@@ -79,9 +112,10 @@
     event.preventDefault();
     if (!form || !submitButton) return;
 
+    form.querySelector('.source-group')?.classList.remove('is-invalid');
     const data = new FormData(form);
     if (!validate(data)) {
-      setResult('Revisa los campos obligatorios y acepta el aviso de privacidad para continuar.');
+      setResult('Revisa los campos obligatorios, selecciona cómo te enteraste del curso y acepta el aviso de privacidad para continuar.');
       return;
     }
 
@@ -90,6 +124,13 @@
     const name = `${firstName} ${lastName}`.trim();
     const email = String(data.get('email') || '').trim();
     const phone = String(data.get('phone') || '').trim();
+    const occupation = String(data.get('occupation') || '').trim();
+    const address = String(data.get('address') || '').trim();
+    const city = String(data.get('city') || '').trim();
+    const state = String(data.get('state') || '').trim();
+    const zip = String(data.get('zip') || '').trim();
+    const heardFrom = selectedSource();
+    const referrerName = String(data.get('referrerName') || '').trim();
     const context = campaignContext();
 
     const message = [
@@ -97,8 +138,12 @@
       `Nombre: ${name}`,
       `Correo: ${email}`,
       `Teléfono: ${phone}`,
-      `Origen: ${context.source}`,
-      `Medio: ${context.medium}`,
+      `Ocupación: ${occupation}`,
+      `Dirección: ${address}, ${city}, ${state} ${zip}`,
+      `Cómo se enteró: ${heardFrom}`,
+      referrerName ? `Persona que invitó/recomendó: ${referrerName}` : '',
+      `Origen digital: ${context.source}`,
+      `Medio digital: ${context.medium}`,
       `Campaña: ${context.campaign}`,
       context.content ? `Contenido: ${context.content}` : '',
       context.ref ? `Referencia: ${context.ref}` : '',
@@ -144,14 +189,16 @@
       window.sessionStorage.setItem(REGISTRATION_STORAGE_KEY, JSON.stringify({
         name,
         email,
+        occupation,
+        city,
+        state,
+        heardFrom,
         submittedAt: new Date().toISOString(),
         campaign: context.campaign
       }));
 
       renderSuccess(name, email);
-      form.querySelectorAll('input').forEach(input => {
-        input.disabled = true;
-      });
+      form.querySelectorAll('input').forEach(input => { input.disabled = true; });
     } catch (error) {
       console.error('AG_DRIVER_REGISTRATION_FAILED', error);
       setResult('No pudimos enviar tu registro en este momento. Tus datos no fueron confirmados como recibidos. Intenta nuevamente en unos minutos.');
@@ -160,5 +207,6 @@
     }
   }
 
+  updateReferrerVisibility();
   form?.addEventListener('submit', submitRegistration);
 })();
