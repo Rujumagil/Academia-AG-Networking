@@ -249,7 +249,6 @@
     const publishedCourses = data.courses.filter(course => course.status === 'published');
 
     const profileMap = new Map(data.profiles.map(item => [item.id, item]));
-    const courseMap = new Map(data.courses.map(item => [item.id, item]));
     const productMap = new Map(data.products.map(item => [item.id, item]));
 
     const enrollmentCountByUser = new Map();
@@ -272,8 +271,9 @@
     const orderRows = data.orders.slice(0, 8).map(order => {
       const student = profileMap.get(order.user_id);
       const product = productMap.get(order.product_id);
+      const buyer = student ? profileName(student) : (order.payer_email || 'Sin alumno vinculado');
       return `<div class="adminexec-table-row adminexec-order-row">
-        <div><strong>${esc(product?.name || order.external_reference || 'Compra')}</strong><small>${esc(profileName(student) || order.payer_email || 'Sin alumno vinculado')}</small></div>
+        <div><strong>${esc(product?.name || order.external_reference || 'Compra')}</strong><small>${esc(buyer)}</small></div>
         <strong class="adminexec-money">${esc(order.amount == null ? '—' : money(order.amount, order.currency || 'MXN'))}</strong>
         <span class="adminexec-status ${statusClass(order.status)}">${esc(statusLabel(order.status))}</span>
         <span class="adminexec-date">${esc(formatDate(order.approved_at || order.created_at, true))}</span>
@@ -420,6 +420,7 @@
         </section>
       </section>`;
 
+    delete page.dataset.adminExecLoading;
     page.dataset.adminExecRelease = RELEASE;
     bindDashboard(page);
   }
@@ -458,17 +459,23 @@
     const page = document.querySelector('#page');
     if (!page) return;
     if (!force && page.querySelector(`.adminexec-shell[data-adminexec-release="${RELEASE}"]`)) return;
+    if (!force && page.dataset.adminExecLoading === RELEASE) return;
 
     const version = ++requestVersion;
+    page.dataset.adminExecLoading = RELEASE;
     renderLoading(page);
     try {
       const data = await loadDashboardData();
       if (version !== requestVersion || !routeIsAdmin()) return;
-      if (!data.isAdmin) return;
+      if (!data.isAdmin) {
+        delete page.dataset.adminExecLoading;
+        return;
+      }
       renderDashboard(page, data);
     } catch (error) {
       console.error('[Admin Ejecutivo]', error);
       if (version !== requestVersion || !routeIsAdmin()) return;
+      delete page.dataset.adminExecLoading;
       page.innerHTML = `<section class="adminexec-error"><strong>No pudimos cargar el dashboard ejecutivo.</strong><p>${esc(error.message || 'Intenta nuevamente.')}</p><button type="button" id="adminexec-retry">Volver a intentar</button></section>`;
       page.querySelector('#adminexec-retry')?.addEventListener('click', () => render(true));
     }
