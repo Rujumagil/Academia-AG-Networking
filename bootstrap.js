@@ -11,8 +11,8 @@
           ${showActions ? `
             <div class="bootstrap-actions">
               <button class="btn btn-primary" id="retry-app">Volver a intentar</button>
-              <a class="btn btn-secondary" href="diagnostico.html?v=20260818.4">Abrir diagnóstico</a>
-              <a class="auth-link" href="limpiar-cache.html?v=20260818.4">Limpiar versión anterior</a>
+              <a class="btn btn-secondary" href="diagnostico.html?v=20260818.5">Abrir diagnóstico</a>
+              <a class="auth-link" href="limpiar-cache.html?v=20260818.5">Limpiar versión anterior</a>
             </div>` : '<div class="spinner" aria-label="Cargando"></div>'}
         </section>
       </main>`;
@@ -84,6 +84,7 @@
       await loadScript('admin-dashboard-ejecutivo.js?v=20260818.1');
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
+      await loadScript('admin-import-link.js?v=20260818.5');
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
         if (stillLoading) renderStatus('No pudimos iniciar la academia','La aplicación tardó más de lo esperado. Abre el diagnóstico para identificar el punto exacto.',true);
