@@ -1,0 +1,289 @@
+/* Academia AG · Mis cursos estilo Apple TV v20260817.16 */
+
+/* Hero de curso en progreso: imagen completa sin cortar títulos de la portada */
+.continue-learning-panel{
+  grid-template-columns:minmax(390px,42%) minmax(0,1fr);
+  min-height:340px;
+  border-radius:30px;
+  border:1px solid rgba(19,39,61,.09);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 26px 70px rgba(20,39,58,.10);
+}
+
+.continue-learning-image{
+  min-height:340px;
+  background:linear-gradient(145deg,#071426,#11243a);
+  display:grid;
+  place-items:center;
+}
+
+.continue-learning-image img{
+  position:relative;
+  inset:auto;
+  width:100%;
+  height:100%;
+  max-height:340px;
+  object-fit:contain;
+  object-position:center;
+  background:#071426;
+}
+
+.continue-learning-content{
+  padding:38px 42px;
+}
+
+.continue-learning-content h2{
+  max-width:880px;
+  font-size:clamp(2.4rem,3.3vw,4.05rem);
+  line-height:.98;
+  letter-spacing:-.025em;
+  margin:10px 0 14px;
+}
+
+.continue-learning-content p{
+  max-width:680px;
+  font-size:1rem;
+  color:#667286;
+}
+
+.continue-progress-row{
+  margin:22px 0 20px;
+}
+
+.continue-progress-row .learning-progress-track{
+  height:7px;
+  background:#e4e8ed;
+}
+
+.continue-progress-row .learning-progress-track span{
+  background:linear-gradient(90deg,#005134,#328165);
+}
+
+/* Biblioteca de cursos: parrilla tipo Apple TV */
+.learning-course-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:24px;
+  align-items:stretch;
+}
+
+.learning-course-card{
+  min-width:0;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:auto 1fr;
+  border-radius:24px;
+  overflow:hidden;
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(19,39,61,.09);
+  box-shadow:0 16px 38px rgba(20,39,58,.075);
+  transform:translateZ(0);
+  transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease;
+}
+
+.learning-course-card:hover{
+  transform:translateY(-6px) scale(1.006);
+  border-color:rgba(0,81,52,.18);
+  box-shadow:0 24px 52px rgba(20,39,58,.13);
+}
+
+/* Portada separada: proporción cine y contenido completo */
+.learning-course-cover{
+  position:relative;
+  min-height:0;
+  aspect-ratio:16/9;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:linear-gradient(145deg,#071426,#142940);
+}
+
+.learning-course-cover::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,15,26,.04),transparent 58%,rgba(5,15,26,.10));
+}
+
+.learning-course-cover img{
+  position:relative;
+  inset:auto;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#071426;
+  transition:transform .4s ease,filter .3s ease;
+}
+
+.learning-course-card:hover .learning-course-cover img{
+  transform:scale(1.018);
+  filter:saturate(1.03) contrast(1.015);
+}
+
+.learning-featured{
+  top:13px;
+  left:13px;
+  z-index:3;
+  padding:7px 11px;
+  border-radius:999px;
+  background:rgba(20,28,67,.90);
+  border:1px solid rgba(255,255,255,.14);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(5,15,26,.20);
+  backdrop-filter:blur(12px);
+}
+
+/* La información vive debajo de la portada, nunca encima */
+.learning-course-body{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+  padding:17px 18px 18px;
+  background:linear-gradient(180deg,#fff 0%,#fbfcfc 100%);
+}
+
+.learning-course-topline{
+  min-width:0;
+  gap:10px;
+}
+
+.course-status{
+  flex:0 0 auto;
+  font-size:.72rem;
+}
+
+.learning-course-category{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:.68rem;
+  letter-spacing:.09em;
+}
+
+.learning-course-body h3{
+  min-width:0;
+  margin:0;
+  min-height:2.35em;
+  max-height:2.35em;
+  font-size:1.38rem;
+  line-height:1.12;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.learning-course-body h3 a{
+  display:block;
+  color:#1f2947;
+}
+
+/* En Apple TV la sinopsis no compite con portada/título */
+.learning-course-body > div > p,
+.learning-course-body > p{
+  display:none !important;
+}
+
+.learning-progress-block{
+  margin-top:auto;
+  gap:7px;
+}
+
+.learning-progress-label{
+  font-size:.72rem;
+}
+
+.learning-progress-track{
+  height:6px;
+  background:#e4e8ec;
+}
+
+.learning-progress-track span{
+  background:linear-gradient(90deg,#005134,#348367);
+}
+
+.learning-course-details{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  padding-top:0;
+}
+
+.learning-course-details span:nth-child(3){
+  display:none;
+}
+
+.learning-course-details small{
+  font-size:.62rem;
+}
+
+.learning-course-details strong{
+  font-size:.72rem;
+}
+
+.learning-course-actions{
+  gap:10px;
+  margin-top:2px;
+}
+
+.learning-primary-action{
+  flex:1 1 auto;
+  min-width:0;
+  border-radius:13px;
+}
+
+.learning-outline-action{
+  flex:0 0 auto;
+  border:1px solid rgba(30,41,59,.12);
+  border-radius:13px;
+  padding:10px 13px;
+  background:#fff;
+  line-height:1;
+}
+
+.learning-outline-action:hover{
+  border-color:rgba(0,81,52,.22);
+  background:#f7faf8;
+}
+
+/* Filtros tipo tvOS */
+.courses-filters{
+  display:flex;
+  gap:9px;
+  overflow-x:auto;
+  padding:2px 0 9px;
+  scrollbar-width:none;
+}
+
+.courses-filters::-webkit-scrollbar{display:none}
+
+.courses-filters button,
+.courses-filters .filter-chip{
+  flex:0 0 auto;
+  border-radius:999px;
+}
+
+@media(max-width:1280px){
+  .learning-course-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .continue-learning-panel{grid-template-columns:minmax(340px,44%) minmax(0,1fr)}
+}
+
+@media(max-width:900px){
+  .continue-learning-panel{grid-template-columns:1fr}
+  .continue-learning-image{min-height:0;aspect-ratio:16/9}
+  .continue-learning-image img{max-height:none}
+  .continue-learning-content{padding:28px 26px}
+  .learning-course-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+}
+
+@media(max-width:680px){
+  .learning-course-list{grid-template-columns:1fr;gap:18px}
+  .learning-course-card{border-radius:21px}
+  .learning-course-body{padding:16px}
+  .learning-course-body h3{font-size:1.28rem}
+  .continue-learning-content{padding:24px 20px}
+}
