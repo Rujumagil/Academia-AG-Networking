@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260817.15';
+const CACHE = 'academia-ag-v20260817.16';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   './home-course-cards.css?v=20260817.13',
   './sidebar-enterprise.css?v=20260817.14',
   './sidebar-icons-premium.css?v=20260817.15',
+  './mis-cursos-appletv.css?v=20260817.16',
   './app.js?v=20260817.12',
   './bootstrap.js?v=20260817.15',
   './lesson-experience.js?v=20260817.12',
