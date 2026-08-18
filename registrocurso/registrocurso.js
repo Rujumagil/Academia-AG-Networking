@@ -4,6 +4,7 @@
   const COMPAS_PUBLIC_KEY = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
   const COMPAS_API_BASE = 'https://app.proyectocompas.com';
   const COMPAS_STORAGE_KEY = `compas-one-web-chat:${COMPAS_PUBLIC_KEY}`;
+  const REGISTRATION_STORAGE_KEY = 'ag-driver-registration:last-success';
 
   const form = document.querySelector('#driver-registration-form');
   const resultBox = document.querySelector('#driver-registration-result');
@@ -30,6 +31,7 @@
     clearValidation();
     const required = ['firstName', 'lastName', 'email', 'phone'];
     let valid = true;
+
     required.forEach(name => {
       const input = form?.elements?.namedItem(name);
       if (!String(data.get(name) || '').trim()) {
@@ -54,6 +56,25 @@
     return valid;
   }
 
+  function campaignContext() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      source: params.get('utm_source') || 'landing-registrocurso',
+      medium: params.get('utm_medium') || 'direct',
+      campaign: params.get('utm_campaign') || 'utah-driver-success-program',
+      content: params.get('utm_content') || '',
+      ref: params.get('ref') || document.referrer || ''
+    };
+  }
+
+  function renderSuccess(name, email) {
+    setResult(`¡Gracias, ${name}! Tu registro fue recibido correctamente. AG Business Networking dará seguimiento a tu solicitud usando ${email}. Cuando tu inscripción sea confirmada, recibirás las indicaciones para acceder a Academia AG.`, 'success');
+    if (submitButton) {
+      submitButton.textContent = 'Registro enviado ✓';
+      submitButton.disabled = true;
+    }
+  }
+
   async function submitRegistration(event) {
     event.preventDefault();
     if (!form || !submitButton) return;
@@ -69,19 +90,20 @@
     const name = `${firstName} ${lastName}`.trim();
     const email = String(data.get('email') || '').trim();
     const phone = String(data.get('phone') || '').trim();
-    const params = new URLSearchParams(window.location.search);
-    const source = params.get('utm_source') || 'landing-registrocurso';
-    const campaign = params.get('utm_campaign') || 'utah-driver-success-program';
+    const context = campaignContext();
 
     const message = [
       'Nuevo registro al Utah Driver Success Program™.',
       `Nombre: ${name}`,
       `Correo: ${email}`,
       `Teléfono: ${phone}`,
-      `Origen: ${source}`,
-      `Campaña: ${campaign}`,
+      `Origen: ${context.source}`,
+      `Medio: ${context.medium}`,
+      `Campaña: ${context.campaign}`,
+      context.content ? `Contenido: ${context.content}` : '',
+      context.ref ? `Referencia: ${context.ref}` : '',
       'Solicitud: contactar para confirmar inscripción y acceso a Academia AG.'
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 
     submitButton.disabled = true;
     const originalText = submitButton.textContent;
@@ -119,12 +141,20 @@
         window.localStorage.setItem(COMPAS_STORAGE_KEY, payload.sessionToken);
       }
 
-      setResult('¡Registro recibido! El equipo de AG Business Networking podrá ponerse en contacto contigo para confirmar tu inscripción y darte los siguientes pasos.', 'success');
-      form.reset();
+      window.sessionStorage.setItem(REGISTRATION_STORAGE_KEY, JSON.stringify({
+        name,
+        email,
+        submittedAt: new Date().toISOString(),
+        campaign: context.campaign
+      }));
+
+      renderSuccess(name, email);
+      form.querySelectorAll('input').forEach(input => {
+        input.disabled = true;
+      });
     } catch (error) {
       console.error('AG_DRIVER_REGISTRATION_FAILED', error);
-      setResult('No pudimos enviar tu registro en este momento. Intenta nuevamente en unos minutos.');
-    } finally {
+      setResult('No pudimos enviar tu registro en este momento. Tus datos no fueron confirmados como recibidos. Intenta nuevamente en unos minutos.');
       submitButton.disabled = false;
       submitButton.textContent = originalText;
     }
