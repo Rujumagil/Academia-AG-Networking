@@ -1,8 +1,9 @@
-const CACHE = 'academia-ag-v20260818.4';
+const CACHE = 'academia-ag-v20260818.5';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './academia.html',
+  './importar-alumnos.html',
   './404.html',
   './styles.css?v=20260817.13',
   './premium-learning.css?v=20260817.13',
@@ -21,7 +22,7 @@ const STATIC_ASSETS = [
   './admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4',
   './app.js?v=20260817.12',
-  './bootstrap.js?v=20260818.4',
+  './bootstrap.js?v=20260818.5',
   './lesson-experience.js?v=20260817.12',
   './video-fix.js?v=20260817.12',
   './quiz-randomizer.js?v=20260817.12',
@@ -36,6 +37,7 @@ const STATIC_ASSETS = [
   './admin-dashboard-ejecutivo.js?v=20260818.1',
   './admin-dashboard-tabs.js?v=20260818.2',
   './first-login-password.js?v=20260818.4',
+  './admin-import-link.js?v=20260818.5',
   './supabase-config.js?v=20260817.13',
   './manifest.json',
   './diagnostico.html',
