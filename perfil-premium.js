@@ -37,14 +37,6 @@
         node.dataset.premiumIcon = 'true';
       }
     });
-
-    const settingsPanel = page.querySelector('.profile-settings-panel');
-    if (settingsPanel && !settingsPanel.querySelector('.profile-security-note')) {
-      const note = document.createElement('div');
-      note.className = 'profile-security-note';
-      note.innerHTML = '<span aria-hidden="true">✓</span><div><strong>Cuenta protegida</strong><small>Tu correo de acceso no puede modificarse desde este formulario.</small></div>';
-      settingsPanel.appendChild(note);
-    }
   }
 
   function schedule() {
