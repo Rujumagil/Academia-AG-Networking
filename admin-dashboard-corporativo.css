@@ -1,0 +1,386 @@
+/* Academia AG · Dashboard Corporativo v20260818.3 */
+
+/* Dirección visual: más ejecutiva, compacta y corporativa. */
+.adminexec-shell{
+  gap:18px;
+  padding-bottom:44px;
+}
+
+.adminexec-hero{
+  min-height:232px;
+  grid-template-columns:minmax(0,1fr) 230px;
+  gap:28px;
+  padding:30px 34px;
+  border-radius:24px;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.018),rgba(255,255,255,0) 46%),
+    linear-gradient(128deg,#121b31 0%,#17253a 56%,#0a4b3b 100%);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 24px 58px rgba(19,31,48,.14);
+}
+
+.adminexec-hero::before{
+  width:320px;
+  height:320px;
+  right:-170px;
+  top:-170px;
+  border-color:rgba(255,255,255,.045);
+  box-shadow:0 0 0 34px rgba(255,255,255,.018),0 0 0 72px rgba(255,255,255,.01);
+}
+
+.adminexec-hero::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:linear-gradient(180deg,#7fd4b3,#0b7556);
+  opacity:.9;
+}
+
+.adminexec-eyebrow{
+  color:#bcd8cf;
+  font-size:.64rem;
+  letter-spacing:.18em;
+}
+
+.adminexec-hero h1{
+  max-width:760px;
+  margin:8px 0 12px;
+  font-size:clamp(2.8rem,4vw,4.45rem);
+  line-height:.94;
+  letter-spacing:-.035em;
+}
+
+.adminexec-hero p{
+  max-width:720px;
+  color:rgba(255,255,255,.7);
+  font-size:.91rem;
+  line-height:1.6;
+}
+
+.adminexec-hero-actions{
+  gap:9px;
+  margin-top:22px;
+}
+
+.adminexec-button{
+  min-height:42px;
+  padding:0 16px;
+  border-radius:11px;
+  font-size:.72rem;
+}
+
+.adminexec-button.primary{
+  background:#f8faf9;
+  color:#162039;
+  border-color:rgba(255,255,255,.82);
+  box-shadow:0 9px 20px rgba(0,0,0,.1);
+}
+.adminexec-button.secondary{
+  background:rgba(255,255,255,.075);
+  border-color:rgba(255,255,255,.14);
+}
+.adminexec-button.ghost{
+  border-color:rgba(255,255,255,.1);
+  color:#c8e2d8;
+}
+
+.adminexec-hero-side{
+  padding:19px;
+  border-radius:19px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11);
+}
+.adminexec-live{
+  font-size:.62rem;
+  color:#c4e5d9;
+}
+.adminexec-hero-side>strong{
+  margin-top:10px;
+  font-size:3.7rem;
+}
+.adminexec-hero-side>small{
+  margin-top:5px;
+  font-size:.67rem;
+}
+.adminexec-refresh{
+  margin-top:18px;
+  padding:8px 11px;
+  border-radius:10px;
+  font-size:.66rem;
+}
+
+/* Pestañas tipo consola ejecutiva */
+.adminexec-nav.adminexec-tabs{
+  top:70px;
+  min-height:52px;
+  gap:3px;
+  padding:6px 8px;
+  border-radius:15px;
+  border:1px solid rgba(21,34,55,.08);
+  background:rgba(252,253,252,.96);
+  box-shadow:0 10px 28px rgba(25,39,58,.055);
+}
+.adminexec-nav.adminexec-tabs .adminexec-tab{
+  min-height:38px;
+  padding:0 17px;
+  border-radius:9px;
+  color:#657187;
+  font-size:.71rem;
+  font-weight:800;
+}
+.adminexec-nav.adminexec-tabs .adminexec-tab::after{
+  left:17px;
+  right:17px;
+  bottom:3px;
+  height:2px;
+}
+.adminexec-nav.adminexec-tabs .adminexec-tab.is-active{
+  background:#17233f;
+  border-color:#17233f;
+  color:#fff;
+  box-shadow:0 7px 16px rgba(23,35,63,.14);
+}
+.adminexec-nav.adminexec-tabs .adminexec-tab.is-active::after{
+  background:#64c5a0;
+}
+
+/* KPIs principales */
+.adminexec-metrics{
+  gap:12px;
+}
+.adminexec-metric{
+  min-height:118px;
+  grid-template-columns:42px minmax(0,1fr);
+  gap:12px;
+  padding:17px 18px;
+  border-radius:17px;
+  border-color:rgba(23,35,63,.065);
+  box-shadow:0 11px 28px rgba(23,35,63,.045);
+  background:#fff;
+}
+.adminexec-metric::after{
+  width:88px;
+  height:88px;
+  right:-43px;
+  top:-43px;
+  opacity:.62;
+}
+.adminexec-metric-icon{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+}
+.adminexec-metric-icon svg{width:19px;height:19px}
+.adminexec-metric-copy small{
+  font-size:.59rem;
+  color:#8792a2;
+}
+.adminexec-metric-copy strong{
+  margin-top:2px;
+  font-size:clamp(1.55rem,1.85vw,2.05rem);
+}
+.adminexec-metric-copy span{
+  margin-top:4px;
+  font-size:.65rem;
+}
+
+.adminexec-secondary-metrics{
+  gap:9px;
+}
+.adminexec-secondary-metrics article{
+  min-height:68px;
+  padding:12px 13px;
+  border-radius:14px;
+  border:1px solid rgba(23,35,63,.06);
+  background:#fff;
+  box-shadow:0 8px 22px rgba(23,35,63,.035);
+}
+.adminexec-secondary-metrics article>span{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+}
+.adminexec-secondary-metrics article strong{
+  font-size:1rem;
+}
+.adminexec-secondary-metrics article small{
+  font-size:.57rem;
+  color:#8a95a5;
+}
+
+/* Paneles y tablas */
+.adminexec-panel{
+  border-radius:18px;
+  border-color:rgba(23,35,63,.07);
+  box-shadow:0 12px 32px rgba(23,35,63,.045);
+  background:#fff;
+}
+.adminexec-panel-heading{
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(23,35,63,.06);
+}
+.adminexec-panel-heading span{
+  font-size:.61rem;
+  letter-spacing:.13em;
+}
+.adminexec-panel-heading h2{
+  margin-top:4px;
+  font-size:1.25rem;
+  letter-spacing:-.015em;
+}
+
+.adminexec-insights{
+  gap:14px;
+  grid-template-columns:minmax(0,1.75fr) minmax(280px,.75fr);
+}
+.adminexec-trends{
+  padding:20px 22px;
+}
+.adminexec-trend-block{
+  padding:15px 0 0;
+}
+.adminexec-trend-block+ .adminexec-trend-block{
+  margin-top:10px;
+  border-top:1px solid rgba(23,35,63,.055);
+}
+.adminexec-trend-block>div:first-child strong{
+  font-size:.72rem;
+}
+.adminexec-trend-block>div:first-child span{
+  font-size:.61rem;
+}
+.adminexec-bars{
+  height:58px;
+  margin-top:8px;
+}
+.adminexec-bar-col small{
+  font-size:.5rem;
+}
+
+.adminexec-boundary{
+  position:relative;
+  padding:22px;
+  overflow:hidden;
+  background:linear-gradient(160deg,#f8fbfa 0%,#f2f7f5 100%);
+  border-left:3px solid #0a7255;
+}
+.adminexec-boundary::after{
+  content:"";
+  position:absolute;
+  width:150px;
+  height:150px;
+  right:-72px;
+  bottom:-75px;
+  border-radius:50%;
+  background:rgba(0,81,52,.045);
+}
+.adminexec-compas-mark{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:#17233f;
+  box-shadow:0 8px 18px rgba(23,35,63,.12);
+}
+.adminexec-boundary h2{
+  margin:8px 0 8px;
+  font-size:1.45rem;
+}
+.adminexec-boundary p,
+.adminexec-boundary li{
+  font-size:.72rem;
+  line-height:1.5;
+}
+
+.adminexec-table-panel{
+  padding:20px 22px;
+}
+.adminexec-table-head{
+  min-height:34px;
+  color:#8c96a5;
+  font-size:.56rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.adminexec-table-row{
+  min-height:64px;
+  border-top:1px solid rgba(23,35,63,.055);
+}
+.adminexec-table-row strong{
+  color:#1d2941;
+}
+.adminexec-table-row small,
+.adminexec-date,
+.adminexec-source{
+  color:#8793a3;
+}
+
+.adminexec-log-row{
+  min-height:58px;
+}
+.adminexec-workspace-card{
+  border-radius:14px;
+}
+.adminexec-academy-summary span{
+  border-radius:12px;
+  background:#f7f9f8;
+}
+
+/* Refinar fondo general del dashboard sin tocar el resto de la academia */
+body:has(.adminexec-shell) .content-area,
+body:has(.adminexec-shell) .page-content,
+body:has(.adminexec-shell) #page{
+  background:
+    radial-gradient(circle at 92% 6%,rgba(0,81,52,.035),transparent 18%),
+    linear-gradient(180deg,#f8faf9 0%,#f5f8f6 100%);
+}
+
+@media (max-width:1180px){
+  .adminexec-hero{
+    grid-template-columns:minmax(0,1fr) 200px;
+    padding:28px;
+  }
+  .adminexec-insights{grid-template-columns:1fr}
+}
+
+@media (max-width:980px){
+  .adminexec-hero{
+    min-height:0;
+    grid-template-columns:1fr;
+  }
+  .adminexec-hero-side{
+    grid-template-columns:auto auto auto;
+    gap:10px 18px;
+    justify-items:start;
+    text-align:left;
+  }
+  .adminexec-hero-side>strong{font-size:2.8rem;margin-top:0}
+  .adminexec-hero-side>small{align-self:center;margin-top:0}
+  .adminexec-refresh{margin-top:0;align-self:center}
+  .adminexec-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media (max-width:680px){
+  .adminexec-shell{gap:14px}
+  .adminexec-hero{
+    padding:23px 20px;
+    border-radius:20px;
+  }
+  .adminexec-hero h1{font-size:2.6rem}
+  .adminexec-hero-actions{display:grid;grid-template-columns:1fr}
+  .adminexec-button{width:100%}
+  .adminexec-hero-side{grid-template-columns:1fr 1fr}
+  .adminexec-refresh{grid-column:1/-1}
+  .adminexec-metrics{grid-template-columns:1fr}
+  .adminexec-secondary-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adminexec-nav.adminexec-tabs{top:56px}
+  .adminexec-nav.adminexec-tabs .adminexec-tab{padding-inline:14px}
+  .adminexec-table-panel{padding:17px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .adminexec-button{transition:none}
+}
