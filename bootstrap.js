@@ -65,23 +65,14 @@
       const cfg = window.SUPABASE_CONFIG;
       const placeholder = !cfg?.url || !cfg?.publishableKey || cfg.url.includes('TU-PROYECTO') || cfg.publishableKey.includes('TU_SUPABASE');
       if (placeholder) {
-        console.error('Configuración pública de la academia incompleta.');
-        renderStatus(
-          'Estamos actualizando tu aula',
-          'La plataforma está terminando de preparar tu acceso. Intenta nuevamente en unos segundos.',
-          true
-        );
+        renderStatus('Estamos actualizando tu aula','La plataforma está terminando de preparar tu acceso. Intenta nuevamente en unos segundos.',true);
         return;
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260819.25');
-      await loadScript('utah-placeholder-guard.js?v=20260819.25');
-
-      // La Bienvenida usa directamente el videoId confirmado por el usuario,
-      // sin depender de resolver la playlist antes de montar YouTube.
-      await loadScript('utah-youtube-seed-v25.js?v=20260819.25');
-      await loadScript('youtube-utah-only-v23.js?v=20260819.25');
+      await loadScript('app.js?v=20260819.26');
+      await loadScript('utah-placeholder-guard.js?v=20260819.26');
+      await loadScript('youtube-utah-direct-v26.js?v=20260819.26');
 
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
@@ -96,25 +87,9 @@
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('admin-import-link.js?v=20260818.5');
-
-      setTimeout(() => {
-        const stillLoading = document.querySelector('.loading-card');
-        if (stillLoading) {
-          console.warn('La academia excedió el tiempo normal de inicio.');
-          renderStatus(
-            'La conexión está tardando más de lo normal',
-            'No se perdió tu información. Vuelve a intentarlo para continuar con tu curso.',
-            true
-          );
-        }
-      }, 15000);
     } catch (error) {
       console.error('Error de inicio de Academia AG:', error);
-      renderStatus(
-        'No pudimos abrir tu aula',
-        'Revisa tu conexión a internet y vuelve a intentarlo. Tu avance permanece guardado.',
-        true
-      );
+      renderStatus('No pudimos abrir tu aula','Revisa tu conexión a internet y vuelve a intentarlo. Tu avance permanece guardado.',true);
     }
   }
 
