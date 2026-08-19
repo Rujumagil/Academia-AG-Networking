@@ -27,6 +27,13 @@
     node.dataset.agPremiumIcon = key;
   }
 
+  function setTopbarIcon(control, key) {
+    if (!control || !icon[key] || control.dataset.agPremiumIcon === key) return;
+    const count = control.querySelector('.notification-count')?.outerHTML || '';
+    control.innerHTML = `${icon[key]}${count}`;
+    control.dataset.agPremiumIcon = key;
+  }
+
   function enhanceMobileNav() {
     document.querySelectorAll('.mobile-nav button').forEach(button => {
       const label = (button.querySelector('span:last-child')?.textContent || '').trim().toLowerCase();
@@ -42,10 +49,10 @@
   function enhanceTopbar() {
     document.querySelectorAll('.top-actions .icon-button').forEach(control => {
       const title = String(control.getAttribute('title') || '').toLowerCase();
-      if (control.classList.contains('notification-button') || title.includes('notific')) setIcon(control, 'bell');
-      else if (control.classList.contains('install-button') || title.includes('instalar')) setIcon(control, 'install');
-      else if (title.includes('ayuda')) setIcon(control, 'help');
-      else if (title.includes('actualizar')) setIcon(control, 'refresh');
+      if (control.classList.contains('notification-button') || title.includes('notific')) setTopbarIcon(control, 'bell');
+      else if (control.classList.contains('install-button') || title.includes('instalar')) setTopbarIcon(control, 'install');
+      else if (title.includes('ayuda')) setTopbarIcon(control, 'help');
+      else if (title.includes('actualizar')) setTopbarIcon(control, 'refresh');
     });
   }
 
