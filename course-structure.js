@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260817.7';
+  const RELEASE = '20260819.14';
   const UTAH_COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const REVIEW_MODULES = new Set([
     'Licencias, permisos y documentación',
@@ -30,10 +30,11 @@
     style.textContent = `
       .utah-module-quiz .utah-quiz-dot{
         width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
-        flex:0 0 32px;background:#eef2ff;color:#4338ca;font-weight:900;border:1px solid #dbe2ff
+        flex:0 0 32px;background:rgba(120,199,166,.10);color:#78c7a6;font-weight:900;
+        border:1px solid rgba(120,199,166,.24)
       }
       .utah-module-quiz a{min-width:0}
-      .utah-module-quiz a small{color:#4338ca;font-weight:800}
+      .utah-module-quiz a small{color:#78c7a6;font-weight:800}
       .utah-module-quiz>a+small{white-space:nowrap}
     `;
     document.head.appendChild(style);
@@ -68,11 +69,9 @@
       </a>
       <small>Repaso</small>`;
 
-    const extra = [...list.querySelectorAll('.lesson-item:not(.utah-module-quiz)')]
-      .find(item => item.querySelector('a strong')?.textContent.trim() === 'Extra');
-
-    if (extra) list.insertBefore(row, extra);
-    else list.appendChild(row);
+    /* Siempre al final del módulo: primero se ven todos los videos,
+       incluido el contenido especial/promocional cuando exista. */
+    list.appendChild(row);
   }
 
   function normalizeModule(module) {
@@ -94,7 +93,7 @@
   function normalizeCourseFacts() {
     document.querySelectorAll('.course-facts > span').forEach(item => {
       if (item.querySelector('small')?.textContent.trim() !== 'Contenido') return;
-      setText(item.querySelector('strong'), '8 secciones · 129 pasos');
+      setText(item.querySelector('strong'), '8 secciones · 130 pasos');
     });
   }
 
@@ -111,6 +110,7 @@
   }
 
   window.addEventListener('hashchange', schedule);
+  window.addEventListener('pageshow', schedule);
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, { childList: true, subtree: true });
 
