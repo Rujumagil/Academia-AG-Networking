@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.12';
+  const RELEASE = '20260819.13';
   const COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const MANUAL_TITLE_RE = /manual\s+de\s+actividades\s+del\s+alumno|manual.*alumno/i;
   let timer = null;
@@ -52,9 +52,6 @@
         cursor:default!important;
         pointer-events:none!important;
         opacity:.95!important;
-      }
-      #complete-current.ag-video-progress-status strong::before{
-        content:'';
       }
       .library-material-card.ag-manual-locked,
       .library-book-card.ag-manual-locked,
@@ -224,17 +221,22 @@
       return;
     }
 
-    const clone = button.cloneNode(true);
-    clone.id = 'complete-current';
-    clone.disabled = true;
-    clone.classList.add('ag-video-progress-status');
-    const strong = clone.querySelector('strong');
-    const small = clone.querySelector('small');
-    if (strong) strong.textContent = isCompleted(lesson.id) ? '✓ Video completado' : 'Progreso automático';
-    if (small) small.textContent = isCompleted(lesson.id)
-      ? 'Este tema ya está desbloqueado en tu progreso.'
+    let target = button;
+    if (!button.classList.contains('ag-video-progress-status')) {
+      target = button.cloneNode(true);
+      target.id = 'complete-current';
+      target.disabled = true;
+      target.classList.add('ag-video-progress-status');
+      button.replaceWith(target);
+    }
+
+    const strong = target.querySelector('strong');
+    const small = target.querySelector('small');
+    const done = isCompleted(lesson.id);
+    if (strong) strong.textContent = done ? '✓ Video completado' : 'Progreso automático';
+    if (small) small.textContent = done
+      ? 'Este tema ya está registrado en tu progreso.'
       : 'Se completa automáticamente al terminar el video.';
-    button.replaceWith(clone);
   }
 
   function configureMaterialButton() {
@@ -251,25 +253,32 @@
     }
 
     const manual = manualResource();
-    const clone = button.cloneNode(true);
-    clone.id = 'material-button';
-    clone.classList.add('ag-final-manual');
-    const strong = clone.querySelector('strong');
-    const small = clone.querySelector('small');
+    let target = button;
+    if (!button.classList.contains('ag-final-manual')) {
+      target = button.cloneNode(true);
+      target.id = 'material-button';
+      target.classList.add('ag-final-manual');
+      button.replaceWith(target);
+    }
+
+    const strong = target.querySelector('strong');
+    const small = target.querySelector('small');
     if (strong) strong.textContent = 'Descargar manual del alumno';
 
     if (!manual || !manualIsUnlocked()) {
-      clone.disabled = true;
+      target.disabled = true;
+      target.onclick = null;
       if (small) small.textContent = manual ? 'Completa el contenido anterior para habilitarlo.' : 'Manual en preparación';
-    } else {
-      clone.disabled = false;
-      if (small) small.textContent = 'PDF · Material final del curso';
-      clone.addEventListener('click', event => {
-        event.preventDefault();
-        if (typeof openResource === 'function') openResource(manual.id);
-      });
+      return;
     }
-    button.replaceWith(clone);
+
+    target.disabled = false;
+    if (small) small.textContent = 'PDF · Material final del curso';
+    target.onclick = event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (typeof openResource === 'function') openResource(manual.id);
+    };
   }
 
   function hideManualFromLibraryUntilFinal() {
@@ -364,9 +373,7 @@
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, {
     childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class','href']
+    subtree: true
   });
 
   window.addEventListener('hashchange', () => {
