@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Extraer playlist Utah Driver</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#071018;color:#eef6f3;margin:0;padding:32px}
+    main{max-width:1000px;margin:auto}
+    h1{font-size:28px;margin:0 0 10px} p{color:#a9bbb5}
+    .card{background:#0d1822;border:1px solid #274238;border-radius:18px;padding:20px;margin-top:20px}
+    button{background:#0d5b43;color:white;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer;margin-right:8px}
+    textarea{width:100%;min-height:520px;background:#05090d;color:#dff3eb;border:1px solid #274238;border-radius:12px;padding:14px;box-sizing:border-box;font-family:monospace;font-size:13px;line-height:1.5}
+    #player{position:fixed;left:-10000px;top:-10000px;width:4px;height:4px;opacity:.001}
+    .ok{color:#78c7a6}.err{color:#ff9e9e}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Extractor de enlaces · Utah Driver</h1>
+  <p>Playlist: <code>PLNjZZNlnN-Kc</code></p>
+  <div class="card">
+    <p id="status">Cargando playlist de YouTube…</p>
+    <button id="copy" disabled>Copiar enlaces</button>
+    <button id="download" disabled>Descargar CSV</button>
+  </div>
+  <div class="card"><textarea id="output" readonly placeholder="Aquí aparecerán los enlaces en orden..."></textarea></div>
+</main>
+<div id="player"></div>
+<script>
+  const PLAYLIST_ID='PLNjZZNlnN-Kc';
+  const SEED='aiIsKF3sCo8';
+  const statusEl=document.querySelector('#status');
+  const output=document.querySelector('#output');
+  const copyBtn=document.querySelector('#copy');
+  const downloadBtn=document.querySelector('#download');
+  let links=[];
+
+  function finish(ids){
+    const clean=[...new Set((ids||[]).filter(Boolean).map(String))];
+    links=clean.map((id,i)=>({index:i+1,id,url:`https://www.youtube.com/watch?v=${id}`}));
+    output.value=links.map(v=>`${String(v.index).padStart(3,'0')}\t${v.url}`).join('\n');
+    statusEl.innerHTML=`<span class="ok">Listo:</span> ${links.length} videos encontrados.`;
+    copyBtn.disabled=!links.length; downloadBtn.disabled=!links.length;
+  }
+
+  function fail(msg){ statusEl.innerHTML=`<span class="err">Error:</span> ${msg}`; }
+
+  window.onYouTubeIframeAPIReady=()=>{
+    let tries=0;
+    const player=new YT.Player('player',{
+      width:'4',height:'4',videoId:SEED,
+      playerVars:{listType:'playlist',list:PLAYLIST_ID,controls:0,disablekb:1,playsinline:1,origin:location.origin},
+      events:{
+        onReady(e){
+          try{e.target.cuePlaylist({listType:'playlist',list:PLAYLIST_ID,index:0,startSeconds:0});}catch(err){fail(err.message);return;}
+          const poll=()=>{
+            tries++;
+            let ids=[];
+            try{ids=e.target.getPlaylist()||[];}catch(_){ }
+            if(ids.length){finish(ids);return;}
+            if(tries>80){fail('YouTube no devolvió los videos de la playlist.');return;}
+            setTimeout(poll,250);
+          };
+          setTimeout(poll,300);
+        },
+        onError(e){fail(`YouTube devolvió el código ${e.data}.`);}
+      }
+    });
+  };
+
+  copyBtn.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(output.value);copyBtn.textContent='Copiado ✓';setTimeout(()=>copyBtn.textContent='Copiar enlaces',1500);}catch(_){output.select();document.execCommand('copy');}
+  });
+  downloadBtn.addEventListener('click',()=>{
+    const csv='posicion,video_id,url\n'+links.map(v=>`${v.index},${v.id},${v.url}`).join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='utah-driver-youtube-links.csv';a.click();URL.revokeObjectURL(a.href);
+  });
+
+  const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.async=true;s.onerror=()=>fail('No se pudo cargar la API de YouTube.');document.head.appendChild(s);
+</script>
+</body>
+</html>
