@@ -1,11 +1,17 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.9';
+  const RELEASE = '20260819.16';
   const COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const YOUTUBE_READY_MODULES = new Set([
     '11111111-0000-4111-8111-000000000001',
-    '11111111-aaaa-4111-8111-111111111111'
+    '11111111-aaaa-4111-8111-111111111111',
+    '11111111-bbbb-4111-8111-111111111111',
+    '11111111-cccc-4111-8111-111111111111',
+    '11111111-dddd-4111-8111-111111111111',
+    '11111111-eeee-4111-8111-111111111111',
+    '11111111-ffff-4111-8111-111111111111',
+    '11111111-0000-4111-8111-000000000008'
   ]);
   const DRIVE_RE = /(?:drive|docs)\.google\.com/i;
   let timer = null;
@@ -143,7 +149,7 @@
     const status = document.createElement('div');
     status.className = 'ag-video-status';
     if (youtubeReady) {
-      status.innerHTML = '<div class="ag-video-status-spinner"></div><strong>Preparando video…</strong><span>Estamos cargando esta lección en el nuevo reproductor.</span>';
+      status.innerHTML = '<div class="ag-video-status-spinner"></div><strong>Preparando video…</strong><span>Estamos cargando esta lección en el reproductor de la Academia.</span>';
     } else {
       status.innerHTML = '<div class="ag-video-status-mark">▶</div><strong>Video en actualización</strong><span>Esta lección se habilitará aquí en cuanto termine su migración al nuevo reproductor.</span>';
     }
