@@ -75,14 +75,13 @@
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260819.24');
+      await loadScript('app.js?v=20260819.25');
+      await loadScript('utah-placeholder-guard.js?v=20260819.25');
 
-      // Neutraliza el fallback heredado de app.js que pedía un video_url
-      // en Supabase. Utah Driver resuelve sus videos exclusivamente en YouTube.
-      await loadScript('utah-placeholder-guard.js?v=20260819.24');
-
-      // Reproductor único del Utah Driver.
-      await loadScript('youtube-utah-only-v23.js?v=20260819.24');
+      // La Bienvenida usa directamente el videoId confirmado por el usuario,
+      // sin depender de resolver la playlist antes de montar YouTube.
+      await loadScript('utah-youtube-seed-v25.js?v=20260819.25');
+      await loadScript('youtube-utah-only-v23.js?v=20260819.25');
 
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
