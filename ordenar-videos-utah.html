@@ -26,9 +26,10 @@ const WELCOME={id:'11111111-0000-4111-8111-000000000001',position:1};
 const CLOSING={id:'11111111-0000-4111-8111-000000000008',position:1};
 const statusEl=document.querySelector('#status'),summary=document.querySelector('#summary'),out=document.querySelector('#output'),bar=document.querySelector('#bar'),start=document.querySelector('#start'),copy=document.querySelector('#copy'),download=document.querySelector('#download');
 let controller=null, sql='';
-function norm(t=''){return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim()}
+function norm(t=''){return String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim()}
 function codeFromTitle(title=''){
  const n=norm(title);
+ if(!n) return null;
  if (/^\s*00\b/.test(n)&&/BIENVENIDA/.test(n)) return '00';
  if (/CIERRE\s+ANGELICA/.test(n)) return 'CIERRE ANGELICA';
  let m=n.match(/\bC\s*([1-6])\s*[:\-_. ]*PROMO\b/); if(m) return `C${Number(m[1])} PROMO`;
@@ -36,22 +37,58 @@ function codeFromTitle(title=''){
  return `C${Number(m[1])} ${String(Number(m[2])).padStart(2,'0')}`;
 }
 function targetFor(code){
- if(code==='00') return WELCOME; if(code==='CIERRE ANGELICA') return CLOSING;
+ if(!code || typeof code!=='string') return null;
+ if(code==='00') return WELCOME;
+ if(code==='CIERRE ANGELICA') return CLOSING;
  const m=code.match(/^(C[1-6])\s+(PROMO|\d{2})$/); if(!m) return null;
  const cfg=MODULES[m[1]]; if(!cfg) return null;
  const pos=m[2]==='PROMO'?cfg.promo:Number(m[2]);
  if(!pos || (m[2]!=='PROMO'&&pos>cfg.core)) return null;
  return {id:cfg.id,position:pos};
 }
-function escapeSql(s){return String(s).replaceAll("'","''")}
+function escapeSql(s){return String(s ?? '').replaceAll("'","''")}
 function buildSql(rows){
- const valid=rows.filter(r=>r.code&&r.target); const values=valid.map(r=>`  ('${r.target.id}'::uuid, ${r.target.position}, '${escapeSql(r.id)}', '${escapeSql(r.code)}')`).join(',\n');
+ const valid=rows.filter(r=>r.code&&r.target); if(!valid.length) return '-- No se reconocieron videos suficientes para generar SQL.';
+ const values=valid.map(r=>`  ('${r.target.id}'::uuid, ${r.target.position}, '${escapeSql(r.id)}', '${escapeSql(r.code)}')`).join(',\n');
  return `begin;\n\nwith video_map(module_id, lesson_position, video_id, code) as (\n  values\n${values}\n)\nupdate public.lessons l\nset video_url = 'https://www.youtube-nocookie.com/embed/' || v.video_id || '?rel=0&playsinline=1&enablejsapi=1&modestbranding=1',\n    updated_at = now()\nfrom video_map v\nwhere l.module_id = v.module_id\n  and l.position = v.lesson_position;\n\ncommit;\n\nselect m.title as seccion,l.position,l.title,l.video_url\nfrom public.lessons l\njoin public.modules m on m.id=l.module_id\nwhere m.course_id='11111111-1111-4111-8111-111111111111'::uuid\n  and l.video_url like 'https://www.youtube-nocookie.com/embed/%'\norder by m.position,l.position;\n`;
 }
-function getPlaylist(){return new Promise((resolve,reject)=>{let tries=0; try{controller.cuePlaylist({listType:'playlist',list:PLAYLIST,index:0});}catch(e){reject(e);return} const poll=()=>{tries++; let ids=[];try{ids=controller.getPlaylist()||[]}catch{} if(ids.length)return resolve([...new Set(ids)]); if(tries>100)return reject(new Error('YouTube no devolvió la playlist')); setTimeout(poll,200)};setTimeout(poll,250)})}
-function titleFor(id){return new Promise(resolve=>{let tries=0;try{controller.cueVideoById(id)}catch{return resolve('')} const poll=()=>{tries++;let d={};try{d=controller.getVideoData()||{}}catch{} if(d.video_id===id&&d.title)return resolve(String(d.title)); if(tries>=30)return resolve(String(d.title||'')); setTimeout(poll,150)};setTimeout(poll,150)})}
-async function analyze(){start.disabled=true;copy.disabled=true;download.disabled=true;out.value='';summary.textContent='';try{const ids=await getPlaylist(); const rows=[]; const seen=new Map(); for(let i=0;i<ids.length;i++){statusEl.textContent=`Leyendo ${i+1} de ${ids.length}…`;bar.style.width=`${Math.round((i/ids.length)*100)}%`;const title=await titleFor(ids[i]);const code=codeFromTitle(title);const target=targetFor(code);rows.push({id:ids[i],title,code,target});if(code){if(!seen.has(code))seen.set(code,[]);seen.get(code).push(ids[i])}} bar.style.width='100%'; const recognized=rows.filter(r=>r.code&&r.target); const unknown=rows.filter(r=>!r.code||!r.target); const dup=[...seen.entries()].filter(([,v])=>v.length>1).map(([k])=>k); sql=buildSql(rows.filter(r=>r.code&&r.target&&seen.get(r.code)?.[0]===r.id)); out.value=sql; statusEl.innerHTML=`<span class="ok">Análisis terminado.</span>`; summary.innerHTML=`${ids.length} videos leídos · <span class="ok">${recognized.length} reconocidos</span> · <span class="warn">${unknown.length} sin código</span>${dup.length?` · <span class="err">${dup.length} códigos duplicados</span>`:''}.`;copy.disabled=!sql;download.disabled=!sql; if(unknown.length||dup.length){out.value += `\n-- DIAGNÓSTICO\n`+unknown.map(r=>`-- SIN CÓDIGO: ${r.id} | ${r.title}`).join('\n')+(dup.length?`\n-- DUPLICADOS: ${dup.join(', ')}`:'')}}catch(e){statusEl.innerHTML=`<span class="err">Error:</span> ${e.message}`;start.disabled=false}}
+function getPlaylist(){return new Promise((resolve,reject)=>{let tries=0; try{controller.cuePlaylist({listType:'playlist',list:PLAYLIST,index:0});}catch(e){reject(e);return} const poll=()=>{tries++; let ids=[];try{ids=controller.getPlaylist()||[]}catch{} if(ids.length)return resolve([...new Set(ids)].filter(Boolean)); if(tries>100)return reject(new Error('YouTube no devolvió la playlist')); setTimeout(poll,200)};setTimeout(poll,250)})}
+function titleFor(id){return new Promise(resolve=>{let tries=0;try{controller.cueVideoById(id)}catch{return resolve('')} const poll=()=>{tries++;let d={};try{d=controller.getVideoData()||{}}catch{} const title=String(d?.title ?? ''); if(d?.video_id===id&&title)return resolve(title); if(tries>=35)return resolve(title); setTimeout(poll,170)};setTimeout(poll,170)})}
+async function analyze(){
+ start.disabled=true;copy.disabled=true;download.disabled=true;out.value='';summary.textContent='';bar.style.width='0%';
+ try{
+  const ids=await getPlaylist(); const rows=[]; const seen=new Map();
+  for(let i=0;i<ids.length;i++){
+   statusEl.textContent=`Leyendo ${i+1} de ${ids.length}…`;
+   bar.style.width=`${Math.round((i/ids.length)*100)}%`;
+   let title='';
+   try{title=await titleFor(ids[i]);}catch(e){title='';}
+   const code=codeFromTitle(title);
+   const target=targetFor(code);
+   rows.push({id:ids[i],title,code,target});
+   if(code){if(!seen.has(code))seen.set(code,[]);seen.get(code).push(ids[i]);}
+  }
+  bar.style.width='100%';
+  const recognized=rows.filter(r=>r.code&&r.target);
+  const unknown=rows.filter(r=>!r.code||!r.target);
+  const dup=[...seen.entries()].filter(([,v])=>v.length>1).map(([k])=>k);
+  const uniqueRows=rows.filter(r=>r.code&&r.target&&seen.get(r.code)?.[0]===r.id);
+  sql=buildSql(uniqueRows);
+  out.value=sql;
+  statusEl.innerHTML=`<span class="ok">Análisis terminado.</span>`;
+  summary.innerHTML=`${ids.length} videos leídos · <span class="ok">${recognized.length} reconocidos</span> · <span class="warn">${unknown.length} sin código</span>${dup.length?` · <span class="err">${dup.length} códigos duplicados</span>`:''}.`;
+  copy.disabled=!uniqueRows.length;download.disabled=!uniqueRows.length;start.disabled=false;
+  if(unknown.length||dup.length){
+   out.value += `\n-- DIAGNÓSTICO\n`+
+     unknown.map(r=>`-- SIN CÓDIGO: ${r.id} | ${r.title || '[título no disponible]'}`).join('\n')+
+     (dup.length?`\n-- DUPLICADOS: ${dup.join(', ')}`:'');
+  }
+ }catch(e){
+  statusEl.innerHTML=`<span class="err">Error:</span> ${String(e?.message || e || 'Error desconocido')}`;
+  start.disabled=false;
+ }
+}
 window.onYouTubeIframeAPIReady=()=>{controller=new YT.Player('player',{width:'4',height:'4',videoId:SEED,playerVars:{controls:0,disablekb:1,playsinline:1},events:{onReady(){statusEl.innerHTML='<span class="ok">API lista.</span> Pulsa Analizar playlist.';start.disabled=false},onError(){}}})};
-start.onclick=analyze;copy.onclick=async()=>{await navigator.clipboard.writeText(out.value);copy.textContent='Copiado ✓';setTimeout(()=>copy.textContent='Copiar SQL',1500)};download.onclick=()=>{const b=new Blob([out.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='utah-driver-video-map-corregido.sql';a.click();URL.revokeObjectURL(a.href)};
+start.onclick=analyze;copy.onclick=async()=>{try{await navigator.clipboard.writeText(out.value);copy.textContent='Copiado ✓';setTimeout(()=>copy.textContent='Copiar SQL',1500)}catch{out.select();document.execCommand('copy')}};download.onclick=()=>{const b=new Blob([out.value],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='utah-driver-video-map-corregido.sql';a.click();URL.revokeObjectURL(a.href)};
 const s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.async=true;s.onerror=()=>statusEl.textContent='No se pudo cargar YouTube.';document.head.appendChild(s);
 </script></main></body></html>
