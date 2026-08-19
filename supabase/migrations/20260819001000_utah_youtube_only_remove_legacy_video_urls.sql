@@ -1,14 +1,14 @@
 -- ============================================================
 -- ACADEMIA AG · UTAH DRIVER · YOUTUBE COMO FUENTE ÚNICA
--- Elimina URLs heredadas de Google Drive/Wix del curso y deja
--- la resolución de video exclusivamente al reproductor YouTube.
+-- Elimina URLs heredadas de Google Drive/Wix del curso.
+-- La resolución del video queda exclusivamente en el frontend YouTube.
+-- Compatible con el esquema real de public.lessons.
 -- ============================================================
 
 begin;
 
 update public.lessons as l
 set video_url = null,
-    video_provider = 'youtube',
     updated_at = now()
 from public.modules as m
 where l.module_id = m.id
