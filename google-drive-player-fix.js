@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.2';
+  const RELEASE = '20260819.3';
   const DRIVE_PREVIEW_RE = /^https:\/\/drive\.google\.com\/file\/d\/([^/]+)\/preview(?:[?#].*)?$/i;
   let timer = null;
 
@@ -45,18 +45,6 @@
         background:#05080d!important;
         pointer-events:auto!important;
       }
-      .drive-video-open{
-        display:flex;
-        justify-content:flex-end;
-        margin-top:8px;
-        font-size:.75rem;
-      }
-      .drive-video-open a{
-        color:#78c7a6;
-        font-weight:800;
-        text-decoration:none;
-      }
-      .drive-video-open a:hover{text-decoration:underline}
     `;
     document.head.appendChild(style);
   }
@@ -66,30 +54,25 @@
     if (!frame) return null;
     const src = String(frame.getAttribute('src') || '').trim();
     const match = src.match(DRIVE_PREVIEW_RE);
-    return match ? { frame, src, fileId: match[1] } : null;
+    return match ? { frame, src } : null;
   }
 
-  function ensureFallbackLink(shell, fileId) {
-    const parent = shell.parentElement;
+  function removeExternalAccess(shell) {
+    const parent = shell?.parentElement;
     if (!parent) return;
-    let row = parent.querySelector(':scope > .drive-video-open');
-    if (!row) {
-      row = document.createElement('div');
-      row.className = 'drive-video-open';
-      shell.insertAdjacentElement('afterend', row);
-    }
-    row.innerHTML = `<a href="https://drive.google.com/file/d/${fileId}/view" target="_blank" rel="noopener">Abrir video en otra pestaña ↗</a>`;
+    parent.querySelectorAll(':scope > .drive-video-open').forEach(node => node.remove());
   }
 
   function fixShell(shell) {
     const current = currentDriveFrame(shell);
+    removeExternalAccess(shell);
     if (!current) {
       shell?.classList.remove('drive-video-active');
       return;
     }
 
     addStyles();
-    const { frame, fileId } = current;
+    const { frame } = current;
     shell.classList.remove('native-video-active');
     shell.classList.add('drive-video-active');
 
@@ -101,11 +84,11 @@
     frame.removeAttribute('sandbox');
 
     shell.querySelectorAll(':scope > .video-center, :scope > .video-bar, :scope > img').forEach(node => node.remove());
-    ensureFallbackLink(shell, fileId);
   }
 
   function fixAll() {
     addStyles();
+    document.querySelectorAll('.drive-video-open').forEach(node => node.remove());
     document.querySelectorAll('.lesson-layout .video-shell').forEach(fixShell);
   }
 
