@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.30';
+  const RELEASE = '20260819.33';
   const UTAH_COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const ACADEMIC_MODULES = [
     'Licencias, permisos y documentación',
@@ -12,7 +12,6 @@
     'Emergencias, compartir el camino y tu récord'
   ];
   const REVIEW_MODULES = new Set(ACADEMIC_MODULES);
-
   let timer = null;
 
   function currentRouteIsUtah() {
@@ -31,13 +30,18 @@
       .trim();
   }
 
-  function displayModuleTitle(cleanTitle) {
-    if (/^Bienvenida y cómo usar el curso$/i.test(cleanTitle)) {
-      return 'Introducción · Bienvenida y cómo usar el curso';
-    }
-    if (/^Cierre del curso$/i.test(cleanTitle)) return 'Cierre del curso';
-    const index = ACADEMIC_MODULES.findIndex(item => item.toLowerCase() === cleanTitle.toLowerCase());
-    return index >= 0 ? `Módulo ${index + 1}: ${cleanTitle}` : cleanTitle;
+  function canonicalTitleByIndex(index, fallback = '') {
+    if (index === 0) return 'Bienvenida y cómo usar el curso';
+    if (index >= 1 && index <= 6) return ACADEMIC_MODULES[index - 1];
+    if (index === 7) return 'Cierre del curso';
+    return fallback;
+  }
+
+  function displayModuleTitle(index, cleanTitle) {
+    if (index === 0) return `Introducción · ${canonicalTitleByIndex(index, cleanTitle)}`;
+    if (index >= 1 && index <= 6) return `Módulo ${index}: ${canonicalTitleByIndex(index, cleanTitle)}`;
+    if (index === 7) return 'Cierre del curso';
+    return cleanTitle;
   }
 
   function addStyles() {
@@ -65,8 +69,8 @@
     });
   }
 
-  function insertReviewStep(module, moduleTitle) {
-    if (!REVIEW_MODULES.has(moduleTitle)) return;
+  function insertReviewStep(module, academicTitle) {
+    if (!REVIEW_MODULES.has(academicTitle)) return;
     const list = module.querySelector('.lesson-list');
     if (!list || list.querySelector('.utah-module-quiz')) return;
 
@@ -82,17 +86,23 @@
     list.appendChild(row);
   }
 
-  function normalizeModule(module) {
+  function normalizeModule(module, index) {
     const heading = module.querySelector('summary strong');
     if (!heading) return;
 
-    const cleanTitle = cleanModuleTitle(heading.textContent);
-    setText(heading, displayModuleTitle(cleanTitle));
+    const rawTitle = cleanModuleTitle(heading.textContent);
+    const canonicalTitle = canonicalTitleByIndex(index, rawTitle);
+
+    module.dataset.utahSectionIndex = String(index);
+    module.dataset.utahSectionType = index === 0 ? 'introduction' : index === 7 ? 'closing' : 'academic';
+
+    setText(heading, displayModuleTitle(index, canonicalTitle));
     normalizeLessonTypes(module);
-    insertReviewStep(module, cleanTitle);
+
+    if (index >= 1 && index <= 6) insertReviewStep(module, canonicalTitle);
 
     const realLessons = module.querySelectorAll('.lesson-item:not(.utah-module-quiz)').length;
-    const reviewSteps = REVIEW_MODULES.has(cleanTitle) ? 1 : 0;
+    const reviewSteps = index >= 1 && index <= 6 ? 1 : 0;
     const count = module.querySelector('summary div > span');
     const total = realLessons + reviewSteps;
     setText(count, `${total} ${total === 1 ? 'paso' : 'pasos'}`);
@@ -101,17 +111,21 @@
   function normalizeLessonSubtitle() {
     const subtitle = document.querySelector('.page-subtitle');
     if (!subtitle || !/^Módulo:/i.test(subtitle.textContent.trim())) return;
-    const cleanTitle = cleanModuleTitle(subtitle.textContent.replace(/^Módulo:\s*/i, ''));
-    if (/^Bienvenida y cómo usar el curso$/i.test(cleanTitle)) {
+
+    const rawTitle = cleanModuleTitle(subtitle.textContent.replace(/^Módulo:\s*/i, ''));
+    const normalized = rawTitle.toLowerCase();
+
+    if (/bienvenida|cómo usar el curso/i.test(rawTitle)) {
       setText(subtitle, 'Introducción');
       return;
     }
-    if (/^Cierre del curso$/i.test(cleanTitle)) {
+    if (/cierre del curso/i.test(rawTitle)) {
       setText(subtitle, 'Cierre del curso');
       return;
     }
-    const index = ACADEMIC_MODULES.findIndex(item => item.toLowerCase() === cleanTitle.toLowerCase());
-    if (index >= 0) setText(subtitle, `Módulo ${index + 1}: ${cleanTitle}`);
+
+    const index = ACADEMIC_MODULES.findIndex(item => item.toLowerCase() === normalized);
+    if (index >= 0) setText(subtitle, `Módulo ${index + 1}: ${ACADEMIC_MODULES[index]}`);
   }
 
   function normalizeCourseFacts() {
@@ -124,9 +138,10 @@
   function enhance() {
     if (!currentRouteIsUtah()) return;
     addStyles();
-    document.querySelectorAll('.module-panel .module').forEach(normalizeModule);
+    document.querySelectorAll('.module-panel .module').forEach((module, index) => normalizeModule(module, index));
     normalizeLessonSubtitle();
     normalizeCourseFacts();
+    document.documentElement.dataset.agUtahStructure = RELEASE;
   }
 
   function schedule() {
@@ -136,8 +151,12 @@
 
   window.addEventListener('hashchange', schedule);
   window.addEventListener('pageshow', schedule);
+  window.addEventListener('load', schedule);
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, { childList: true, subtree: true });
+
+  const rescue = setInterval(enhance, 300);
+  setTimeout(() => clearInterval(rescue), 15000);
 
   window.ACADEMIA_AG_COURSE_STRUCTURE = { release: RELEASE, enhance };
   schedule();
