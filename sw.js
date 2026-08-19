@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260819.33';
+const CACHE = 'academia-ag-v20260819.34';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -8,7 +8,7 @@ const STATIC_ASSETS = [
   './admin-dashboard-ejecutivo.css?v=20260818.1','./admin-dashboard-tabs.css?v=20260818.2','./admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./youtube-embed-hotfix.css?v=20260819.29',
   './app.js?v=20260819.30','./bootstrap.js?v=20260819.33',
-  './student-experience-premium.js?v=20260819.6','./student-course-flow.js?v=20260819.14','./youtube-progress-tracker.js?v=20260819.32','./questionnaire-flow.js?v=20260819.15',
+  './student-experience-premium.js?v=20260819.6','./student-course-flow.js?v=20260819.14','./youtube-progress-tracker.js?v=20260819.34','./questionnaire-flow.js?v=20260819.15',
   './quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.33','./premium-learning.js?v=20260817.12',
   './lesson-cleanup.js?v=20260817.12','./module-exam.js?v=20260817.12','./sidebar-icons-premium.js?v=20260817.15',
   './evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20','./calendario-premium.js?v=20260817.22',
