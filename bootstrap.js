@@ -1,6 +1,11 @@
 (() => {
   const app = document.querySelector('#app');
 
+  function publicSiteUrl() {
+    const configured = String(window.SUPABASE_CONFIG?.publicSiteUrl || '').trim();
+    return /^https?:\/\//i.test(configured) ? configured : 'https://www.agbusinessnetworking.com/';
+  }
+
   function renderStatus(title, message, showActions = false) {
     app.innerHTML = `
       <main class="login-screen">
@@ -11,8 +16,7 @@
           ${showActions ? `
             <div class="bootstrap-actions">
               <button class="btn btn-primary" id="retry-app">Volver a intentar</button>
-              <a class="btn btn-secondary" href="diagnostico.html?v=20260818.5">Abrir diagnóstico</a>
-              <a class="auth-link" href="limpiar-cache.html?v=20260818.5">Limpiar versión anterior</a>
+              <a class="btn btn-secondary" href="${publicSiteUrl()}">Ir a AG Business Networking</a>
             </div>` : '<div class="spinner" aria-label="Cargando"></div>'}
         </section>
       </main>`;
@@ -52,7 +56,7 @@
         lastError = error;
       }
     }
-    throw lastError || new Error('No fue posible cargar Supabase.');
+    throw lastError || new Error('No fue posible cargar la biblioteca de datos.');
   }
 
   async function start() {
@@ -61,13 +65,15 @@
       const cfg = window.SUPABASE_CONFIG;
       const placeholder = !cfg?.url || !cfg?.publishableKey || cfg.url.includes('TU-PROYECTO') || cfg.publishableKey.includes('TU_SUPABASE');
       if (placeholder) {
+        console.error('Configuración pública de la academia incompleta.');
         renderStatus(
-          'Academia AG lista para conectar',
-          'La configuración local todavía no contiene los datos públicos de Supabase. Pulsa “Limpiar versión anterior” para cargar la versión actualizada.',
+          'Estamos actualizando tu aula',
+          'La plataforma está terminando de preparar tu acceso. Intenta nuevamente en unos segundos.',
           true
         );
         return;
       }
+
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260817.12');
       await loadScript('lesson-experience.js?v=20260817.12');
@@ -85,13 +91,25 @@
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('admin-import-link.js?v=20260818.5');
+
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
-        if (stillLoading) renderStatus('No pudimos iniciar la academia','La aplicación tardó más de lo esperado. Abre el diagnóstico para identificar el punto exacto.',true);
+        if (stillLoading) {
+          console.warn('La academia excedió el tiempo normal de inicio.');
+          renderStatus(
+            'La conexión está tardando más de lo normal',
+            'No se perdió tu información. Vuelve a intentarlo para continuar con tu curso.',
+            true
+          );
+        }
       }, 15000);
     } catch (error) {
-      console.error('Error de inicio:', error);
-      renderStatus('No pudimos cargar Academia AG','La conexión o una versión guardada en el navegador impidió iniciar la página.',true);
+      console.error('Error de inicio de Academia AG:', error);
+      renderStatus(
+        'No pudimos abrir tu aula',
+        'Revisa tu conexión a internet y vuelve a intentarlo. Tu avance permanece guardado.',
+        true
+      );
     }
   }
 
