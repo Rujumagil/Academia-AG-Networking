@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.32';
+  const RELEASE = '20260819.34';
   const COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const EXAM_MODULE_IDS = new Set([
     '11111111-aaaa-4111-8111-111111111111',
@@ -54,9 +54,7 @@
   function contextForLesson(lessonId) {
     for (const module of orderedModules()) {
       const lessonIndex = module.lessons.findIndex(item => item.id === lessonId);
-      if (lessonIndex >= 0) {
-        return { module, lesson: module.lessons[lessonIndex], lessonIndex };
-      }
+      if (lessonIndex >= 0) return { module, lesson: module.lessons[lessonIndex], lessonIndex };
     }
     return null;
   }
@@ -66,9 +64,16 @@
   }
 
   function show(message, type = 'info') {
-    try {
-      if (typeof showToast === 'function') showToast(message, type);
-    } catch (_) {}
+    try { if (typeof showToast === 'function') showToast(message, type); } catch (_) {}
+  }
+
+  function navigate(hash) {
+    const clean = String(hash || '').replace(/^#/, '');
+    if (!clean) return;
+    if (location.hash.replace(/^#/, '') !== clean) location.hash = clean;
+    setTimeout(() => {
+      try { if (typeof route === 'function') route(); } catch (_) {}
+    }, 80);
   }
 
   async function saveCompleted(lessonId) {
@@ -92,7 +97,6 @@
         .single();
 
       if (error) throw error;
-
       const index = state.progressRows.findIndex(row => row.lesson_id === lessonId);
       if (index >= 0) state.progressRows[index] = data;
       else state.progressRows.push(data);
@@ -116,32 +120,30 @@
 
     if (nextInsideModule) {
       show('Video completado. Abriendo el siguiente tema…', 'success');
-      await new Promise(resolve => setTimeout(resolve, 650));
-      if (activeLessonId() === lessonId) {
-        location.hash = `lesson/${COURSE_ID}/${nextInsideModule.id}`;
-      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (activeLessonId() === lessonId) navigate(`lesson/${COURSE_ID}/${nextInsideModule.id}`);
       return;
     }
 
     if (EXAM_MODULE_IDS.has(module.id)) {
       try { sessionStorage.setItem('ag-scroll-module-exam', module.id); } catch (_) {}
       show('Módulo completado. Continúa con “Reforzar lo aprendido”.', 'success');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      if (activeLessonId() === lessonId) location.hash = 'evaluations';
+      try { window.ACADEMIA_AG_MODULE_EXAM?.enhance?.(); } catch (_) {}
+      try { window.ACADEMIA_AG_QUESTIONNAIRE_FLOW?.apply?.(); } catch (_) {}
+      setTimeout(() => {
+        const card = document.querySelector(`.module-exam-card[data-module-id="${module.id}"]`) || document.querySelector('.module-exam-card');
+        card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
       return;
     }
 
     const modules = orderedModules();
     const moduleIndex = modules.findIndex(item => item.id === module.id);
-    const nextModule = modules[moduleIndex + 1];
-    const nextLesson = nextModule?.lessons?.[0];
-
+    const nextLesson = modules[moduleIndex + 1]?.lessons?.[0];
     if (nextLesson) {
       show('Video completado. Continuamos con el siguiente tema…', 'success');
-      await new Promise(resolve => setTimeout(resolve, 650));
-      if (activeLessonId() === lessonId) {
-        location.hash = `lesson/${COURSE_ID}/${nextLesson.id}`;
-      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (activeLessonId() === lessonId) navigate(`lesson/${COURSE_ID}/${nextLesson.id}`);
       return;
     }
 
@@ -149,16 +151,12 @@
   }
 
   async function finishLesson(lessonId, source = 'ended') {
-    if (!lessonId || finishing.has(lessonId)) return;
-    if (activeLessonId() !== lessonId) return;
-
+    if (!lessonId || finishing.has(lessonId) || activeLessonId() !== lessonId) return;
     finishing.add(lessonId);
     document.documentElement.dataset.agYoutubeFinishSource = source;
-
     try {
       const saved = await saveCompleted(lessonId);
-      if (!saved) return;
-      await advanceAfterCompletion(lessonId);
+      if (saved) await advanceAfterCompletion(lessonId);
     } finally {
       finishing.delete(lessonId);
     }
@@ -182,28 +180,22 @@
     stopHeartbeat();
     heartbeat = setInterval(() => {
       if (!player || activeLessonId() !== lessonId) return;
-
       try {
         const playerState = Number(player.getPlayerState?.());
         const current = Number(player.getCurrentTime?.() || 0);
         const duration = Number(player.getDuration?.() || 0);
-
         if (playerState === 1) hasPlayed = true;
         if (Number.isFinite(current)) maxCurrentTime = Math.max(maxCurrentTime, current);
-
         document.documentElement.dataset.agYoutubeState = String(playerState);
+        document.documentElement.dataset.agYoutubeCurrent = String(Math.round(current * 10) / 10);
+        document.documentElement.dataset.agYoutubeDuration = String(Math.round(duration * 10) / 10);
 
         const atEnd = duration > 0
-          && current >= Math.max(0, duration - 0.8)
+          && current >= Math.max(0, duration - 0.7)
           && (hasPlayed || maxCurrentTime > 2 || playerState === 0);
-
-        if (playerState === 0 || atEnd) {
-          finishLesson(lessonId, playerState === 0 ? 'ended' : 'time');
-        }
-      } catch (error) {
-        console.debug('Heartbeat de YouTube no disponible todavía:', error);
-      }
-    }, 650);
+        if (playerState === 0 || atEnd) finishLesson(lessonId, playerState === 0 ? 'ended' : 'time');
+      } catch (_) {}
+    }, 500);
   }
 
   function loadYouTubeApi() {
@@ -232,7 +224,6 @@
         document.head.appendChild(script);
       }
     });
-
     return apiPromise;
   }
 
@@ -243,55 +234,53 @@
     return /youtube(?:-nocookie)?\.com\/embed\//i.test(src) ? iframe : null;
   }
 
-  function videoIdFromIframe(iframe) {
+  function prepareIframe(iframe, lessonId) {
+    if (!iframe.id) iframe.id = `ag-youtube-native-${String(lessonId).replace(/[^a-z0-9_-]/gi, '')}`;
+    iframe.dataset.agYoutubeProgress = RELEASE;
     try {
       const url = new URL(iframe.src, location.href);
-      const match = url.pathname.match(/\/embed\/([^/?#]+)/i);
-      return match?.[1] || '';
-    } catch (_) {
-      return '';
-    }
+      let changed = false;
+      if (url.searchParams.get('enablejsapi') !== '1') {
+        url.searchParams.set('enablejsapi', '1');
+        changed = true;
+      }
+      if (url.searchParams.get('origin') !== location.origin) {
+        url.searchParams.set('origin', location.origin);
+        changed = true;
+      }
+      if (url.searchParams.get('playsinline') !== '1') {
+        url.searchParams.set('playsinline', '1');
+        changed = true;
+      }
+      if (changed) {
+        iframe.src = url.toString();
+        return false;
+      }
+    } catch (_) {}
+    return true;
   }
 
-  async function buildControlledPlayer(lessonId, iframe) {
-    const videoId = videoIdFromIframe(iframe);
-    if (!videoId) throw new Error('youtube-video-id-missing');
-
-    const shell = iframe.closest('.video-shell');
-    if (!shell) throw new Error('youtube-shell-missing');
-
+  async function attachExistingPlayer(lessonId, iframe) {
     await loadYouTubeApi();
     if (!iframe.isConnected || activeLessonId() !== lessonId) return;
 
-    const target = document.createElement('div');
-    target.id = `ag-youtube-player-${lessonId}`;
-    target.className = 'lesson-frame ag-youtube-player-target';
-    iframe.replaceWith(target);
+    const readyForApi = prepareIframe(iframe, lessonId);
+    if (!readyForApi) {
+      iframe.addEventListener('load', schedule, { once: true });
+      return;
+    }
 
     hasPlayed = false;
     maxCurrentTime = 0;
+    playerIframe = iframe;
+    playerLessonId = lessonId;
 
-    player = new window.YT.Player(target.id, {
-      width: '100%',
-      height: '100%',
-      videoId,
-      host: 'https://www.youtube-nocookie.com',
-      playerVars: {
-        rel: 0,
-        playsinline: 1,
-        modestbranding: 1,
-        enablejsapi: 1,
-        origin: location.origin
-      },
+    player = new window.YT.Player(iframe.id, {
       events: {
         onReady(event) {
           if (activeLessonId() !== lessonId) return;
-          const frame = event.target.getIframe?.();
-          if (frame) {
-            frame.classList.add('lesson-frame');
-            frame.dataset.agYoutubeProgress = RELEASE;
-            playerIframe = frame;
-          }
+          player = event.target;
+          playerIframe = event.target.getIframe?.() || iframe;
           document.documentElement.dataset.agYoutubeProgress = RELEASE;
           document.documentElement.dataset.agYoutubePlayer = 'ready';
           startHeartbeat(lessonId);
@@ -299,10 +288,8 @@
         onStateChange(event) {
           if (activeLessonId() !== lessonId) return;
           document.documentElement.dataset.agYoutubeState = String(event.data);
-          if (event.data === window.YT.PlayerState.PLAYING || event.data === 1) hasPlayed = true;
-          if (event.data === window.YT.PlayerState.ENDED || event.data === 0) {
-            finishLesson(lessonId, 'ended');
-          }
+          if (event.data === 1 || event.data === window.YT.PlayerState.PLAYING) hasPlayed = true;
+          if (event.data === 0 || event.data === window.YT.PlayerState.ENDED) finishLesson(lessonId, 'ended');
         },
         onError(event) {
           console.error('Error del reproductor de YouTube:', event.data);
@@ -310,8 +297,6 @@
         }
       }
     });
-
-    playerLessonId = lessonId;
   }
 
   async function attach() {
@@ -321,17 +306,15 @@
       stopTracking();
       return;
     }
-
     if (player && playerLessonId === lessonId) return;
 
     const iframe = nativeIframe();
     if (!iframe) return;
-
     attaching = true;
     try {
       stopTracking();
       document.documentElement.dataset.agYoutubePlayer = 'connecting';
-      await buildControlledPlayer(lessonId, iframe);
+      await attachExistingPlayer(lessonId, iframe);
     } catch (error) {
       console.error('No se pudo conectar el progreso automático de YouTube:', error);
       document.documentElement.dataset.agYoutubePlayer = 'connect-error';
@@ -346,6 +329,17 @@
     timer = setTimeout(attach, 120);
   }
 
+  window.addEventListener('message', event => {
+    if (!playerIframe?.contentWindow || event.source !== playerIframe.contentWindow) return;
+    let payload = event.data;
+    try { if (typeof payload === 'string') payload = JSON.parse(payload); } catch (_) { return; }
+    if (!payload || typeof payload !== 'object') return;
+    const lessonId = playerLessonId;
+    if (!lessonId || activeLessonId() !== lessonId) return;
+    if (payload.event === 'onStateChange' && Number(payload.info) === 0) finishLesson(lessonId, 'message-ended');
+    if (payload.event === 'infoDelivery' && Number(payload.info?.playerState) === 0) finishLesson(lessonId, 'message-state');
+  });
+
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, { childList: true, subtree: true });
 
@@ -357,13 +351,14 @@
   window.addEventListener('load', schedule);
   document.addEventListener('DOMContentLoaded', schedule, { once: true });
 
-  const rescueInterval = setInterval(schedule, 1500);
-  setTimeout(() => clearInterval(rescueInterval), 180000);
+  const rescueInterval = setInterval(schedule, 1200);
+  setTimeout(() => clearInterval(rescueInterval), 300000);
 
   window.ACADEMIA_AG_YOUTUBE_PROGRESS = {
     release: RELEASE,
     attach,
-    finishLesson
+    finishLesson,
+    advanceAfterCompletion
   };
 
   schedule();
