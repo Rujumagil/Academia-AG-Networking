@@ -4,49 +4,90 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#1E293B">
-  <title>Limpiar Academia AG</title>
-  <link rel="stylesheet" href="styles.css?v=20260817.2">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Actualizar Academia AG</title>
+  <link rel="stylesheet" href="styles.css?v=20260817.13">
 </head>
 <body>
   <main class="login-screen">
     <section class="login-card glass loading-card">
       <img class="official-lockup" src="logo-completo-oficial.png" alt="AG Business Networking">
       <h1>Actualizando Academia AG</h1>
-      <p id="status">Eliminando archivos guardados de la versión anterior…</p>
+      <p id="status">Limpiando la versión anterior…</p>
       <div class="spinner" id="spinner"></div>
-      <a class="btn btn-primary hide" id="return-link" href="academia.html?v=20260817.2">Regresar a Academia AG</a>
+      <a class="btn btn-primary hide" id="return-link" href="academia.html?player=youtube-v24">Abrir Academia AG</a>
     </section>
   </main>
   <script>
-    (async () => {
+    (() => {
+      'use strict';
+
       const status = document.querySelector('#status');
       const spinner = document.querySelector('#spinner');
       const link = document.querySelector('#return-link');
+      const destination = `academia.html?player=youtube-v24&fresh=${Date.now()}`;
+      let finished = false;
 
-      try {
-        if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(registration => registration.unregister()));
-        }
-
-        if ('caches' in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(key => caches.delete(key)));
-        }
-
-        localStorage.removeItem('aula_v2_logged_in');
-        localStorage.removeItem('academia_ag_logged_in');
-        sessionStorage.clear();
-
-        status.textContent = 'La versión anterior fue eliminada correctamente.';
-      } catch (error) {
-        console.error(error);
-        status.textContent = 'Se limpió lo posible. Ya puedes regresar a Academia AG.';
+      function finish(message) {
+        if (finished) return;
+        finished = true;
+        status.textContent = message || 'Actualización terminada. Abriendo Academia AG…';
+        spinner.classList.add('hide');
+        link.classList.remove('hide');
+        link.href = destination;
+        setTimeout(() => location.replace(destination), 500);
       }
 
-      spinner.classList.add('hide');
-      link.classList.remove('hide');
-      setTimeout(() => location.replace('academia.html?v=20260817.2&actualizacion=1'), 1200);
+      // Seguridad: esta página nunca debe quedarse esperando indefinidamente.
+      const hardTimeout = setTimeout(() => {
+        finish('Actualización completada. Abriendo Academia AG…');
+      }, 3000);
+
+      (async () => {
+        try {
+          const tasks = [];
+
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations()
+                .then(registrations => Promise.allSettled(registrations.map(registration => registration.unregister())))
+                .catch(() => null)
+            );
+          }
+
+          if ('caches' in window) {
+            tasks.push(
+              caches.keys()
+                .then(keys => Promise.allSettled(keys.map(key => caches.delete(key))))
+                .catch(() => null)
+            );
+          }
+
+          try {
+            localStorage.removeItem('aula_v2_logged_in');
+            localStorage.removeItem('academia_ag_logged_in');
+            Object.keys(localStorage)
+              .filter(key => key.startsWith('academia-ag:youtube:'))
+              .forEach(key => localStorage.removeItem(key));
+            sessionStorage.clear();
+          } catch (_) {}
+
+          // Espera como máximo 2 segundos por tareas del navegador.
+          await Promise.race([
+            Promise.allSettled(tasks),
+            new Promise(resolve => setTimeout(resolve, 2000))
+          ]);
+
+          clearTimeout(hardTimeout);
+          finish('Versión anterior eliminada. Abriendo Academia AG…');
+        } catch (error) {
+          console.error(error);
+          clearTimeout(hardTimeout);
+          finish('Actualización completada. Abriendo Academia AG…');
+        }
+      })();
     })();
   </script>
 </body>
