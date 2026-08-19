@@ -70,10 +70,9 @@
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260819.27');
-      // Utah Driver usa únicamente enlaces individuales de YouTube.
-      // El reproductor v27 limpia por sí mismo el fallback heredado y evita ciclos de remontaje.
-      await loadScript('youtube-utah-direct-v27.js?v=20260819.27');
+      // Utah Driver vuelve al flujo nativo de la Academia: cada lección recibe
+      // un embed individual de YouTube en lessons.video_url.
+      await loadScript('app.js?v=20260819.28');
 
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
