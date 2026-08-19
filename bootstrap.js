@@ -75,12 +75,14 @@
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260817.12');
+      await loadScript('app.js?v=20260819.24');
 
-      // Los reproductores heredados de Wix/Drive fueron retirados.
-      // Utah Driver usa un solo controlador YouTube-only para evitar
-      // competencia entre observadores y el fallback "Video pendiente".
-      await loadScript('youtube-utah-only-v23.js?v=20260819.23');
+      // Neutraliza el fallback heredado de app.js que pedía un video_url
+      // en Supabase. Utah Driver resuelve sus videos exclusivamente en YouTube.
+      await loadScript('utah-placeholder-guard.js?v=20260819.24');
+
+      // Reproductor único del Utah Driver.
+      await loadScript('youtube-utah-only-v23.js?v=20260819.24');
 
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
