@@ -77,13 +77,11 @@
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260817.12');
 
-      // Utah Driver queda en modo YouTube exclusivo desde este punto.
-      // Este scrubber elimina de memoria y del DOM cualquier fuente Wix/Drive
-      // antes de que pueda competir con el reproductor oficial de YouTube.
-      await loadScript('utah-youtube-only.js?v=20260819.22');
+      // Los reproductores heredados de Wix/Drive fueron retirados.
+      // Utah Driver usa un solo controlador YouTube-only para evitar
+      // competencia entre observadores y el fallback "Video pendiente".
+      await loadScript('youtube-utah-only-v23.js?v=20260819.23');
 
-      // Los reproductores legados lesson-experience.js, video-fix.js y
-      // video-source-guard.js fueron retirados del repositorio.
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
       await loadScript('premium-learning.js?v=20260817.12');
@@ -97,9 +95,6 @@
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('admin-import-link.js?v=20260818.5');
-
-      // YouTube se monta al final cuando la aplicación ya está inicializada.
-      await loadScript('youtube-utah-exclusive.js?v=20260819.22');
 
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
