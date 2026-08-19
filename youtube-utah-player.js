@@ -1,12 +1,19 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.7';
+  const RELEASE = '20260819.8';
   const COURSE_ID = '11111111-1111-4111-8111-111111111111';
+  const WELCOME_MODULE_ID = '11111111-0000-4111-8111-000000000001';
+  const MODULE_1_ID = '11111111-aaaa-4111-8111-111111111111';
   const PLAYLIST_ID = 'PLNjZZNlnN-Kc';
 
+  /*
+    La playlist está ordenada por el propietario y los títulos del aula
+    determinan qué posición corresponde a cada lección.
+    0 = Bienvenida, 1..13 = C1 01..C1 13.
+    El promocional NO se incluye hasta terminar su verificación.
+  */
   const TITLE_INDEX = new Map([
-    ['bienvenida', 0],
     ['tu primer paso hacia la licencia', 1],
     ['quien necesita una licencia de utah', 2],
     ['quien puede manejar sin obtener una licencia de utah', 3],
@@ -28,9 +35,10 @@
     'C1 08','C1 09','C1 10','C1 11','C1 12','C1 13'
   ];
 
-  let playlistIds = [];
-  let resolving = false;
-  let ytPromise = null;
+  let ytApiPromise = null;
+  let player = null;
+  let activeKey = '';
+  let activeFrame = null;
   let timer = null;
 
   function normalize(value = '') {
@@ -45,9 +53,13 @@
   }
 
   function addStyles() {
-    if (document.querySelector('#academia-ag-youtube-utah-player')) return;
-    const style = document.createElement('style');
-    style.id = 'academia-ag-youtube-utah-player';
+    let style = document.querySelector('#academia-ag-youtube-utah-player');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'academia-ag-youtube-utah-player';
+      document.head.appendChild(style);
+    }
+
     style.textContent = `
       .video-shell.youtube-video-active{
         position:relative!important;
@@ -67,12 +79,18 @@
         box-shadow:0 18px 44px rgba(0,0,0,.20),inset 0 0 0 1px rgba(255,255,255,.03)!important;
       }
       .video-shell.youtube-video-active::before,
-      .video-shell.youtube-video-active::after{display:none!important;content:none!important}
+      .video-shell.youtube-video-active::after{
+        display:none!important;
+        content:none!important;
+        pointer-events:none!important;
+      }
       .video-shell.youtube-video-active>.video-center,
       .video-shell.youtube-video-active>.video-bar,
       .video-shell.youtube-video-active>img,
       .video-shell.youtube-video-active>.drive-popout-shield,
-      .video-shell.youtube-video-active>.drive-player-loading{display:none!important}
+      .video-shell.youtube-video-active>.drive-player-loading{
+        display:none!important;
+      }
       .video-shell.youtube-video-active iframe.youtube-lesson-frame{
         position:absolute!important;
         inset:0!important;
@@ -80,31 +98,56 @@
         height:100%!important;
         min-width:100%!important;
         min-height:100%!important;
+        max-width:none!important;
+        max-height:none!important;
         border:0!important;
         border-radius:inherit!important;
         background:#05080d!important;
         display:block!important;
-        z-index:50!important;
+        z-index:60!important;
         pointer-events:auto!important;
+        touch-action:manipulation!important;
       }
-      .youtube-resolver-host{
-        position:fixed!important;
-        left:-9999px!important;
-        top:-9999px!important;
-        width:2px!important;
-        height:2px!important;
-        opacity:.001!important;
+      .video-shell.youtube-video-active>.youtube-player-loading{
+        position:absolute!important;
+        inset:0!important;
+        z-index:65!important;
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:center!important;
+        justify-content:center!important;
+        gap:10px!important;
+        background:linear-gradient(145deg,#07141a,#05080d)!important;
+        color:#c3d2cd!important;
+        font:700 .76rem/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+        letter-spacing:.03em!important;
         pointer-events:none!important;
-        overflow:hidden!important;
+        transition:opacity .25s ease,visibility .25s ease!important;
       }
+      .video-shell.youtube-video-active.youtube-player-ready>.youtube-player-loading{
+        opacity:0!important;
+        visibility:hidden!important;
+      }
+      .video-shell.youtube-video-active>.youtube-player-loading::before{
+        content:''!important;
+        width:25px!important;
+        height:25px!important;
+        border-radius:50%!important;
+        border:2px solid rgba(255,255,255,.14)!important;
+        border-top-color:#78c7a6!important;
+        animation:agYouTubeSpin .8s linear infinite!important;
+      }
+      @keyframes agYouTubeSpin{to{transform:rotate(360deg)}}
       @media(max-width:720px){
-        .video-shell.youtube-video-active{border-radius:18px!important;box-shadow:0 14px 32px rgba(0,0,0,.18)!important}
+        .video-shell.youtube-video-active{
+          border-radius:18px!important;
+          box-shadow:0 14px 32px rgba(0,0,0,.18)!important;
+        }
       }
       @media(max-width:420px){
         .video-shell.youtube-video-active{border-radius:16px!important}
       }
     `;
-    document.head.appendChild(style);
   }
 
   function course() {
@@ -112,91 +155,45 @@
     return state.courses.find(item => item.id === COURSE_ID) || null;
   }
 
+  function lessonIndex(module, lesson) {
+    if (!module || !lesson) return null;
+    const key = normalize(lesson.title || '');
+
+    if (module.id === WELCOME_MODULE_ID && key.includes('bienvenida')) return 0;
+    if (module.id !== MODULE_1_ID) return null;
+
+    return TITLE_INDEX.has(key) ? TITLE_INDEX.get(key) : null;
+  }
+
   function activeLessonContext() {
     const parts = location.hash.replace(/^#/, '').split('/');
     if (parts[0] !== 'lesson' || parts[1] !== COURSE_ID || !parts[2]) return null;
+
     const current = course();
     if (!current) return null;
 
     for (const module of current.modules || []) {
       const lesson = (module.lessons || []).find(item => item.id === parts[2]);
       if (!lesson) continue;
-      const key = normalize(lesson.title || '');
-      let index = TITLE_INDEX.get(key);
-      if (index == null && module.id === '11111111-0000-4111-8111-000000000001' && key.includes('bienvenida')) index = 0;
-      return { module, lesson, index };
+      return { module, lesson, index: lessonIndex(module, lesson) };
     }
     return null;
   }
 
-  function directEmbed(videoId) {
-    const origin = encodeURIComponent(location.origin);
-    return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&playsinline=1&controls=1&fs=1&enablejsapi=1&origin=${origin}`;
-  }
-
-  function patchState() {
-    if (playlistIds.length < 14) return 0;
-    const current = course();
-    if (!current?.modules?.length) return 0;
-    let changed = 0;
-
-    for (const module of current.modules) {
-      for (const lesson of module.lessons || []) {
-        const key = normalize(lesson.title || '');
-        let index = TITLE_INDEX.get(key);
-        if (index == null && module.id === '11111111-0000-4111-8111-000000000001' && key.includes('bienvenida')) index = 0;
-        if (index == null || !playlistIds[index]) continue;
-        const url = directEmbed(playlistIds[index]);
-        if (lesson.video_url !== url) {
-          lesson.video_url = url;
-          lesson.youtube_playlist_index = index;
-          lesson.youtube_playlist_label = PLAYLIST_LABELS[index] || '';
-          changed++;
-        }
-      }
-    }
-    return changed;
-  }
-
-  function renderActiveLesson() {
-    if (playlistIds.length < 14) return;
-    const context = activeLessonContext();
-    if (!context || context.index == null || !playlistIds[context.index]) return;
-
-    addStyles();
-    const shell = document.querySelector('.lesson-layout .video-shell');
-    if (!shell) return;
-    const videoId = playlistIds[context.index];
-    const existing = shell.querySelector('iframe.youtube-lesson-frame');
-    if (existing?.dataset.youtubeVideoId === videoId) return;
-
-    shell.classList.remove('drive-video-active', 'drive-frame-ready', 'native-video-active');
-    shell.classList.add('youtube-video-active');
-    shell.querySelectorAll(':scope > *').forEach(node => node.remove());
-
-    const frame = document.createElement('iframe');
-    frame.className = 'lesson-frame youtube-lesson-frame';
-    frame.dataset.youtubeVideoId = videoId;
-    frame.dataset.youtubePlaylistIndex = String(context.index);
-    frame.src = directEmbed(videoId);
-    frame.title = context.lesson.title || 'Video de la lección';
-    frame.loading = 'eager';
-    frame.referrerPolicy = 'strict-origin-when-cross-origin';
-    frame.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; fullscreen');
-    frame.setAttribute('allowfullscreen', '');
-    shell.appendChild(frame);
-  }
-
   function loadYouTubeApi() {
     if (window.YT?.Player) return Promise.resolve(window.YT);
-    if (ytPromise) return ytPromise;
+    if (ytApiPromise) return ytApiPromise;
 
-    ytPromise = new Promise((resolve, reject) => {
+    ytApiPromise = new Promise((resolve, reject) => {
       const previous = window.onYouTubeIframeAPIReady;
-      let timeout;
+      const timeout = window.setTimeout(() => {
+        if (window.YT?.Player) resolve(window.YT);
+        else reject(new Error('youtube-api-timeout'));
+      }, 12000);
+
       window.onYouTubeIframeAPIReady = () => {
         try { if (typeof previous === 'function') previous(); } catch (_) {}
-        clearTimeout(timeout);
+        window.clearTimeout(timeout);
         resolve(window.YT);
       };
 
@@ -208,90 +205,152 @@
         script.onerror = () => reject(new Error('youtube-api-load-failed'));
         document.head.appendChild(script);
       }
-
-      timeout = setTimeout(() => {
-        if (window.YT?.Player) resolve(window.YT);
-        else reject(new Error('youtube-api-timeout'));
-      }, 12000);
     });
-    return ytPromise;
+
+    return ytApiPromise;
   }
 
-  async function resolvePlaylist() {
-    if (playlistIds.length >= 14 || resolving) return;
-    resolving = true;
+  function playlistEmbed(index) {
+    const origin = encodeURIComponent(location.origin);
+    return `https://www.youtube-nocookie.com/embed?listType=playlist&list=${PLAYLIST_ID}&index=${index}&rel=0&playsinline=1&controls=1&fs=1&enablejsapi=1&origin=${origin}`;
+  }
+
+  function destroyCurrentPlayer() {
+    try { player?.destroy?.(); } catch (_) {}
+    player = null;
+    activeFrame = null;
+    activeKey = '';
+  }
+
+  function prepareShell(shell, context) {
+    const key = `${context.lesson.id}:${context.index}`;
+    if (
+      key === activeKey &&
+      activeFrame?.isConnected &&
+      shell.contains(activeFrame)
+    ) return false;
+
+    destroyCurrentPlayer();
+
+    shell.classList.remove('drive-video-active', 'drive-frame-ready', 'native-video-active');
+    shell.classList.add('youtube-video-active');
+    shell.querySelectorAll(':scope > *').forEach(node => node.remove());
+
+    const frame = document.createElement('iframe');
+    frame.id = `ag-youtube-lesson-${String(context.lesson.id).replace(/[^a-z0-9_-]/gi, '')}`;
+    frame.className = 'lesson-frame youtube-lesson-frame';
+    frame.dataset.youtubePlaylistIndex = String(context.index);
+    frame.src = playlistEmbed(context.index);
+    frame.title = `${context.lesson.title || 'Video de la lección'} · ${PLAYLIST_LABELS[context.index] || ''}`;
+    frame.loading = 'eager';
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+    frame.setAttribute('allowfullscreen', '');
+
+    const loading = document.createElement('div');
+    loading.className = 'youtube-player-loading';
+    loading.textContent = 'Preparando video…';
+
+    shell.appendChild(frame);
+    shell.appendChild(loading);
+
+    activeKey = key;
+    activeFrame = frame;
+    return true;
+  }
+
+  async function mountYouTube(context, shell) {
+    const created = prepareShell(shell, context);
+    if (!created) return;
+
+    const frame = activeFrame;
+    const expectedKey = activeKey;
 
     try {
       await loadYouTubeApi();
-      const host = document.createElement('div');
-      host.className = 'youtube-resolver-host';
-      const iframe = document.createElement('iframe');
-      iframe.id = `ag-youtube-resolver-${Date.now()}`;
-      iframe.src = `https://www.youtube-nocookie.com/embed?enablejsapi=1&origin=${encodeURIComponent(location.origin)}&listType=playlist&list=${PLAYLIST_ID}&playsinline=1&controls=0`;
-      iframe.setAttribute('allow', 'encrypted-media');
-      host.appendChild(iframe);
-      document.body.appendChild(host);
+      if (!frame?.isConnected || expectedKey !== activeKey) return;
 
-      let settled = false;
-      let player;
-      const finish = ids => {
-        if (settled) return;
-        settled = true;
-        if (Array.isArray(ids) && ids.length >= 14) playlistIds = ids.slice();
-        try { player?.destroy?.(); } catch (_) {}
-        host.remove();
-        if (playlistIds.length >= 14) {
-          patchState();
-          renderActiveLesson();
-        }
-      };
-
-      player = new window.YT.Player(iframe, {
+      player = new window.YT.Player(frame, {
         events: {
           onReady(event) {
+            if (expectedKey !== activeKey) return;
             try {
-              event.target.cuePlaylist({ listType:'playlist', list:PLAYLIST_ID, index:0, startSeconds:0 });
-            } catch (_) {}
-
-            let checks = 0;
-            const check = () => {
-              checks++;
-              let ids = [];
-              try { ids = event.target.getPlaylist?.() || []; } catch (_) {}
-              if (ids.length >= 14) return finish(ids);
-              if (checks < 32) return setTimeout(check, 250);
-              finish([]);
-            };
-            setTimeout(check, 150);
+              event.target.cuePlaylist({
+                listType: 'playlist',
+                list: PLAYLIST_ID,
+                index: context.index,
+                startSeconds: 0
+              });
+            } catch (error) {
+              console.warn('No se pudo posicionar la playlist de YouTube:', error);
+            }
+            window.setTimeout(() => shell.classList.add('youtube-player-ready'), 350);
           },
-          onError() { finish([]); }
+          onStateChange(event) {
+            if (expectedKey !== activeKey) return;
+            if (event.data === window.YT.PlayerState.CUED || event.data === window.YT.PlayerState.PLAYING || event.data === window.YT.PlayerState.PAUSED) {
+              shell.classList.add('youtube-player-ready');
+            }
+          },
+          onError(event) {
+            console.warn('YouTube player error:', event.data);
+            shell.classList.add('youtube-player-ready');
+          }
         }
       });
 
-      setTimeout(() => finish([]), 10000);
+      /* Fallback visual: nunca dejar una pantalla de carga permanente. */
+      window.setTimeout(() => {
+        if (expectedKey === activeKey && shell.isConnected) shell.classList.add('youtube-player-ready');
+      }, 3500);
     } catch (error) {
-      console.warn('YouTube playlist resolver:', error?.message || error);
-    } finally {
-      resolving = false;
+      console.warn('YouTube player:', error?.message || error);
+      shell.classList.add('youtube-player-ready');
+    }
+  }
+
+  function patchStateMetadata() {
+    const current = course();
+    if (!current?.modules?.length) return;
+
+    for (const module of current.modules) {
+      for (const lesson of module.lessons || []) {
+        const index = lessonIndex(module, lesson);
+        if (index == null) continue;
+        lesson.youtube_playlist_id = PLAYLIST_ID;
+        lesson.youtube_playlist_index = index;
+        lesson.youtube_playlist_label = PLAYLIST_LABELS[index] || '';
+        lesson.video_provider = 'youtube';
+      }
     }
   }
 
   function apply() {
     addStyles();
-    patchState();
-    renderActiveLesson();
-    if (playlistIds.length < 14) resolvePlaylist();
+    patchStateMetadata();
+
+    const context = activeLessonContext();
+    if (!context || context.index == null) {
+      if (activeFrame?.isConnected === false) destroyCurrentPlayer();
+      return;
+    }
+
+    const shell = document.querySelector('.lesson-layout .video-shell');
+    if (!shell) return;
+
+    mountYouTube(context, shell);
   }
 
   function schedule() {
-    clearTimeout(timer);
-    timer = setTimeout(apply, 55);
+    window.clearTimeout(timer);
+    timer = window.setTimeout(apply, 45);
   }
 
   window.addEventListener('hashchange', schedule);
   window.addEventListener('pageshow', schedule);
   window.addEventListener('load', schedule);
   window.addEventListener('orientationchange', schedule, { passive:true });
+  window.addEventListener('resize', schedule, { passive:true });
 
   const observer = new MutationObserver(schedule);
   observer.observe(document.querySelector('#app') || document.body, {
@@ -301,14 +360,16 @@
     attributeFilter:['src','class']
   });
 
-  const interval = setInterval(apply, 800);
-  setTimeout(() => clearInterval(interval), 120000);
+  /* Drive puede seguir alimentando temporalmente los módulos 2–6.
+     Este intervalo garantiza que Introducción + Módulo 1 siempre
+     recuperen prioridad visual de YouTube después de cualquier re-render. */
+  const interval = window.setInterval(apply, 650);
+  window.setTimeout(() => window.clearInterval(interval), 180000);
 
   window.ACADEMIA_AG_YOUTUBE_UTAH = {
     release: RELEASE,
     playlistId: PLAYLIST_ID,
     playlistLabels: PLAYLIST_LABELS.slice(),
-    getPlaylistIds: () => playlistIds.slice(),
     apply
   };
 
