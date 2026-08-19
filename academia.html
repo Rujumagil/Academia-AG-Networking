@@ -36,6 +36,25 @@
   <link rel="stylesheet" href="first-login-password.css?v=20260818.4">
   <link rel="stylesheet" href="student-experience-premium.css?v=20260819.6">
   <link rel="stylesheet" href="youtube-embed-hotfix.css?v=20260819.29">
+  <script>
+    (() => {
+      const resetKey = 'ag-academy-cache-reset-20260819.37';
+      if (sessionStorage.getItem(resetKey)) return;
+      sessionStorage.setItem(resetKey, '1');
+      Promise.all([
+        'serviceWorker' in navigator
+          ? navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister())))
+          : Promise.resolve(),
+        'caches' in window
+          ? caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
+          : Promise.resolve()
+      ]).finally(() => {
+        const url = new URL(location.href);
+        url.searchParams.set('fresh', '20260819.37');
+        location.replace(url.toString());
+      });
+    })();
+  </script>
 </head>
 <body>
   <div id="app">
@@ -50,7 +69,8 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="supabase-config.js?v=20260817.13"></script>
-  <script src="bootstrap.js?v=20260819.33"></script>
+  <script src="bootstrap.js?v=20260819.37"></script>
   <script src="student-experience-premium.js?v=20260819.6"></script>
+  <script src="free-course-navigation.js?v=20260819.37"></script>
 </body>
 </html>
