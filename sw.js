@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260818.5';
+const CACHE = 'academia-ag-v20260819.1';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -23,6 +23,7 @@ const STATIC_ASSETS = [
   './first-login-password.css?v=20260818.4',
   './app.js?v=20260817.12',
   './bootstrap.js?v=20260818.5',
+  './google-drive-videos.js?v=20260819.1',
   './lesson-experience.js?v=20260817.12',
   './video-fix.js?v=20260817.12',
   './quiz-randomizer.js?v=20260817.12',
