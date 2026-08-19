@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260819.14';
+const CACHE = 'academia-ag-v20260819.15';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -28,6 +28,7 @@ const STATIC_ASSETS = [
   './youtube-utah-player.js?v=20260819.14',
   './student-experience-premium.js?v=20260819.6',
   './student-course-flow.js?v=20260819.14',
+  './questionnaire-flow.js?v=20260819.15',
   './lesson-experience.js?v=20260817.12',
   './video-fix.js?v=20260817.12',
   './quiz-randomizer.js?v=20260817.12',
