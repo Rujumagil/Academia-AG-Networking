@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260819.29';
+const CACHE = 'academia-ag-v20260819.30';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -7,14 +7,14 @@ const STATIC_ASSETS = [
   './perfil-premium.css?v=20260817.20','./calendario-premium.css?v=20260817.21','./calendario-hotfix.css?v=20260817.22',
   './admin-dashboard-ejecutivo.css?v=20260818.1','./admin-dashboard-tabs.css?v=20260818.2','./admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./youtube-embed-hotfix.css?v=20260819.29',
-  './app.js?v=20260819.28','./bootstrap.js?v=20260819.28',
+  './app.js?v=20260819.30','./bootstrap.js?v=20260819.30',
   './student-experience-premium.js?v=20260819.6','./student-course-flow.js?v=20260819.14','./questionnaire-flow.js?v=20260819.15',
-  './quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.14','./premium-learning.js?v=20260817.12',
+  './quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.30','./premium-learning.js?v=20260817.12',
   './lesson-cleanup.js?v=20260817.12','./module-exam.js?v=20260817.12','./sidebar-icons-premium.js?v=20260817.15',
   './evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20','./calendario-premium.js?v=20260817.22',
   './admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2','./first-login-password.js?v=20260818.4',
   './admin-import-link.js?v=20260818.5','./supabase-config.js?v=20260817.13','./manifest.json','./diagnostico.html','./limpiar-cache.html',
-  './verificar-imagenes.html','./curso-utah-driver.webp','./curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp',
+  './verificar-imagenes.html','./ordenar-videos-utah.html','./curso-utah-driver.webp','./curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp',
   './curso-ingles.webp','./hero-academia.webp','./icon-192.png','./icon-512.png','./icono-oficial.png','./logo-completo-oficial.png',
   './logo-texto-oficial.png','./logo.webp','./recurso-utah-driver.webp','./recurso-manual-ag.webp'
 ];
