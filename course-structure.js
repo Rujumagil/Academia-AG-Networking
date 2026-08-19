@@ -1,16 +1,17 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.14';
+  const RELEASE = '20260819.30';
   const UTAH_COURSE_ID = '11111111-1111-4111-8111-111111111111';
-  const REVIEW_MODULES = new Set([
+  const ACADEMIC_MODULES = [
     'Licencias, permisos y documentación',
     'Salud, exámenes y preparación del vehículo',
     'Manejo básico',
     'Reglas del camino y señales',
     'Alcohol, drogas y retos al manejar',
     'Emergencias, compartir el camino y tu récord'
-  ]);
+  ];
+  const REVIEW_MODULES = new Set(ACADEMIC_MODULES);
 
   let timer = null;
 
@@ -21,6 +22,22 @@
 
   function setText(node, value) {
     if (node && node.textContent !== value) node.textContent = value;
+  }
+
+  function cleanModuleTitle(value = '') {
+    return String(value)
+      .replace(/^Módulo\s+\d+:\s*/i, '')
+      .replace(/^Introducción\s*[·:\-]\s*/i, '')
+      .trim();
+  }
+
+  function displayModuleTitle(cleanTitle) {
+    if (/^Bienvenida y cómo usar el curso$/i.test(cleanTitle)) {
+      return 'Introducción · Bienvenida y cómo usar el curso';
+    }
+    if (/^Cierre del curso$/i.test(cleanTitle)) return 'Cierre del curso';
+    const index = ACADEMIC_MODULES.findIndex(item => item.toLowerCase() === cleanTitle.toLowerCase());
+    return index >= 0 ? `Módulo ${index + 1}: ${cleanTitle}` : cleanTitle;
   }
 
   function addStyles() {
@@ -43,13 +60,7 @@
   function normalizeLessonTypes(module) {
     module.querySelectorAll('.lesson-item:not(.utah-module-quiz) a small').forEach(label => {
       const value = label.textContent.trim().toLowerCase();
-      const mapped = ({
-        video: 'Video',
-        text: 'Lectura',
-        activity: 'Actividad',
-        resource: 'Recurso',
-        live: 'En vivo'
-      })[value];
+      const mapped = ({ video:'Video', text:'Lectura', activity:'Actividad', resource:'Recurso', live:'En vivo' })[value];
       if (mapped) setText(label, mapped);
     });
   }
@@ -68,9 +79,6 @@
         <small>Cuestionario</small>
       </a>
       <small>Repaso</small>`;
-
-    /* Siempre al final del módulo: primero se ven todos los videos,
-       incluido el contenido especial/promocional cuando exista. */
     list.appendChild(row);
   }
 
@@ -78,8 +86,8 @@
     const heading = module.querySelector('summary strong');
     if (!heading) return;
 
-    const cleanTitle = heading.textContent.replace(/^Módulo\s+\d+:\s*/i, '').trim();
-    setText(heading, cleanTitle);
+    const cleanTitle = cleanModuleTitle(heading.textContent);
+    setText(heading, displayModuleTitle(cleanTitle));
     normalizeLessonTypes(module);
     insertReviewStep(module, cleanTitle);
 
@@ -90,10 +98,26 @@
     setText(count, `${total} ${total === 1 ? 'paso' : 'pasos'}`);
   }
 
+  function normalizeLessonSubtitle() {
+    const subtitle = document.querySelector('.page-subtitle');
+    if (!subtitle || !/^Módulo:/i.test(subtitle.textContent.trim())) return;
+    const cleanTitle = cleanModuleTitle(subtitle.textContent.replace(/^Módulo:\s*/i, ''));
+    if (/^Bienvenida y cómo usar el curso$/i.test(cleanTitle)) {
+      setText(subtitle, 'Introducción');
+      return;
+    }
+    if (/^Cierre del curso$/i.test(cleanTitle)) {
+      setText(subtitle, 'Cierre del curso');
+      return;
+    }
+    const index = ACADEMIC_MODULES.findIndex(item => item.toLowerCase() === cleanTitle.toLowerCase());
+    if (index >= 0) setText(subtitle, `Módulo ${index + 1}: ${cleanTitle}`);
+  }
+
   function normalizeCourseFacts() {
     document.querySelectorAll('.course-facts > span').forEach(item => {
       if (item.querySelector('small')?.textContent.trim() !== 'Contenido') return;
-      setText(item.querySelector('strong'), '8 secciones · 130 pasos');
+      setText(item.querySelector('strong'), 'Introducción · 6 módulos · cierre');
     });
   }
 
@@ -101,12 +125,13 @@
     if (!currentRouteIsUtah()) return;
     addStyles();
     document.querySelectorAll('.module-panel .module').forEach(normalizeModule);
+    normalizeLessonSubtitle();
     normalizeCourseFacts();
   }
 
   function schedule() {
     clearTimeout(timer);
-    timer = setTimeout(enhance, 40);
+    timer = setTimeout(enhance, 60);
   }
 
   window.addEventListener('hashchange', schedule);
