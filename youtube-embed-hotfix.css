@@ -1,0 +1,3 @@
+.video-shell::after{pointer-events:none!important;z-index:0!important}
+.video-shell>.lesson-frame{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;border:0!important;z-index:5!important;pointer-events:auto!important;background:#000!important}
+.video-shell:has(.lesson-frame){background:#000!important}
