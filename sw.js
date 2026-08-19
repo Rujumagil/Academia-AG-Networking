@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260819.25';
+const CACHE = 'academia-ag-v20260819.26';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -22,11 +22,10 @@ const STATIC_ASSETS = [
   './admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4',
   './student-experience-premium.css?v=20260819.6',
-  './app.js?v=20260819.25',
-  './bootstrap.js?v=20260819.25',
-  './utah-placeholder-guard.js?v=20260819.25',
-  './utah-youtube-seed-v25.js?v=20260819.25',
-  './youtube-utah-only-v23.js?v=20260819.25',
+  './app.js?v=20260819.26',
+  './bootstrap.js?v=20260819.26',
+  './utah-placeholder-guard.js?v=20260819.26',
+  './youtube-utah-direct-v26.js?v=20260819.26',
   './student-experience-premium.js?v=20260819.6',
   './student-course-flow.js?v=20260819.14',
   './questionnaire-flow.js?v=20260819.15',
@@ -65,20 +64,12 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE).then(cache =>
-      Promise.allSettled(STATIC_ASSETS.map(asset => cache.add(asset)))
-    )
-  );
+  event.waitUntil(caches.open(CACHE).then(cache => Promise.allSettled(STATIC_ASSETS.map(asset => cache.add(asset)))));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
@@ -88,23 +79,17 @@ self.addEventListener('fetch', event => {
   const isCritical = event.request.mode === 'navigate' || (sameOrigin && /\.(?:html|js|css)$/i.test(url.pathname));
 
   if (isCritical) {
-    event.respondWith(
-      fetch(event.request, { cache: 'no-store' })
-        .then(response => {
-          if (response.ok && sameOrigin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-          return response;
-        })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./academia.html') || caches.match('./index.html')))
-    );
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).then(response => {
+      if (response.ok && sameOrigin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+      return response;
+    }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./academia.html') || caches.match('./index.html'))));
     return;
   }
 
   if (sameOrigin) {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
-        return response;
-      }))
-    );
+    event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
+      if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
+      return response;
+    })));
   }
 });
