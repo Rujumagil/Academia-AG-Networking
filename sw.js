@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260819.23';
+const CACHE = 'academia-ag-v20260819.24';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -22,9 +22,10 @@ const STATIC_ASSETS = [
   './admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4',
   './student-experience-premium.css?v=20260819.6',
-  './app.js?v=20260817.12',
-  './bootstrap.js?v=20260819.23',
-  './youtube-utah-only-v23.js?v=20260819.23',
+  './app.js?v=20260819.24',
+  './bootstrap.js?v=20260819.24',
+  './utah-placeholder-guard.js?v=20260819.24',
+  './youtube-utah-only-v23.js?v=20260819.24',
   './student-experience-premium.js?v=20260819.6',
   './student-course-flow.js?v=20260819.14',
   './questionnaire-flow.js?v=20260819.15',
