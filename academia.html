@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="youtube-embed-hotfix.css?v=20260819.29">
   <script>
     (() => {
-      const resetKey = 'ag-academy-cache-reset-20260819.37';
+      const resetKey = 'ag-academy-cache-reset-20260819.38';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -50,7 +50,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260819.37');
+        url.searchParams.set('fresh', '20260819.38');
         location.replace(url.toString());
       });
     })();
@@ -72,5 +72,6 @@
   <script src="bootstrap.js?v=20260819.37"></script>
   <script src="student-experience-premium.js?v=20260819.6"></script>
   <script src="free-course-navigation.js?v=20260819.37"></script>
+  <script src="promo-video-pin.js?v=20260819.38"></script>
 </body>
 </html>
