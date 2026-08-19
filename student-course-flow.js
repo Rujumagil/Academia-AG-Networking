@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260819.13';
+  const RELEASE = '20260819.14';
   const COURSE_ID = '11111111-1111-4111-8111-111111111111';
   const MANUAL_TITLE_RE = /manual\s+de\s+actividades\s+del\s+alumno|manual.*alumno/i;
   let timer = null;
@@ -16,61 +16,25 @@
       #material-button{display:none!important}
       #material-button.ag-final-manual{display:flex!important}
 
-      .lesson-item.ag-lesson-locked{
-        opacity:.48!important;
-        filter:saturate(.65)!important;
-      }
-      .lesson-item.ag-lesson-locked a{
-        pointer-events:none!important;
-        cursor:not-allowed!important;
-      }
+      .lesson-item.ag-lesson-locked{opacity:.48!important;filter:saturate(.65)!important}
+      .lesson-item.ag-lesson-locked a{pointer-events:none!important;cursor:not-allowed!important}
       .lesson-item.ag-lesson-locked>small:last-child{opacity:.5!important}
       .ag-lock-badge{
-        display:inline-flex!important;
-        align-items:center!important;
-        gap:5px!important;
-        margin-top:5px!important;
-        font-size:.68rem!important;
-        font-weight:700!important;
-        letter-spacing:.02em!important;
-        color:#91a6a0!important;
+        display:inline-flex!important;align-items:center!important;gap:5px!important;margin-top:5px!important;
+        font-size:.68rem!important;font-weight:700!important;letter-spacing:.02em!important;color:#91a6a0!important
       }
       .ag-lock-badge svg{
-        width:12px!important;
-        height:12px!important;
-        fill:none!important;
-        stroke:currentColor!important;
-        stroke-width:1.8!important;
-        stroke-linecap:round!important;
-        stroke-linejoin:round!important;
+        width:12px!important;height:12px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+        stroke-linecap:round!important;stroke-linejoin:round!important
       }
-      .lesson-item button[data-complete].ag-video-status-control{
-        cursor:default!important;
-        pointer-events:none!important;
-      }
-      #complete-current.ag-video-progress-status{
-        cursor:default!important;
-        pointer-events:none!important;
-        opacity:.95!important;
-      }
-      .library-material-card.ag-manual-locked,
-      .library-book-card.ag-manual-locked,
-      [data-resource-title].ag-manual-locked{
-        display:none!important;
-      }
-      .ag-final-manual strong{
-        display:flex!important;
-        align-items:center!important;
-        gap:8px!important;
-      }
+      .lesson-item button[data-complete].ag-video-status-control{cursor:default!important;pointer-events:none!important}
+      #complete-current.ag-video-progress-status{cursor:default!important;pointer-events:none!important;opacity:.95!important}
+      .library-material-card.ag-manual-locked,.library-book-card.ag-manual-locked,[data-resource-title].ag-manual-locked{display:none!important}
+      .ag-final-manual strong{display:flex!important;align-items:center!important;gap:8px!important}
       .ag-final-manual strong::before{
-        content:'';
-        width:18px;
-        height:18px;
-        flex:0 0 18px;
-        background:currentColor;
+        content:'';width:18px;height:18px;flex:0 0 18px;background:currentColor;
         mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v11M8 10l4 4 4-4M5 20h14' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
-        -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v11M8 10l4 4 4-4M5 20h14' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+        -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v11M8 10l4 4 4-4M5 20h14' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat
       }
     `;
     document.head.appendChild(style);
@@ -131,15 +95,10 @@
     ) || null;
   }
 
-  function previousLessonsComplete(index) {
-    if (index <= 0) return true;
-    return lessons().slice(0, index).every(item => isCompleted(item.id));
-  }
-
   function manualIsUnlocked() {
     const items = lessons();
     if (!items.length) return false;
-    return previousLessonsComplete(items.length - 1);
+    return items.every(item => isCompleted(item.id));
   }
 
   function lockIcon() {
@@ -200,9 +159,7 @@
     if (targetIndex > firstIncomplete && !isCompleted(targetId)) {
       const allowed = items[firstIncomplete];
       if (allowed) {
-        if (typeof showToast === 'function') {
-          showToast('Termina el video actual para desbloquear el siguiente tema.', 'info');
-        }
+        if (typeof showToast === 'function') showToast('Termina el video actual para desbloquear el siguiente tema.', 'info');
         location.replace(`#lesson/${COURSE_ID}/${allowed.id}`);
         return true;
       }
@@ -268,7 +225,9 @@
     if (!manual || !manualIsUnlocked()) {
       target.disabled = true;
       target.onclick = null;
-      if (small) small.textContent = manual ? 'Completa el contenido anterior para habilitarlo.' : 'Manual en preparación';
+      if (small) small.textContent = manual
+        ? 'Termina el mensaje final para habilitar tu manual.'
+        : 'Manual en preparación';
       return;
     }
 
@@ -316,11 +275,10 @@
       if (index >= 0) state.progressRows[index] = data;
       else state.progressRows.push(data);
 
-      if (typeof showToast === 'function') {
-        showToast('Video completado. Ya puedes continuar al siguiente tema.', 'success');
-      }
+      if (typeof showToast === 'function') showToast('Video completado. Ya puedes continuar al siguiente tema.', 'success');
       applySequentialLocks();
       configureCurrentProgressCard();
+      configureMaterialButton();
       hideManualFromLibraryUntilFinal();
     } catch (error) {
       console.error('No se pudo guardar la finalización automática del video:', error);
@@ -371,10 +329,7 @@
   }, true);
 
   const observer = new MutationObserver(schedule);
-  observer.observe(document.querySelector('#app') || document.body, {
-    childList: true,
-    subtree: true
-  });
+  observer.observe(document.querySelector('#app') || document.body, { childList: true, subtree: true });
 
   window.addEventListener('hashchange', () => {
     lastEndedLesson = '';
@@ -382,7 +337,7 @@
   });
   window.addEventListener('pageshow', schedule);
   window.addEventListener('load', schedule);
-  document.addEventListener('DOMContentLoaded', schedule, { once:true });
+  document.addEventListener('DOMContentLoaded', schedule, { once: true });
 
   const interval = setInterval(apply, 500);
   setTimeout(() => clearInterval(interval), 180000);
