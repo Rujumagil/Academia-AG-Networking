@@ -79,7 +79,7 @@
       await loadScript('lesson-experience.js?v=20260817.12');
       await loadScript('video-fix.js?v=20260817.12');
       await loadScript('quiz-randomizer.js?v=20260817.12');
-      await loadScript('course-structure.js?v=20260817.12');
+      await loadScript('course-structure.js?v=20260819.14');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('lesson-cleanup.js?v=20260817.12');
       await loadScript('module-exam.js?v=20260817.12');
