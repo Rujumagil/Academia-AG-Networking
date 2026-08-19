@@ -76,8 +76,10 @@
 
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260817.12');
-      await loadScript('lesson-experience.js?v=20260817.12');
-      await loadScript('video-fix.js?v=20260817.12');
+
+      // Ya no se cargan lesson-experience.js ni video-fix.js aquí.
+      // Ambos pertenecen al reproductor legado (Wix/Drive) y competían
+      // con el reproductor exclusivo de YouTube del Utah Driver.
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('course-structure.js?v=20260819.14');
       await loadScript('premium-learning.js?v=20260817.12');
@@ -91,6 +93,10 @@
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('admin-import-link.js?v=20260818.5');
+
+      // YouTube se monta al final, cuando la aplicación y los módulos ya
+      // están inicializados. Así ningún manejador legado vuelve a reemplazarlo.
+      await loadScript('youtube-utah-exclusive.js?v=20260819.20');
 
       setTimeout(() => {
         const stillLoading = document.querySelector('.loading-card');
