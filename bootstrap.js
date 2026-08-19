@@ -70,12 +70,9 @@
       }
 
       await loadSupabaseLibrary();
-      // Utah Driver vuelve al flujo nativo de la Academia: cada lección recibe
-      // un embed individual de YouTube en lessons.video_url.
-      await loadScript('app.js?v=20260819.28');
-
+      await loadScript('app.js?v=20260819.30');
       await loadScript('quiz-randomizer.js?v=20260817.12');
-      await loadScript('course-structure.js?v=20260819.14');
+      await loadScript('course-structure.js?v=20260819.30');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('lesson-cleanup.js?v=20260817.12');
       await loadScript('module-exam.js?v=20260817.12');
