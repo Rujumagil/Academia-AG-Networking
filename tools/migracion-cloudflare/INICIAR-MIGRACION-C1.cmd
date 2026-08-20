@@ -25,10 +25,16 @@ del /Q "%SCRIPT%" >nul 2>&1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0migrar-modulo1-cloudflare.ps1"
 set "EXITCODE=%ERRORLEVEL%"
 echo.
-if not "%EXITCODE%"=="0" (
-  echo La migracion se detuvo. No borres el archivo checkpoint; puedes volver a ejecutar este lanzador.
+if "%EXITCODE%"=="0" (
+  echo Migracion completa. En esta misma carpeta encontraras el SQL FINAL para Supabase.
+) else if "%EXITCODE%"=="2" (
+  echo Migracion parcial completada.
+  echo Los videos correctos quedaron guardados y NO se duplicaran.
+  echo Revisa utah-c1-cloudflare-errors.json y vuelve a ejecutar este lanzador para reintentar solo los pendientes.
+  echo NO borres c1-cloudflare-checkpoint.json.
 ) else (
-  echo Migracion finalizada. En esta misma carpeta encontraras el SQL para Supabase.
+  echo La migracion encontro un error general.
+  echo NO borres el archivo checkpoint; puedes volver a ejecutar este lanzador.
 )
 echo.
 pause
