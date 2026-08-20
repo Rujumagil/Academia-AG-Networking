@@ -1,6 +1,7 @@
 -- ============================================================
 -- ACADEMIA AG · RESET TOTAL UTAH DRIVER · INICIO LIMPIO
 -- Fecha: 2026-08-20
+-- Versión corregida: SIN tablas temporales.
 --
 -- Objetivo:
 --   1) Eliminar el Utah Driver Success Program anterior.
@@ -19,82 +20,101 @@
 begin;
 
 -- ------------------------------------------------------------
--- 1. Identificar exclusivamente el curso heredado.
+-- 1. Desconectar órdenes históricas del producto Utah anterior.
+--    Conservamos la orden para mantener el historial económico/auditable.
 -- ------------------------------------------------------------
-create temporary table _ag_legacy_utah_courses(
-  id uuid primary key
-) on commit drop;
-
-insert into _ag_legacy_utah_courses(id)
-select c.id
-from public.courses c
-where c.id = '11111111-1111-4111-8111-111111111111'::uuid
-   or lower(coalesce(c.slug,'')) = 'utah-driver-success-program'
-on conflict do nothing;
-
--- ------------------------------------------------------------
--- 2. Identificar productos que daban acceso al curso viejo.
--- ------------------------------------------------------------
-create temporary table _ag_legacy_utah_products(
-  id uuid primary key
-) on commit drop;
-
 do $$
 begin
-  if to_regclass('public.product_contents') is not null then
-    execute $sql$
-      insert into pg_temp._ag_legacy_utah_products(id)
-      select distinct pc.product_id
-      from public.product_contents pc
-      where pc.course_id in (select id from pg_temp._ag_legacy_utah_courses)
-      on conflict do nothing
-    $sql$;
-  end if;
+  if to_regclass('public.orders') is not null
+     and to_regclass('public.products') is not null then
 
-  if to_regclass('public.products') is not null then
-    execute $sql$
-      insert into pg_temp._ag_legacy_utah_products(id)
-      select p.id
-      from public.products p
-      where lower(coalesce(p.name,'')) like '%utah driver%'
-         or lower(coalesce(p.slug,'')) like '%utah-driver%'
-         or lower(coalesce(p.external_reference,'')) like '%utah%driver%'
-      on conflict do nothing
-    $sql$;
+    if to_regclass('public.product_contents') is not null then
+      execute $sql$
+        update public.orders o
+        set product_id = null,
+            updated_at = now()
+        where o.product_id in (
+          select p.id
+          from public.products p
+          where lower(coalesce(p.name,'')) like '%utah driver%'
+             or lower(coalesce(p.slug,'')) like '%utah-driver%'
+             or lower(coalesce(p.external_reference,'')) like '%utah%driver%'
+             or exists (
+               select 1
+               from public.product_contents pc
+               join public.courses c on c.id = pc.course_id
+               where pc.product_id = p.id
+                 and (
+                   c.id = '11111111-1111-4111-8111-111111111111'::uuid
+                   or lower(coalesce(c.slug,'')) = 'utah-driver-success-program'
+                 )
+             )
+        )
+      $sql$;
+    else
+      execute $sql$
+        update public.orders o
+        set product_id = null,
+            updated_at = now()
+        where o.product_id in (
+          select p.id
+          from public.products p
+          where lower(coalesce(p.name,'')) like '%utah driver%'
+             or lower(coalesce(p.slug,'')) like '%utah-driver%'
+             or lower(coalesce(p.external_reference,'')) like '%utah%driver%'
+        )
+      $sql$;
+    end if;
   end if;
 end;
 $$;
 
 -- ------------------------------------------------------------
--- 3. Desconectar órdenes históricas y borrar el producto viejo.
---    No borramos la orden: conservamos el registro económico/auditable.
+-- 2. Eliminar productos/accesos comerciales del curso anterior.
 -- ------------------------------------------------------------
 do $$
 begin
-  if to_regclass('public.orders') is not null then
-    execute $sql$
-      update public.orders
-      set product_id = null,
-          updated_at = now()
-      where product_id in (select id from pg_temp._ag_legacy_utah_products)
-    $sql$;
-  end if;
-
   if to_regclass('public.products') is not null then
-    execute $sql$
-      delete from public.products
-      where id in (select id from pg_temp._ag_legacy_utah_products)
-    $sql$;
+    if to_regclass('public.product_contents') is not null then
+      execute $sql$
+        delete from public.products p
+        where lower(coalesce(p.name,'')) like '%utah driver%'
+           or lower(coalesce(p.slug,'')) like '%utah-driver%'
+           or lower(coalesce(p.external_reference,'')) like '%utah%driver%'
+           or exists (
+             select 1
+             from public.product_contents pc
+             join public.courses c on c.id = pc.course_id
+             where pc.product_id = p.id
+               and (
+                 c.id = '11111111-1111-4111-8111-111111111111'::uuid
+                 or lower(coalesce(c.slug,'')) = 'utah-driver-success-program'
+               )
+           )
+      $sql$;
+    else
+      execute $sql$
+        delete from public.products p
+        where lower(coalesce(p.name,'')) like '%utah driver%'
+           or lower(coalesce(p.slug,'')) like '%utah-driver%'
+           or lower(coalesce(p.external_reference,'')) like '%utah%driver%'
+      $sql$;
+    end if;
   end if;
 end;
 $$;
 
 -- ------------------------------------------------------------
--- 4. Eliminar recursos heredados dedicados al curso anterior.
+-- 3. Eliminar recursos heredados dedicados al curso anterior.
 -- ------------------------------------------------------------
 delete from public.resources r
 where r.id = 'aaaaaaaa-0001-4000-8000-aaaaaaaaaaaa'::uuid
-   or r.course_id in (select id from _ag_legacy_utah_courses)
+   or r.course_id in (
+        select c.id
+        from public.courses c
+        where c.id = '11111111-1111-4111-8111-111111111111'::uuid
+           or lower(coalesce(c.slug,'')) = 'utah-driver-success-program'
+      )
    or lower(coalesce(r.title,'')) in (
         'manual de utah driver',
         'utah driver success program™',
@@ -102,41 +122,46 @@ where r.id = 'aaaaaaaa-0001-4000-8000-aaaaaaaaaaaa'::uuid
       );
 
 -- ------------------------------------------------------------
--- 5. Eliminar el curso viejo.
---
--- Las relaciones del esquema eliminan en cascada, según corresponda:
--- módulos, lecciones, progreso, notas, bloques, inscripciones,
--- evaluaciones, intentos, certificados, instructores y recursos del curso.
+-- 4. Eliminar el curso viejo.
+--    Las FK ON DELETE CASCADE eliminan módulos, lecciones, progreso,
+--    notas, bloques, inscripciones, evaluaciones, intentos,
+--    certificados, instructores y recursos relacionados.
 -- ------------------------------------------------------------
 delete from public.courses c
-where c.id in (select id from _ag_legacy_utah_courses)
-   or c.id = '11111111-1111-4111-8111-111111111111'::uuid
+where c.id = '11111111-1111-4111-8111-111111111111'::uuid
    or lower(coalesce(c.slug,'')) = 'utah-driver-success-program';
 
 -- ------------------------------------------------------------
--- 6. Retirar cualquier conexión ACTIVA restante con los proveedores viejos.
---    Conservamos otros cursos, pero ninguna lección/recurso seguirá apuntando
---    a YouTube, Google Drive o Wix después de este reset.
+-- 5. Retirar cualquier conexión ACTIVA restante con proveedores viejos.
 -- ------------------------------------------------------------
 update public.lessons
 set video_url = null,
     updated_at = now()
-where coalesce(video_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+where coalesce(video_url,'') ~*
+'(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
 
 update public.resources
 set external_url = null,
     updated_at = now()
-where coalesce(external_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+where coalesce(external_url,'') ~*
+'(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
 
--- Un bloque de video heredado sin proveedor nuevo no debe seguir funcionando.
--- Se eliminan sólo bloques VIDEO que todavía contienen referencias a esos hosts.
-delete from public.lesson_blocks
-where block_type = 'video'
-  and coalesce(content::text,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+-- Sólo si lesson_blocks existe, retirar bloques de video heredados.
+do $$
+begin
+  if to_regclass('public.lesson_blocks') is not null then
+    execute $sql$
+      delete from public.lesson_blocks
+      where block_type = 'video'
+        and coalesce(content::text,'') ~*
+        '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
+    $sql$;
+  end if;
+end;
+$$;
 
 -- ------------------------------------------------------------
--- 7. Retirar RPCs específicos del sistema académico viejo.
---    Las recrearemos con la arquitectura nueva cuando corresponda.
+-- 6. Retirar RPCs específicos del sistema académico viejo.
 -- ------------------------------------------------------------
 drop function if exists public.get_module_exam(uuid);
 drop function if exists public.submit_module_exam(uuid,jsonb);
@@ -147,7 +172,7 @@ commit;
 
 -- ============================================================
 -- VERIFICACIÓN FINAL
--- Todo debe quedar en 0.
+-- Los cuatro valores deben quedar en 0.
 -- ============================================================
 select
   (
@@ -159,15 +184,23 @@ select
   (
     select count(*)
     from public.lessons l
-    where coalesce(l.video_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
+    where coalesce(l.video_url,'') ~*
+    '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
   ) as urls_video_legacy_en_lecciones,
   (
     select count(*)
     from public.resources r
-    where coalesce(r.external_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
+    where coalesce(r.external_url,'') ~*
+    '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
   ) as urls_legacy_en_recursos,
   (
-    select count(*)
-    from public.lesson_blocks b
-    where coalesce(b.content::text,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
+    case
+      when to_regclass('public.lesson_blocks') is null then 0
+      else (
+        select count(*)
+        from public.lesson_blocks b
+        where coalesce(b.content::text,'') ~*
+        '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)'
+      )
+    end
   ) as urls_legacy_en_bloques;
