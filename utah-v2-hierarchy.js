@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260820.45';
+  const RELEASE = '20260820.46';
   const COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
   let timer = null;
 
@@ -14,11 +14,12 @@
     return course?.id === COURSE_ID ? course : null;
   }
 
-  function currentModule(course) {
+  function currentLessonContext(course) {
     const parts = location.hash.replace(/^#/, '').split('/');
     if (parts[0] !== 'lesson' || !parts[2]) return null;
     for (const module of course.modules || []) {
-      if ((module.lessons || []).some(lesson => lesson.id === parts[2])) return module;
+      const lesson = (module.lessons || []).find(item => item.id === parts[2]);
+      if (lesson) return { module, lesson };
     }
     return null;
   }
@@ -29,6 +30,18 @@
     if (module.section_type === 'closing') return 'Cierre del curso';
     const number = Number(module.academic_number || 0);
     return `Módulo ${number || ''}${number ? ' · ' : ''}${module.title}`;
+  }
+
+  function lessonBadge(ctx) {
+    if (!ctx) return '';
+    const { module, lesson } = ctx;
+    if (module.section_type === 'introduction' || lesson.lesson_kind === 'welcome') return 'Introducción';
+    if (module.section_type === 'closing' || lesson.lesson_kind === 'closing') return 'Cierre del curso';
+    const number = Number(module.academic_number || 0);
+    if (lesson.lesson_kind === 'promo') return `Módulo ${number} · Contenido especial`;
+    const academicLessons = (module.lessons || []).filter(item => item.lesson_kind === 'lesson');
+    const lessonIndex = academicLessons.findIndex(item => item.id === lesson.id);
+    return `Módulo ${number} · Lección ${lessonIndex >= 0 ? lessonIndex + 1 : Number(lesson.position || 1)}`;
   }
 
   function setText(node, value) {
@@ -51,9 +64,15 @@
   }
 
   function patchLessonHeading(course) {
-    const module = currentModule(course);
-    if (!module) return;
-    setText(document.querySelector('.page > .page-subtitle, #page > .page-subtitle'), moduleLabel(module));
+    const ctx = currentLessonContext(course);
+    if (!ctx) return;
+    setText(document.querySelector('.page > .page-subtitle, #page > .page-subtitle'), moduleLabel(ctx.module));
+
+    document.querySelectorAll('#page span, #page div').forEach(node => {
+      if (node.children.length) return;
+      const text = String(node.textContent || '').trim();
+      if (/^Lecci[oó]n\s+\d+\s+de\s+\d+$/i.test(text)) setText(node, lessonBadge(ctx));
+    });
   }
 
   function patchCourseFacts(course) {
