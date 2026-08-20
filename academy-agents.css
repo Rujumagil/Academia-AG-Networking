@@ -49,6 +49,6 @@
 .ag-agent-ticketbox{display:none;margin-top:10px;padding:11px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075)}.ag-agent-ticketbox.is-open{display:block}.ag-agent-ticketbox p{margin:0 0 8px;color:#9db0aa;font-size:10px;line-height:1.4}.ag-agent-ticket-actions{display:flex;gap:7px}.ag-agent-ticket-actions button{border:0;border-radius:10px;padding:8px 10px;font:750 10px/1 Montserrat,Arial,sans-serif;cursor:pointer}.ag-agent-ticket-confirm{background:#0b6549;color:#fff}.ag-agent-ticket-cancel{background:rgba(255,255,255,.07);color:#dce8e4}
 
 @media(max-width:680px){
-  .ag-agent-launcher{right:14px;bottom:14px;padding-right:12px}.ag-agent-launcher__copy span{display:none}
-  .ag-agent-panel{right:7px;left:7px;bottom:7px;width:auto;height:calc(100dvh - 14px);max-height:none;border-radius:22px}
+  .ag-agent-launcher{right:max(14px,env(safe-area-inset-right));bottom:calc(88px + env(safe-area-inset-bottom));padding-right:12px}.ag-agent-launcher__copy span{display:none}
+  .ag-agent-panel{right:7px;left:7px;bottom:calc(78px + env(safe-area-inset-bottom));width:auto;height:calc(100dvh - 100px - env(safe-area-inset-bottom));max-height:none;border-radius:22px}
 }
