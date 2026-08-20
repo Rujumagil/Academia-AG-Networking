@@ -36,10 +36,11 @@
   <link rel="stylesheet" href="first-login-password.css?v=20260818.4">
   <link rel="stylesheet" href="student-experience-premium.css?v=20260819.6">
   <link rel="stylesheet" href="youtube-embed-hotfix.css?v=20260819.29">
-  <link rel="stylesheet" href="academy-agents.css?v=20260819.40">
+  <link rel="stylesheet" href="academy-agents.css?v=20260820.41">
+  <link rel="stylesheet" href="cloudflare-stream-player.css?v=20260820.41">
   <script>
     (() => {
-      const resetKey = 'ag-academy-cache-reset-20260819.40';
+      const resetKey = 'ag-academy-cache-reset-20260820.41';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -51,7 +52,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260819.40');
+        url.searchParams.set('fresh', '20260820.41');
         location.replace(url.toString());
       });
     })();
@@ -75,5 +76,6 @@
   <script src="free-course-navigation.js?v=20260819.37"></script>
   <script src="promo-video-pin.js?v=20260819.38"></script>
   <script src="academy-agents.js?v=20260819.40"></script>
+  <script src="cloudflare-stream-player.js?v=20260820.41"></script>
 </body>
 </html>
