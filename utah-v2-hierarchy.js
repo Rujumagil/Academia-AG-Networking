@@ -31,6 +31,10 @@
     return `Módulo ${number || ''}${number ? ' · ' : ''}${module.title}`;
   }
 
+  function setText(node, value) {
+    if (node && node.textContent !== value) node.textContent = value;
+  }
+
   function patchModulePanels(course) {
     const modules = [...(course.modules || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
     document.querySelectorAll('.module-panel').forEach(panel => {
@@ -39,13 +43,9 @@
         const module = modules[index];
         if (!module) return;
         detail.dataset.sectionType = module.section_type || '';
-        const strong = detail.querySelector('summary strong');
-        if (strong) strong.textContent = moduleLabel(module);
-        const counter = detail.querySelector('summary span:not(:last-child)');
-        if (counter && counter.closest('div')) {
-          const total = (module.lessons || []).length;
-          counter.textContent = `${total} ${total === 1 ? 'contenido' : 'contenidos'}`;
-        }
+        setText(detail.querySelector('summary strong'), moduleLabel(module));
+        const total = (module.lessons || []).length;
+        setText(detail.querySelector('summary div span'), `${total} ${total === 1 ? 'contenido' : 'contenidos'}`);
       });
     });
   }
@@ -53,17 +53,17 @@
   function patchLessonHeading(course) {
     const module = currentModule(course);
     if (!module) return;
-    const subtitle = document.querySelector('.page > .page-subtitle, #page > .page-subtitle');
-    if (subtitle) subtitle.textContent = moduleLabel(module);
+    setText(document.querySelector('.page > .page-subtitle, #page > .page-subtitle'), moduleLabel(module));
   }
 
   function patchCourseFacts(course) {
     const academic = (course.modules || []).filter(module => module.section_type === 'academic').length;
+    const total = course.modules.flatMap(module => module.lessons || []).length;
     document.querySelectorAll('.course-facts span').forEach(item => {
       const label = item.querySelector('small');
       const value = item.querySelector('strong');
-      if (label?.textContent?.trim() === 'Contenido' && value) {
-        value.textContent = `Introducción · ${academic} módulos · Cierre · ${course.modules.flatMap(module => module.lessons || []).length} contenidos`;
+      if (label?.textContent?.trim() === 'Contenido') {
+        setText(value, `Introducción · ${academic} módulos · Cierre · ${total} contenidos`);
       }
     });
   }
