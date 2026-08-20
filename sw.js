@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260820.42';
+const CACHE = 'academia-ag-v20260820.43';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -6,18 +6,16 @@ const STATIC_ASSETS = [
   './evaluaciones-premium.css?v=20260817.17','./biblioteca-premium.css?v=20260817.18','./certificados-premium.css?v=20260817.19',
   './perfil-premium.css?v=20260817.20','./calendario-premium.css?v=20260817.21','./calendario-hotfix.css?v=20260817.22',
   './admin-dashboard-ejecutivo.css?v=20260818.1','./admin-dashboard-tabs.css?v=20260818.2','./admin-dashboard-corporativo.css?v=20260818.3',
-  './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./youtube-embed-hotfix.css?v=20260819.29',
-  './academy-agents.css?v=20260820.41','./cloudflare-stream-player.css?v=20260820.41',
-  './app.js?v=20260819.30','./bootstrap.js?v=20260819.39','./free-course-navigation.js?v=20260819.37','./promo-video-pin.js?v=20260819.38',
-  './academy-agents.js?v=20260819.40','./cloudflare-stream-player.js?v=20260820.42','./cloudflare-stream-test-pin.js?v=20260820.42','./student-experience-premium.js?v=20260819.6','./quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.33',
-  './premium-learning.js?v=20260817.12','./lesson-cleanup.js?v=20260817.12','./module-exam.js?v=20260819.39',
+  './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./academy-agents.css?v=20260820.41',
+  './app.js?v=20260819.30','./bootstrap.js?v=20260820.43','./academy-agents.js?v=20260819.40',
+  './student-experience-premium.js?v=20260819.6','./quiz-randomizer.js?v=20260817.12','./premium-learning.js?v=20260817.12',
   './sidebar-icons-premium.js?v=20260817.15','./evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20',
   './calendario-premium.js?v=20260817.22','./admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2',
   './first-login-password.js?v=20260818.4','./admin-import-link.js?v=20260818.5','./supabase-config.js?v=20260817.13',
   './manifest.json','./diagnostico.html','./limpiar-cache.html','./verificar-imagenes.html',
-  './curso-utah-driver.webp','./curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp','./curso-ingles.webp',
+  './curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp','./curso-ingles.webp',
   './hero-academia.webp','./icon-192.png','./icon-512.png','./icono-oficial.png','./logo-completo-oficial.png','./logo-texto-oficial.png',
-  './logo.webp','./recurso-utah-driver.webp','./recurso-manual-ag.webp'
+  './logo.webp','./recurso-manual-ag.webp'
 ];
 
 self.addEventListener('install', event => {
