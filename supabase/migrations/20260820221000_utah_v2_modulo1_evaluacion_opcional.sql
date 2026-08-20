@@ -7,8 +7,6 @@
 
 begin;
 
--- Historial de intentos por módulo. Se conserva separado de las evaluaciones
--- generales para que este repaso no altere requisitos de avance o certificado.
 create table if not exists public.module_exam_attempts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -27,17 +25,11 @@ create index if not exists module_exam_attempts_user_module_idx
 alter table public.module_exam_attempts enable row level security;
 revoke all on public.module_exam_attempts from anon, authenticated;
 
--- Banco original de 10 preguntas del Módulo 1, enlazado por lesson_code V2.
-create temporary table _utah_v2_m1_questions (
-  lesson_code text primary key,
-  question text not null,
-  options jsonb not null,
-  correct_key text not null,
-  explanation text not null
-) on commit drop;
-
-insert into _utah_v2_m1_questions(lesson_code, question, options, correct_key, explanation)
-values
+-- Banco original de 10 preguntas del Módulo 1.
+-- Se usa un CTE en lugar de una tabla temporal para que Supabase SQL Editor
+-- pueda ejecutar el script de forma segura aun si separa sentencias internamente.
+with q(lesson_code, question, options, correct_key, explanation) as (
+  values
 (
   'C1-01',
   '¿Qué necesita una persona residente de Utah para conducir legalmente en las vías públicas?',
@@ -107,8 +99,8 @@ values
   '[{"key":"a","text":"Toda persona mayor de 65 años."},{"key":"b","text":"Toda persona que visita Utah temporalmente."},{"key":"c","text":"Una persona menor de 21 años que obtiene una licencia Class D."},{"key":"d","text":"Únicamente una persona menor de 16 años."}]'::jsonb,
   'c',
   'En Utah, una persona de 20 años o menos que obtiene una licencia Class D es considerada conductora provisional.'
-);
-
+)
+)
 insert into public.lesson_quizzes(
   lesson_id, question, options, correct_key, explanation, required, updated_at
 )
@@ -121,7 +113,7 @@ select
   false,
   now()
 from public.lessons l
-join _utah_v2_m1_questions q on q.lesson_code = l.lesson_code
+join q on q.lesson_code = l.lesson_code
 where l.module_id = '7c4d9f60-1001-4b7b-9f2c-2d5e1a8c4001'::uuid
 on conflict (lesson_id) do update set
   question = excluded.question,
@@ -131,7 +123,6 @@ on conflict (lesson_id) do update set
   required = false,
   updated_at = now();
 
--- El navegador recibe preguntas y opciones, pero nunca correct_key.
 create or replace function public.get_module_exam(target_module uuid)
 returns jsonb
 language plpgsql
@@ -222,8 +213,6 @@ begin
 end;
 $$;
 
--- Calificación segura en Supabase. Después de enviar un intento sí se devuelve
--- retroalimentación completa para que el alumno pueda reforzar lo incorrecto.
 create or replace function public.submit_module_exam(
   target_module uuid,
   submitted_answers jsonb
@@ -368,7 +357,6 @@ grant execute on function public.submit_module_exam(uuid,jsonb) to authenticated
 
 commit;
 
--- VERIFICACIÓN: debe regresar 10 preguntas y 10 opcionales.
 select
   count(*) as preguntas_modulo_1,
   count(*) filter (where q.required = false) as preguntas_opcionales
