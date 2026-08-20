@@ -7,10 +7,10 @@ echo ============================================================
 echo  ACADEMIA AG - INTRODUCCION + CONTENIDO ESPECIAL
 echo ============================================================
 echo.
-echo Descargando la herramienta oficial desde GitHub...
+echo Descargando la herramienta oficial corregida desde GitHub...
 echo.
-set "SCRIPT=%~dp0migrar-intro-promo-cloudflare.ps1"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/Rujumagil/Academia-AG-Networking/main/tools/migracion-cloudflare/migrar-intro-promo-cloudflare.ps1' -OutFile '%SCRIPT%' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
+set "SCRIPT=%~dp0migrar-intro-promo-cloudflare-v2.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/Rujumagil/Academia-AG-Networking/main/tools/migracion-cloudflare/migrar-intro-promo-cloudflare-v2.ps1' -OutFile '%SCRIPT%' } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }"
 if errorlevel 1 (
   echo.
   echo No se pudo descargar la herramienta. Verifica tu conexion a Internet.
