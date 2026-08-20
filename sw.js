@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260820.44';
+const CACHE = 'academia-ag-v20260820.45';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -7,9 +7,9 @@ const STATIC_ASSETS = [
   './perfil-premium.css?v=20260817.20','./calendario-premium.css?v=20260817.21','./calendario-hotfix.css?v=20260817.22',
   './admin-dashboard-ejecutivo.css?v=20260818.1','./admin-dashboard-tabs.css?v=20260818.2','./admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./academy-agents.css?v=20260820.41',
-  './cloudflare-stream-v2.css?v=20260820.44',
-  './app.js?v=20260819.30','./bootstrap.js?v=20260820.44','./academy-agents.js?v=20260819.40','./academy-rebuild-state.js?v=20260820.43',
-  './cloudflare-stream-v2.js?v=20260820.44',
+  './cloudflare-stream-v45.css?v=20260820.45',
+  './app.js?v=20260819.30','./bootstrap.js?v=20260820.45','./academy-agents.js?v=20260819.40','./academy-rebuild-state.js?v=20260820.43',
+  './utah-v2-hierarchy.js?v=20260820.45','./cloudflare-stream-v45.js?v=20260820.45',
   './student-experience-premium.js?v=20260819.6','./quiz-randomizer.js?v=20260817.12','./premium-learning.js?v=20260817.12',
   './sidebar-icons-premium.js?v=20260817.15','./evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20',
   './calendario-premium.js?v=20260817.22','./admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2',
