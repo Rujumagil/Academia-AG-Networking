@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="cloudflare-stream-player.css?v=20260820.41">
   <script>
     (() => {
-      const resetKey = 'ag-academy-cache-reset-20260820.41';
+      const resetKey = 'ag-academy-cache-reset-20260820.42';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -52,7 +52,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260820.41');
+        url.searchParams.set('fresh', '20260820.42');
         location.replace(url.toString());
       });
     })();
@@ -76,6 +76,7 @@
   <script src="free-course-navigation.js?v=20260819.37"></script>
   <script src="promo-video-pin.js?v=20260819.38"></script>
   <script src="academy-agents.js?v=20260819.40"></script>
-  <script src="cloudflare-stream-player.js?v=20260820.41"></script>
+  <script src="cloudflare-stream-player.js?v=20260820.42"></script>
+  <script src="cloudflare-stream-test-pin.js?v=20260820.42"></script>
 </body>
 </html>
