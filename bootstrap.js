@@ -72,10 +72,7 @@
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260819.30');
       await loadScript('quiz-randomizer.js?v=20260817.12');
-      await loadScript('course-structure.js?v=20260819.33');
       await loadScript('premium-learning.js?v=20260817.12');
-      await loadScript('lesson-cleanup.js?v=20260817.12');
-      await loadScript('module-exam.js?v=20260819.39');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
       await loadScript('evaluaciones-premium.js?v=20260817.17');
       await loadScript('perfil-premium.js?v=20260817.20');
