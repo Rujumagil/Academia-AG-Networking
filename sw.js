@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260820.41';
+const CACHE = 'academia-ag-v20260820.42';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -9,7 +9,7 @@ const STATIC_ASSETS = [
   './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./youtube-embed-hotfix.css?v=20260819.29',
   './academy-agents.css?v=20260820.41','./cloudflare-stream-player.css?v=20260820.41',
   './app.js?v=20260819.30','./bootstrap.js?v=20260819.39','./free-course-navigation.js?v=20260819.37','./promo-video-pin.js?v=20260819.38',
-  './academy-agents.js?v=20260819.40','./cloudflare-stream-player.js?v=20260820.41','./student-experience-premium.js?v=20260819.6','./quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.33',
+  './academy-agents.js?v=20260819.40','./cloudflare-stream-player.js?v=20260820.42','./cloudflare-stream-test-pin.js?v=20260820.42','./student-experience-premium.js?v=20260819.6','./quiz-randomizer.js?v=20260817.12','./course-structure.js?v=20260819.33',
   './premium-learning.js?v=20260817.12','./lesson-cleanup.js?v=20260817.12','./module-exam.js?v=20260819.39',
   './sidebar-icons-premium.js?v=20260817.15','./evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20',
   './calendario-premium.js?v=20260817.22','./admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2',
