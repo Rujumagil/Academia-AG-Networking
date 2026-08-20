@@ -71,7 +71,8 @@
 
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260819.30');
-      await loadScript('cloudflare-stream-v2.js?v=20260820.44');
+      await loadScript('utah-v2-hierarchy.js?v=20260820.45');
+      await loadScript('cloudflare-stream-v45.js?v=20260820.45');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
