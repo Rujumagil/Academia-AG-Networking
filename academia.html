@@ -35,12 +35,10 @@
   <link rel="stylesheet" href="admin-dashboard-corporativo.css?v=20260818.3">
   <link rel="stylesheet" href="first-login-password.css?v=20260818.4">
   <link rel="stylesheet" href="student-experience-premium.css?v=20260819.6">
-  <link rel="stylesheet" href="youtube-embed-hotfix.css?v=20260819.29">
   <link rel="stylesheet" href="academy-agents.css?v=20260820.41">
-  <link rel="stylesheet" href="cloudflare-stream-player.css?v=20260820.41">
   <script>
     (() => {
-      const resetKey = 'ag-academy-cache-reset-20260820.42';
+      const resetKey = 'ag-academy-clean-reset-20260820.43';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -52,7 +50,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260820.42');
+        url.searchParams.set('fresh', '20260820.43');
         location.replace(url.toString());
       });
     })();
@@ -71,12 +69,8 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="supabase-config.js?v=20260817.13"></script>
-  <script src="bootstrap.js?v=20260819.39"></script>
+  <script src="bootstrap.js?v=20260820.43"></script>
   <script src="student-experience-premium.js?v=20260819.6"></script>
-  <script src="free-course-navigation.js?v=20260819.37"></script>
-  <script src="promo-video-pin.js?v=20260819.38"></script>
   <script src="academy-agents.js?v=20260819.40"></script>
-  <script src="cloudflare-stream-player.js?v=20260820.42"></script>
-  <script src="cloudflare-stream-test-pin.js?v=20260820.42"></script>
 </body>
 </html>
