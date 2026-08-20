@@ -36,9 +36,10 @@
   <link rel="stylesheet" href="first-login-password.css?v=20260818.4">
   <link rel="stylesheet" href="student-experience-premium.css?v=20260819.6">
   <link rel="stylesheet" href="academy-agents.css?v=20260820.41">
+  <link rel="stylesheet" href="cloudflare-stream-v2.css?v=20260820.44">
   <script>
     (() => {
-      const resetKey = 'ag-academy-clean-reset-20260820.43';
+      const resetKey = 'ag-academy-clean-reset-20260820.44';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -50,7 +51,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260820.43');
+        url.searchParams.set('fresh', '20260820.44');
         location.replace(url.toString());
       });
     })();
@@ -69,7 +70,7 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="supabase-config.js?v=20260817.13"></script>
-  <script src="bootstrap.js?v=20260820.43"></script>
+  <script src="bootstrap.js?v=20260820.44"></script>
   <script src="student-experience-premium.js?v=20260819.6"></script>
   <script src="academy-agents.js?v=20260819.40"></script>
   <script src="academy-rebuild-state.js?v=20260820.43"></script>
