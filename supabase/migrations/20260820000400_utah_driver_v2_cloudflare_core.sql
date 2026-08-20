@@ -36,7 +36,7 @@ alter table public.modules
 alter table public.modules
   add constraint modules_academic_number_check
   check (
-    (section_type = 'academic' and academic_number between 1 and 99)
+    (section_type = 'academic' and (academic_number is null or academic_number between 1 and 99))
     or
     (section_type in ('introduction','closing') and academic_number is null)
   );
