@@ -73,6 +73,7 @@
       await loadScript('app.js?v=20260819.30');
       await loadScript('utah-v2-hierarchy.js?v=20260820.46');
       await loadScript('cloudflare-stream-v46.js?v=20260820.46');
+      await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
