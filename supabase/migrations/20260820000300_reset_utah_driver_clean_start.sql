@@ -8,7 +8,8 @@
 --      por medio de las FK ON DELETE CASCADE existentes.
 --   3) Eliminar productos/accesos comerciales ligados al curso viejo.
 --   4) Retirar funciones específicas de los cuestionarios anteriores.
---   5) Dejar la base lista para reconstruir el curso desde cero con
+--   5) Retirar de la base cualquier URL activa de Wix, Google Drive o YouTube.
+--   6) Dejar la base lista para reconstruir el curso desde cero con
 --      Cloudflare Stream como única fuente de video.
 --
 -- Esta migración NO elimina usuarios, perfiles, workspaces ni otros cursos.
@@ -113,7 +114,28 @@ where c.id in (select id from _ag_legacy_utah_courses)
    or lower(coalesce(c.slug,'')) = 'utah-driver-success-program';
 
 -- ------------------------------------------------------------
--- 6. Retirar RPCs específicos del sistema académico viejo.
+-- 6. Retirar cualquier conexión ACTIVA restante con los proveedores viejos.
+--    Conservamos otros cursos, pero ninguna lección/recurso seguirá apuntando
+--    a YouTube, Google Drive o Wix después de este reset.
+-- ------------------------------------------------------------
+update public.lessons
+set video_url = null,
+    updated_at = now()
+where coalesce(video_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+
+update public.resources
+set external_url = null,
+    updated_at = now()
+where coalesce(external_url,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+
+-- Un bloque de video heredado sin proveedor nuevo no debe seguir funcionando.
+-- Se eliminan sólo bloques VIDEO que todavía contienen referencias a esos hosts.
+delete from public.lesson_blocks
+where block_type = 'video'
+  and coalesce(content::text,'') ~* '(youtube\.com|youtu\.be|youtube-nocookie\.com|drive\.google\.com|googleusercontent\.com|wixstatic\.com|wix\.com)';
+
+-- ------------------------------------------------------------
+-- 7. Retirar RPCs específicos del sistema académico viejo.
 --    Las recrearemos con la arquitectura nueva cuando corresponda.
 -- ------------------------------------------------------------
 drop function if exists public.get_module_exam(uuid);
