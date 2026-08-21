@@ -70,10 +70,8 @@
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260819.30');
-      await loadScript('utah-v2-hierarchy.js?v=20260820.46');
-      await loadScript('cloudflare-stream-v46.js?v=20260820.46');
-      await loadScript('cloudflare-stream-uid-fallback-v56.js?v=20260821.56');
+      await loadScript('app.js?v=20260821.62');
+      await loadScript('utah-course-runtime-v62.js?v=20260821.62');
       await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('utah-module2-exam-v2.js?v=20260820.49');
       await loadScript('utah-module3-exam-v2.js?v=20260820.50');
