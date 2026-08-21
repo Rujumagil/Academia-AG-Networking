@@ -39,7 +39,7 @@
   <link rel="stylesheet" href="cloudflare-stream-v46.css?v=20260820.46">
   <script>
     (() => {
-      const resetKey = 'ag-academy-clean-reset-20260821.60';
+      const resetKey = 'ag-academy-clean-reset-20260821.61';
       if (sessionStorage.getItem(resetKey)) return;
       sessionStorage.setItem(resetKey, '1');
       Promise.all([
@@ -51,7 +51,7 @@
           : Promise.resolve()
       ]).finally(() => {
         const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260821.60');
+        url.searchParams.set('fresh', '20260821.61');
         location.replace(url.toString());
       });
     })();
@@ -70,8 +70,7 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="supabase-config.js?v=20260817.13"></script>
-  <script src="bootstrap.js?v=20260821.58"></script>
-  <script src="utah-critical-v59.js?v=20260821.59"></script>
+  <script src="bootstrap.js?v=20260821.61"></script>
   <script src="academy-boot-rescue-v60.js?v=20260821.60"></script>
   <script src="student-experience-premium.js?v=20260819.6"></script>
   <script src="academy-agents.js?v=20260819.40"></script>
