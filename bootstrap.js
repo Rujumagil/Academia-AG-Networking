@@ -71,7 +71,7 @@
 
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260821.63');
-      await loadScript('utah-course-runtime.js?v=20260821.63');
+      await loadScript('utah-course-runtime.js?v=20260821.64');
       await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('utah-module2-exam-v2.js?v=20260820.49');
       await loadScript('utah-module3-exam-v2.js?v=20260820.50');
