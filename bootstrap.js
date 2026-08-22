@@ -71,14 +71,14 @@
 
       await loadSupabaseLibrary();
       await loadScript('app.js?v=20260821.63');
-      await loadScript('utah-course-runtime.js?v=20260821.64');
+      await loadScript('utah-course-runtime.js?v=20260822.65');
       await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('utah-module2-exam-v2.js?v=20260820.49');
       await loadScript('utah-module3-exam-v2.js?v=20260820.50');
       await loadScript('utah-module4-exam-v2.js?v=20260820.51');
       await loadScript('utah-module5-exam-v2.js?v=20260820.52');
       await loadScript('utah-module6-exam-v2.js?v=20260821.53');
-      await loadScript('utah-sequential-lock-v55.js?v=20260821.55');
+      await loadScript('utah-sequential-lock-v56.js?v=20260822.56');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
