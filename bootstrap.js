@@ -79,6 +79,7 @@
       await loadScript('utah-module5-exam-v2.js?v=20260820.52');
       await loadScript('utah-module6-exam-v2.js?v=20260821.53');
       await loadScript('utah-sequential-lock-v56.js?v=20260822.56');
+      await loadScript('utah-clean-ui-v66.js?v=20260822.66');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
