@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260821.64';
+  const RELEASE = '20260822.65';
   const COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
   const INTRO_MODULE_ID = '7c4d9f60-0000-4b7b-9f2c-2d5e1a8c4001';
   const CLOSING_MODULE_ID = '7c4d9f60-9999-4b7b-9f2c-2d5e1a8c4001';
@@ -12,6 +12,7 @@
   let sdkPromise = null;
   let active = null;
   let pollTimer = null;
+  let originalCourseProgress = null;
 
   function context() {
     try {
@@ -30,6 +31,11 @@
     return null;
   }
 
+  function targetCourse() {
+    try { return (state?.courses || []).find(item => item.id === COURSE_ID) || null; }
+    catch (_) { return null; }
+  }
+
   function orderedModules(course) {
     return [...(course?.modules || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
   }
@@ -38,10 +44,54 @@
     return [...(module?.lessons || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
   }
 
-  function nextLessonInModule(module, lessonId) {
-    const lessons = orderedModuleLessons(module);
-    const index = lessons.findIndex(item => item.id === lessonId);
-    return index >= 0 ? (lessons[index + 1] || null) : null;
+  function orderedCourseContents(course) {
+    return orderedModules(course).flatMap(module => orderedModuleLessons(module));
+  }
+
+  function isOptionalLesson(lesson) {
+    return String(lesson?.lesson_kind || '').toLowerCase() === 'promo';
+  }
+
+  function requiredLessons(course) {
+    return orderedCourseContents(course).filter(lesson => !isOptionalLesson(lesson));
+  }
+
+  function nextContentInCourse(course, lessonId) {
+    const contents = orderedCourseContents(course);
+    const index = contents.findIndex(item => item.id === lessonId);
+    return index >= 0 ? (contents[index + 1] || null) : null;
+  }
+
+  function utahCourseProgress(course) {
+    const lessons = requiredLessons(course);
+    if (!lessons.length) return 0;
+    const rows = state?.progressRows || [];
+    const done = lessons.filter(lesson => rows.some(row => row.lesson_id === lesson.id && row.completed)).length;
+    return Math.round((done / lessons.length) * 100);
+  }
+
+  function installCourseProgressOverride() {
+    if (window.__AG_UTAH_PROGRESS_V65__) return;
+    originalCourseProgress = typeof window.courseProgress === 'function' ? window.courseProgress : null;
+    window.courseProgress = course => {
+      if (course?.id === COURSE_ID) return utahCourseProgress(course);
+      return originalCourseProgress ? originalCourseProgress(course) : 0;
+    };
+    window.__AG_UTAH_PROGRESS_V65__ = true;
+  }
+
+  function patchProgressDisplay() {
+    const course = targetCourse();
+    if (!course) return;
+    const hash = location.hash.replace(/^#/, '');
+    if (hash !== `course/${COURSE_ID}` && !hash.startsWith(`lesson/${COURSE_ID}/`)) return;
+    const percentage = utahCourseProgress(course);
+    document.querySelectorAll('.progress-line').forEach(line => {
+      const label = line.querySelector(':scope > span');
+      const bar = line.querySelector('.progress-track > span');
+      if (label) label.textContent = `${percentage}% completado`;
+      if (bar) bar.style.width = `${percentage}%`;
+    });
   }
 
   function moduleType(module) {
@@ -60,8 +110,7 @@
   }
 
   function patchLabels() {
-    if (typeof state === 'undefined') return;
-    const course = (state.courses || []).find(item => item.id === COURSE_ID);
+    const course = targetCourse();
     if (!course) return;
     const modules = orderedModules(course);
 
@@ -74,8 +123,9 @@
         const count = card.querySelector(':scope > summary > div > span');
         const label = moduleLabel(module);
         if (strong && strong.textContent !== label) strong.textContent = label;
-        const total = Number(module.lessons?.length || 0);
-        const countText = `${total} ${total === 1 ? 'lección' : 'lecciones'}`;
+        const required = orderedModuleLessons(module).filter(item => !isOptionalLesson(item)).length;
+        const optional = orderedModuleLessons(module).some(isOptionalLesson);
+        const countText = `${required} ${required === 1 ? 'lección' : 'lecciones'}${optional ? ' · evaluación opcional' : ''}`;
         if (count && count.textContent !== countText) count.textContent = countText;
       });
     });
@@ -110,8 +160,6 @@
       .find(Boolean);
     if (direct) return direct;
 
-    // INTRO-01 puede tener sólo UID. Reutilizamos el origen oficial de cualquier
-    // otro video del mismo curso, todos pertenecen a la misma cuenta de Stream.
     for (const module of course?.modules || []) {
       for (const item of module.lessons || []) {
         const origin = [item.stream_hls_url, item.stream_dash_url, item.stream_thumbnail_url]
@@ -120,8 +168,6 @@
         if (origin) return origin;
       }
     }
-
-    // Compatibilidad únicamente si la base aún no tiene manifests guardados.
     return 'https://iframe.videodelivery.net';
   }
 
@@ -130,14 +176,9 @@
     const origin = playbackOrigin(course, lesson);
     let host = '';
     try { host = new URL(origin).hostname.toLowerCase(); } catch (_) {}
-
-    // El reproductor actual recomendado por Cloudflare usa el subdominio
-    // customer-<CODE>.cloudflarestream.com/<UID>/iframe.
     if (host.endsWith('.cloudflarestream.com') || host === 'cloudflarestream.com') {
       return `${origin}/${uid}/iframe?preload=metadata`;
     }
-
-    // Ruta de compatibilidad de videodelivery.net.
     return `https://iframe.videodelivery.net/${uid}?preload=metadata`;
   }
 
@@ -235,15 +276,35 @@
     active = null;
   }
 
+  function showMissingVideoState(ctx, shell) {
+    if (!ctx || !shell || isOptionalLesson(ctx.lesson) || isCloudflare(ctx.lesson)) return;
+    if (shell.dataset.agMissingVideo === ctx.lesson.id) return;
+    shell.dataset.agMissingVideo = ctx.lesson.id;
+    const image = shell.querySelector('img');
+    if (!image) return;
+    let warning = shell.querySelector('[data-utah-video-missing]');
+    if (!warning) {
+      warning = document.createElement('div');
+      warning.dataset.utahVideoMissing = '1';
+      warning.className = 'ag-stream46-status';
+      warning.dataset.mode = 'error';
+      warning.textContent = 'Este tema todavía no tiene un video activo. El avance no se marcará hasta que el video esté disponible.';
+      shell.appendChild(warning);
+    }
+  }
+
   async function mountPlayer() {
     const ctx = context();
     const shell = document.querySelector('.lesson-layout .video-shell');
 
     if (!ctx || !shell || !isCloudflare(ctx.lesson)) {
       if (active && active.lessonId !== ctx?.lesson?.id) destroy();
+      showMissingVideoState(ctx, shell);
       return;
     }
 
+    delete shell.dataset.agMissingVideo;
+    shell.querySelector('[data-utah-video-missing]')?.remove();
     if (active?.lessonId === ctx.lesson.id && shell.querySelector('[data-utah-stream-frame]')) return;
     destroy();
 
@@ -311,13 +372,16 @@
           return;
         }
 
+        patchProgressDisplay();
         setStatus(status, 'Tema completado. Ya puedes continuar.', 'complete');
         try { if (typeof showToast === 'function') showToast('Tema completado. El siguiente tema ya está disponible.', 'success'); } catch (_) {}
         try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
 
-        const nextLesson = nextLessonInModule(ctx.module, ctx.lesson.id);
+        const nextLesson = nextContentInCourse(ctx.course, ctx.lesson.id);
         if (nextLesson) {
-          setStatus(status, 'Tema completado. Abriendo el siguiente tema…', 'complete');
+          setStatus(status, isOptionalLesson(nextLesson)
+            ? 'Tema completado. Abriendo la evaluación opcional…'
+            : 'Tema completado. Abriendo el siguiente tema…', 'complete');
           setTimeout(() => {
             if (active !== local) return;
             try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
@@ -345,13 +409,14 @@
       local.cleanup = () => document.removeEventListener('visibilitychange', onVisibility);
     } catch (error) {
       console.error('Utah runtime SDK:', error, { lesson: ctx.lesson.lesson_code, src });
-      // El iframe sigue siendo un reproductor funcional aunque el SDK falle.
       setStatus(status, 'Video cargado. Presiona reproducir.', 'ready');
     }
   }
 
   function run() {
+    installCourseProgressOverride();
     patchLabels();
+    patchProgressDisplay();
     mountPlayer();
     document.documentElement.dataset.agUtahRuntime = RELEASE;
   }
@@ -361,7 +426,6 @@
     pollTimer = setTimeout(run, 60);
   }
 
-  // Sin MutationObserver: evita ciclos de render que anteriormente congelaban la página.
   window.addEventListener('hashchange', schedule);
   window.addEventListener('pageshow', schedule);
   setInterval(run, POLL_MS);
@@ -370,6 +434,9 @@
   window.ACADEMIA_AG_UTAH_RUNTIME = {
     release: RELEASE,
     run,
+    requiredLessons,
+    nextContentInCourse,
+    courseProgress: utahCourseProgress,
     playbackOrigin: lesson => {
       const ctx = context();
       return ctx ? playbackOrigin(ctx.course, lesson || ctx.lesson) : '';
