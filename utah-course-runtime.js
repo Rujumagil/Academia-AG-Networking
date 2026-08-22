@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260821.63';
+  const RELEASE = '20260821.64';
   const COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
   const INTRO_MODULE_ID = '7c4d9f60-0000-4b7b-9f2c-2d5e1a8c4001';
   const CLOSING_MODULE_ID = '7c4d9f60-9999-4b7b-9f2c-2d5e1a8c4001';
@@ -32,6 +32,16 @@
 
   function orderedModules(course) {
     return [...(course?.modules || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+  }
+
+  function orderedModuleLessons(module) {
+    return [...(module?.lessons || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+  }
+
+  function nextLessonInModule(module, lessonId) {
+    const lessons = orderedModuleLessons(module);
+    const index = lessons.findIndex(item => item.id === lessonId);
+    return index >= 0 ? (lessons[index + 1] || null) : null;
   }
 
   function moduleType(module) {
@@ -141,6 +151,26 @@
     const index = (state.progressRows || []).findIndex(item => item.lesson_id === row.lesson_id);
     if (index >= 0) state.progressRows[index] = row;
     else state.progressRows.push(row);
+  }
+
+  async function readProgress(lessonId) {
+    if (!lessonId || typeof db === 'undefined' || typeof state === 'undefined' || !state.user?.id) return null;
+    try {
+      const { data, error } = await db.from('lesson_progress')
+        .select('*')
+        .eq('user_id', state.user.id)
+        .eq('lesson_id', lessonId)
+        .maybeSingle();
+      if (error) {
+        console.error('Utah runtime verify progress:', error);
+        return null;
+      }
+      if (data) mergeProgress(data);
+      return data || null;
+    } catch (error) {
+      console.error('Utah runtime verify progress:', error);
+      return null;
+    }
   }
 
   async function saveProgress(ctx, player, completed = false, force = false) {
@@ -271,15 +301,30 @@
         if (local.finished) return;
         local.finished = true;
         setStatus(status, 'Video completado. Guardando avance…', 'complete');
-        const row = await saveProgress(ctx, player, true, true);
-        if (!row) {
+
+        let row = await saveProgress(ctx, player, true, true);
+        if (!row?.completed) row = await readProgress(ctx.lesson.id);
+
+        if (!row?.completed) {
           local.finished = false;
-          setStatus(status, 'No pudimos guardar tu avance. Intenta nuevamente.', 'error');
+          setStatus(status, 'El video terminó, pero no pudimos confirmar el avance. Reproduce los últimos segundos e intenta nuevamente.', 'error');
           return;
         }
+
         setStatus(status, 'Tema completado. Ya puedes continuar.', 'complete');
         try { if (typeof showToast === 'function') showToast('Tema completado. El siguiente tema ya está disponible.', 'success'); } catch (_) {}
         try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
+
+        const nextLesson = nextLessonInModule(ctx.module, ctx.lesson.id);
+        if (nextLesson) {
+          setStatus(status, 'Tema completado. Abriendo el siguiente tema…', 'complete');
+          setTimeout(() => {
+            if (active !== local) return;
+            try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
+            const target = `#lesson/${ctx.course.id}/${nextLesson.id}`;
+            if (location.hash !== target) location.hash = target;
+          }, 700);
+        }
       };
       const onError = event => {
         console.error('Cloudflare Stream player error:', event, { lesson: ctx.lesson.lesson_code, src });
