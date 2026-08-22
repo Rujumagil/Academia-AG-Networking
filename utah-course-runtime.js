@@ -5,6 +5,7 @@
   const COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
   const INTRO_MODULE_ID = '7c4d9f60-0000-4b7b-9f2c-2d5e1a8c4001';
   const CLOSING_MODULE_ID = '7c4d9f60-9999-4b7b-9f2c-2d5e1a8c4001';
+  const FINAL_EXAM_LESSON_CODE = 'C6-25';
   const SDK_URL = 'https://embed.cloudflarestream.com/embed/sdk.latest.js';
   const SAVE_EVERY_MS = 8000;
   const POLL_MS = 450;
@@ -378,7 +379,11 @@
         try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
 
         const nextLesson = nextContentInCourse(ctx.course, ctx.lesson.id);
-        if (nextLesson) {
+        const pauseForFinalExam = String(ctx.lesson.lesson_code || '') === FINAL_EXAM_LESSON_CODE;
+        if (nextLesson && pauseForFinalExam) {
+          setStatus(status, 'Tema completado. Puedes realizar la evaluación opcional o continuar al cierre.', 'complete');
+          try { window.ACADEMIA_AG_UTAH_SEQUENTIAL_LOCK?.enhance?.(); } catch (_) {}
+        } else if (nextLesson) {
           setStatus(status, isOptionalLesson(nextLesson)
             ? 'Tema completado. Abriendo la evaluación opcional…'
             : 'Tema completado. Abriendo el siguiente tema…', 'complete');
