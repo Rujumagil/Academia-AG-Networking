@@ -86,7 +86,7 @@
       await loadScript('utah-course-images-v67.js?v=20260822.67');
       await loadScript('utah-official-cover-v73.js?v=20260823.73');
       await loadScript('course-access-request-v75.js?v=20260823.75');
-      await loadScript('student-home-catalog-v76.js?v=20260823.76');
+      await loadScript('student-home-catalog-v77.js?v=20260823.77');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
