@@ -1,0 +1,48 @@
+name: Academia AG release checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check bootstrap.js
+          node --check app.js
+          node --check utah-course-runtime.js
+          node --check utah-sequential-lock-v56.js
+          node --check utah-clean-ui-v66.js
+          node --check utah-course-images-v67.js
+          node --check academy-agents.js
+          node --check academy-rebuild-state.js
+
+      - name: Validate release wiring
+        run: |
+          test -s academia.html
+          test -s manifest.json
+          test -s logo-completo-oficial.png
+          grep -q 'bootstrap.js?v=20260822.67' academia.html
+          grep -q 'utah-sequential-lock-v56.js?v=20260822.56' bootstrap.js
+          grep -q 'utah-clean-ui-v66.js?v=20260822.66' bootstrap.js
+          grep -q 'utah-course-images-v67.js?v=20260822.67' bootstrap.js
+
+      - name: Prevent temporary destructive cache reset
+        run: |
+          ! grep -q 'navigator.serviceWorker.getRegistrations' academia.html
+          ! grep -q 'caches.keys' academia.html
+          ! grep -q 'ag-academy-clean-reset' academia.html
