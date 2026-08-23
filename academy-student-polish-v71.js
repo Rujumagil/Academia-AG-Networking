@@ -6,7 +6,9 @@
   let observer = null;
 
   function currentHash() {
-    return location.hash.replace(/^#/, '') || '';
+    const hash = location.hash.replace(/^#/, '');
+    if (hash) return hash;
+    return hasSession() ? 'home' : 'catalog';
   }
 
   function hasSession() {
