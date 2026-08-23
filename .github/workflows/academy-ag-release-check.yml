@@ -37,6 +37,7 @@ jobs:
           node --check utah-clean-ui-v66.js
           node --check utah-student-flow-v70.js
           node --check academy-student-polish-v71.js
+          node --check academy-academic-polish-v72.js
           node --check utah-course-images-v67.js
           node --check quiz-randomizer.js
           node --check premium-learning.js
@@ -90,12 +91,16 @@ jobs:
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260823.71' academia.html
+          grep -q 'bootstrap.js?v=20260823.72' academia.html
           grep -q 'utah-student-flow-v70.js?v=20260823.70' bootstrap.js
           grep -q 'academy-student-polish-v71.js?v=20260823.71' bootstrap.js
+          grep -q 'academy-academic-polish-v72.js?v=20260823.72' bootstrap.js
           grep -q 'utah-sequential-lock-v57.js?v=20260823.57' bootstrap.js
           grep -q 'utah-clean-ui-v66.js?v=20260822.66' bootstrap.js
           grep -q 'utah-course-images-v67.js?v=20260822.67' bootstrap.js
+          grep -q "academia-ag-v20260823.72" sw.js
+          grep -q './bootstrap.js?v=20260823.72' sw.js
+          grep -q './academy-academic-polish-v72.js?v=20260823.72' sw.js
 
       - name: Validate local assets linked from academia
         run: |
