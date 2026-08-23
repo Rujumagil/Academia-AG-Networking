@@ -20,15 +20,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate JavaScript syntax
+      - name: Validate production JavaScript syntax
         run: |
           node --check bootstrap.js
           node --check app.js
           node --check supabase-config.js
           node --check utah-course-runtime.js
+          node --check utah-module-exam-v2.js
+          node --check utah-module2-exam-v2.js
+          node --check utah-module3-exam-v2.js
+          node --check utah-module4-exam-v2.js
+          node --check utah-module5-exam-v2.js
+          node --check utah-module6-exam-v2.js
           node --check utah-sequential-lock-v56.js
           node --check utah-clean-ui-v66.js
           node --check utah-course-images-v67.js
+          node --check quiz-randomizer.js
+          node --check premium-learning.js
+          node --check sidebar-icons-premium.js
+          node --check evaluaciones-premium.js
+          node --check perfil-premium.js
+          node --check calendario-premium.js
+          node --check admin-dashboard-ejecutivo.js
+          node --check admin-dashboard-tabs.js
+          node --check first-login-password.js
+          node --check admin-import-link.js
           node --check academy-agents.js
           node --check academy-rebuild-state.js
 
@@ -39,6 +55,9 @@ jobs:
           test -s logo-completo-oficial.png
           test -s supabase-config.js
           grep -q 'bootstrap.js?v=20260822.67' academia.html
+          grep -q 'utah-course-runtime.js?v=20260822.65' bootstrap.js
+          grep -q 'utah-module-exam-v2.js?v=20260820.48' bootstrap.js
+          grep -q 'utah-module6-exam-v2.js?v=20260821.53' bootstrap.js
           grep -q 'utah-sequential-lock-v56.js?v=20260822.56' bootstrap.js
           grep -q 'utah-clean-ui-v66.js?v=20260822.66' bootstrap.js
           grep -q 'utah-course-images-v67.js?v=20260822.67' bootstrap.js
@@ -48,6 +67,9 @@ jobs:
           grep -Eq 'https://[a-z0-9-]+\.supabase\.co' supabase-config.js
           grep -q 'publishableKey' supabase-config.js
           ! grep -qi 'TU-PROYECTO\|TU_SUPABASE\|service_role\|SUPABASE_SERVICE_ROLE' supabase-config.js
+          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey' . \
+            --include='*.html' --include='*.js' \
+            --exclude-dir='.git'
 
       - name: Prevent temporary destructive cache reset
         run: |
