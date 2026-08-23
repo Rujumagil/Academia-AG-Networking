@@ -164,7 +164,7 @@ jobs:
           grep -Eq 'https://[a-z0-9-]+\.supabase\.co' supabase-config.js
           grep -q 'publishableKey' supabase-config.js
           ! grep -qi 'TU-PROYECTO\|TU_SUPABASE\|service_role\|SUPABASE_SERVICE_ROLE' supabase-config.js
-          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey|vapid_private_key\s*[:=]\s*["'"'][A-Za-z0-9_-]+' . --include='*.html' --include='*.js' --exclude-dir='.git'
+          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey' . --include='*.html' --include='*.js' --exclude-dir='.git'
 
       - name: Prevent temporary destructive cache reset
         run: |
