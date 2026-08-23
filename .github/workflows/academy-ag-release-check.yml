@@ -24,6 +24,7 @@ jobs:
         run: |
           node --check bootstrap.js
           node --check app.js
+          node --check supabase-config.js
           node --check utah-course-runtime.js
           node --check utah-sequential-lock-v56.js
           node --check utah-clean-ui-v66.js
@@ -36,10 +37,17 @@ jobs:
           test -s academia.html
           test -s manifest.json
           test -s logo-completo-oficial.png
+          test -s supabase-config.js
           grep -q 'bootstrap.js?v=20260822.67' academia.html
           grep -q 'utah-sequential-lock-v56.js?v=20260822.56' bootstrap.js
           grep -q 'utah-clean-ui-v66.js?v=20260822.66' bootstrap.js
           grep -q 'utah-course-images-v67.js?v=20260822.67' bootstrap.js
+
+      - name: Validate public Supabase configuration
+        run: |
+          grep -Eq 'https://[a-z0-9-]+\.supabase\.co' supabase-config.js
+          grep -q 'publishableKey' supabase-config.js
+          ! grep -qi 'TU-PROYECTO\|TU_SUPABASE\|service_role\|SUPABASE_SERVICE_ROLE' supabase-config.js
 
       - name: Prevent temporary destructive cache reset
         run: |
