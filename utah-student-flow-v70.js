@@ -98,28 +98,37 @@
   }
 
   function clearSidebarState() {
-    document.querySelectorAll('.lesson-item.ag-utah-current70').forEach(row => row.classList.remove('ag-utah-current70'));
-    document.querySelectorAll('.ag-utah-current70-label').forEach(node => node.remove());
-    document.querySelectorAll(`a[href^="#lesson/${COURSE_ID}/"]`).forEach(anchor => anchor.removeAttribute('aria-current'));
+    document.querySelectorAll(`a[href^="#lesson/${COURSE_ID}/"]`).forEach(anchor => {
+      anchor.removeAttribute('aria-current');
+      const row = anchor.closest('.lesson-item');
+      row?.classList.remove('ag-utah-current70');
+      anchor.querySelector('.ag-utah-current70-label')?.remove();
+    });
   }
 
   function markCurrentLesson(ctx) {
-    clearSidebarState();
-    const href = `#lesson/${ctx.course.id}/${ctx.lesson.id}`;
-    const anchor = [...document.querySelectorAll(`a[href^="#lesson/${COURSE_ID}/"]`)]
-      .find(node => node.getAttribute('href') === href);
-    if (!anchor) return;
-    anchor.setAttribute('aria-current', 'page');
-    const row = anchor.closest('.lesson-item');
-    if (!row) return;
-    row.classList.add('ag-utah-current70');
-    const strong = anchor.querySelector('strong');
-    if (strong && !strong.querySelector('.ag-utah-current70-label')) {
-      const badge = document.createElement('span');
-      badge.className = 'ag-utah-current70-label';
-      badge.textContent = 'Actual';
-      strong.appendChild(badge);
-    }
+    const currentHref = `#lesson/${ctx.course.id}/${ctx.lesson.id}`;
+    document.querySelectorAll(`a[href^="#lesson/${COURSE_ID}/"]`).forEach(anchor => {
+      const isCurrent = anchor.getAttribute('href') === currentHref;
+      const row = anchor.closest('.lesson-item');
+      const strong = anchor.querySelector('strong');
+      const badge = anchor.querySelector('.ag-utah-current70-label');
+
+      if (isCurrent) {
+        if (anchor.getAttribute('aria-current') !== 'page') anchor.setAttribute('aria-current', 'page');
+        row?.classList.add('ag-utah-current70');
+        if (strong && !badge) {
+          const nextBadge = document.createElement('span');
+          nextBadge.className = 'ag-utah-current70-label';
+          nextBadge.textContent = 'Actual';
+          strong.appendChild(nextBadge);
+        }
+      } else {
+        if (anchor.hasAttribute('aria-current')) anchor.removeAttribute('aria-current');
+        row?.classList.remove('ag-utah-current70');
+        badge?.remove();
+      }
+    });
   }
 
   function isAutoTrackedVideo(lesson) {
@@ -150,6 +159,10 @@
     }
 
     const contentLabel = optional ? 'Evaluación opcional' : `Tema ${Math.max(index + 1, 1)} de ${lessons.length}`;
+    const signature = [ctx.lesson.id, previous?.id || '', next?.id || '', stats.percentage, currentDone ? '1' : '0', optional ? '1' : '0'].join('|');
+    if (panel.dataset.signature === signature) return;
+    panel.dataset.signature = signature;
+
     panel.innerHTML = `
       <div class="ag-utah-flow70__top">
         <div>
@@ -177,8 +190,9 @@
   }
 
   function clear() {
-    document.documentElement.removeAttribute('data-ag-utah-flow');
-    document.documentElement.removeAttribute('data-ag-utah-auto-track');
+    const root = document.documentElement;
+    if (root.hasAttribute('data-ag-utah-flow')) root.removeAttribute('data-ag-utah-flow');
+    if (root.hasAttribute('data-ag-utah-auto-track')) root.removeAttribute('data-ag-utah-auto-track');
     document.querySelector('[data-ag-utah-flow70]')?.remove();
     clearSidebarState();
   }
