@@ -115,6 +115,12 @@
     pendingSubjects = new Set((data || []).map(row => row.subject));
   }
 
+  async function dispatchPush(ticketId) {
+    try {
+      await window.ACADEMIA_AG_PUSH?.dispatchCourseRequest?.(ticketId, true);
+    } catch (_) {}
+  }
+
   async function createInlineRequest(button) {
     if (!isStudentSession() || !button || button.disabled) return;
     const card = button.closest('.student-home-course-v77,.student-home-course-v76');
@@ -138,6 +144,7 @@
         .limit(1);
       if (existingError) throw existingError;
 
+      let ticketId = existing?.[0]?.id || '';
       if (!existing?.length) {
         const profileName = state.profile?.full_name || state.user?.user_metadata?.full_name || 'Alumno';
         const email = state.profile?.email || state.user?.email || '';
@@ -152,17 +159,19 @@
           'Origen: Inicio del alumno · Academia AG'
         ].filter(Boolean).join('\n');
 
-        const { error } = await db.from('support_tickets').insert({
+        const { data: created, error } = await db.from('support_tickets').insert({
           user_id: state.user.id,
           category: 'course',
           subject,
           message
-        });
+        }).select('id').single();
         if (error) throw error;
+        ticketId = created?.id || '';
       }
 
       pendingSubjects.add(subject);
       renderPending(card, available);
+      if (ticketId) dispatchPush(ticketId);
       if (typeof showToast === 'function') {
         showToast(
           available
@@ -215,8 +224,6 @@
     createInlineRequest(button);
   }, true);
 
-  // Protección adicional: nunca permitir que una tarjeta de Inicio mande al alumno
-  // al catálogo público cuando la intención es solicitar acceso.
   document.addEventListener('click', event => {
     const link = event.target.closest?.('.student-home-course-v77 a[href="#catalog/programs"],.student-home-course-v76 a[href="#catalog/programs"]');
     if (!link) return;
