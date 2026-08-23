@@ -5,6 +5,7 @@
   const COMPAS_API_BASE = 'https://app.proyectocompas.com';
   const COMPAS_STORAGE_KEY = `compas-one-web-chat:${COMPAS_PUBLIC_KEY}`;
   const REGISTRATION_STORAGE_KEY = 'ag-driver-registration:last-success';
+  const OFFICIAL_COVER = 'https://static.wixstatic.com/media/11f124_5a9d6fd7f2054172943aab4260f3cfe7~mv2.png';
 
   const form = document.querySelector('#driver-registration-form');
   const resultBox = document.querySelector('#driver-registration-result');
@@ -15,6 +16,17 @@
   const sourceGroup = form?.querySelector('.source-group');
   const consentLabel = form?.querySelector('.consent');
 
+  function applyOfficialCover() {
+    const heroImage = document.querySelector('.hero-image img');
+    if (heroImage) {
+      heroImage.src = OFFICIAL_COVER;
+      heroImage.alt = 'Portada oficial Utah Driver Success Program™ · Angelica Gallardo';
+    }
+    const socialImage = document.querySelector('meta[property="og:image"]');
+    if (socialImage) socialImage.setAttribute('content', OFFICIAL_COVER);
+  }
+
+  applyOfficialCover();
   if (year) year.textContent = new Date().getFullYear();
 
   function uniqueId() {
