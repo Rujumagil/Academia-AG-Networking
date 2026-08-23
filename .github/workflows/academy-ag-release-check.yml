@@ -35,6 +35,8 @@ jobs:
           node --check utah-module6-exam-v2.js
           node --check utah-sequential-lock-v57.js
           node --check utah-clean-ui-v66.js
+          node --check utah-student-flow-v70.js
+          node --check academy-student-polish-v71.js
           node --check utah-course-images-v67.js
           node --check quiz-randomizer.js
           node --check premium-learning.js
@@ -48,6 +50,31 @@ jobs:
           node --check admin-import-link.js
           node --check academy-agents.js
           node --check academy-rebuild-state.js
+
+      - name: Validate every local script loaded by bootstrap
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          from urllib.parse import urlsplit
+          text = Path('bootstrap.js').read_text(encoding='utf-8')
+          refs = re.findall(r"loadScript\(\s*['\"]([^'\"]+\.js(?:\?[^'\"]*)?)['\"]", text)
+          scripts = []
+          for ref in refs:
+              parsed = urlsplit(ref)
+              if parsed.scheme or parsed.netloc or ref.startswith('//'):
+                  continue
+              path = parsed.path.lstrip('./')
+              if path:
+                  scripts.append(path)
+          scripts = sorted(set(scripts))
+          missing = [p for p in scripts if not Path(p).is_file() or Path(p).stat().st_size == 0]
+          if missing:
+              raise SystemExit('Missing or empty JavaScript loaded by bootstrap: ' + ', '.join(missing))
+          for path in scripts:
+              subprocess.run(['node', '--check', path], check=True)
+          print(f'Validated {len(scripts)} local scripts loaded by bootstrap.js')
+          PY
 
       - name: Validate release wiring
         run: |
@@ -63,11 +90,9 @@ jobs:
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260823.68' academia.html
-          grep -q "academia-ag-v20260823.69" sw.js
-          grep -q 'utah-course-runtime.js?v=20260822.65' bootstrap.js
-          grep -q 'utah-module-exam-v2.js?v=20260820.48' bootstrap.js
-          grep -q 'utah-module6-exam-v2.js?v=20260821.53' bootstrap.js
+          grep -q 'bootstrap.js?v=20260823.71' academia.html
+          grep -q 'utah-student-flow-v70.js?v=20260823.70' bootstrap.js
+          grep -q 'academy-student-polish-v71.js?v=20260823.71' bootstrap.js
           grep -q 'utah-sequential-lock-v57.js?v=20260823.57' bootstrap.js
           grep -q 'utah-clean-ui-v66.js?v=20260822.66' bootstrap.js
           grep -q 'utah-course-images-v67.js?v=20260822.67' bootstrap.js
@@ -78,36 +103,24 @@ jobs:
           from html.parser import HTMLParser
           from pathlib import Path
           from urllib.parse import urlsplit
-
           class Assets(HTMLParser):
               def __init__(self):
-                  super().__init__()
-                  self.paths = []
+                  super().__init__(); self.paths = []
               def handle_starttag(self, tag, attrs):
                   values = dict(attrs)
-                  if tag == 'script' and values.get('src'):
-                      self.paths.append(values['src'])
-                  if tag == 'link' and values.get('href') and values.get('rel') == 'stylesheet':
-                      self.paths.append(values['href'])
-
-          parser = Assets()
-          parser.feed(Path('academia.html').read_text(encoding='utf-8'))
-          missing = []
-          empty = []
+                  if tag == 'script' and values.get('src'): self.paths.append(values['src'])
+                  if tag == 'link' and values.get('href') and values.get('rel') == 'stylesheet': self.paths.append(values['href'])
+          parser = Assets(); parser.feed(Path('academia.html').read_text(encoding='utf-8'))
+          missing, empty = [], []
           for raw in parser.paths:
               parsed = urlsplit(raw)
-              if parsed.scheme or raw.startswith('//'):
-                  continue
+              if parsed.scheme or raw.startswith('//'): continue
               path = parsed.path.lstrip('./')
-              if not path:
-                  continue
+              if not path: continue
               file = Path(path)
-              if not file.is_file():
-                  missing.append(raw)
-              elif file.stat().st_size == 0:
-                  empty.append(raw)
-          if missing or empty:
-              raise SystemExit(f'Missing local assets: {missing}; empty local assets: {empty}')
+              if not file.is_file(): missing.append(raw)
+              elif file.stat().st_size == 0: empty.append(raw)
+          if missing or empty: raise SystemExit(f'Missing local assets: {missing}; empty local assets: {empty}')
           print(f'Validated {len(parser.paths)} linked stylesheet/script references.')
           PY
 
@@ -116,9 +129,7 @@ jobs:
           grep -Eq 'https://[a-z0-9-]+\.supabase\.co' supabase-config.js
           grep -q 'publishableKey' supabase-config.js
           ! grep -qi 'TU-PROYECTO\|TU_SUPABASE\|service_role\|SUPABASE_SERVICE_ROLE' supabase-config.js
-          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey' . \
-            --include='*.html' --include='*.js' \
-            --exclude-dir='.git'
+          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey' . --include='*.html' --include='*.js' --exclude-dir='.git'
 
       - name: Prevent temporary destructive cache reset
         run: |
