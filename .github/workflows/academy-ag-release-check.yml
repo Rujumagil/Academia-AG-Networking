@@ -44,6 +44,7 @@ jobs:
           node --check student-home-catalog-v77.js
           node --check student-inline-access-v79.js
           node --check admin-course-requests-v78.js
+          node --check push-notifications-v80.js
           node --check quiz-randomizer.js
           node --check premium-learning.js
           node --check sidebar-icons-premium.js
@@ -96,12 +97,15 @@ jobs:
           test -s student-home-catalog-v77.js
           test -s student-inline-access-v79.js
           test -s admin-course-requests-v78.js
+          test -s push-notifications-v80.js
+          test -s supabase/migrations/20260823233000_web_push_notifications.sql
+          test -s supabase/functions/send-web-push/index.ts
           python -m json.tool manifest.json >/dev/null
           grep -q '"start_url": "./academia.html"' manifest.json
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260823.79' academia.html
+          grep -q 'bootstrap.js?v=20260823.80' academia.html
           grep -q 'utah-student-flow-v70.js?v=20260823.70' bootstrap.js
           grep -q 'academy-student-polish-v71.js?v=20260823.71' bootstrap.js
           grep -q 'academy-academic-polish-v72.js?v=20260823.72' bootstrap.js
@@ -113,14 +117,20 @@ jobs:
           grep -q 'student-home-catalog-v77.js?v=20260823.77' bootstrap.js
           grep -q 'student-inline-access-v79.js?v=20260823.79' bootstrap.js
           grep -q 'admin-course-requests-v78.js?v=20260823.78' bootstrap.js
-          grep -q "academia-ag-v20260823.79" sw.js
-          grep -q './bootstrap.js?v=20260823.79' sw.js
+          grep -q 'push-notifications-v80.js?v=20260823.80' bootstrap.js
+          grep -q "academia-ag-v20260823.80" sw.js
+          grep -q './bootstrap.js?v=20260823.80' sw.js
           grep -q './academy-academic-polish-v72.js?v=20260823.72' sw.js
           grep -q './utah-official-cover-v73.js?v=20260823.73' sw.js
           grep -q './course-access-request-v75.js?v=20260823.75' sw.js
           grep -q './student-home-catalog-v77.js?v=20260823.77' sw.js
           grep -q './student-inline-access-v79.js?v=20260823.79' sw.js
           grep -q './admin-course-requests-v78.js?v=20260823.78' sw.js
+          grep -q './push-notifications-v80.js?v=20260823.80' sw.js
+          grep -q "addEventListener('push'" sw.js
+          grep -q "addEventListener('notificationclick'" sw.js
+          grep -q 'save_my_push_subscription' supabase/migrations/20260823233000_web_push_notifications.sql
+          grep -q 'generateVAPIDKeys' supabase/functions/send-web-push/index.ts
 
       - name: Validate local assets linked from academia
         run: |
@@ -154,7 +164,7 @@ jobs:
           grep -Eq 'https://[a-z0-9-]+\.supabase\.co' supabase-config.js
           grep -q 'publishableKey' supabase-config.js
           ! grep -qi 'TU-PROYECTO\|TU_SUPABASE\|service_role\|SUPABASE_SERVICE_ROLE' supabase-config.js
-          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey' . --include='*.html' --include='*.js' --exclude-dir='.git'
+          ! grep -RniE 'service_role|SUPABASE_SERVICE_ROLE|serviceRoleKey|vapid_private_key\s*[:=]\s*["'"'][A-Za-z0-9_-]+' . --include='*.html' --include='*.js' --exclude-dir='.git'
 
       - name: Prevent temporary destructive cache reset
         run: |
