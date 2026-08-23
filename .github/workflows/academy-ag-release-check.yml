@@ -42,6 +42,7 @@ jobs:
           node --check utah-official-cover-v73.js
           node --check course-access-request-v75.js
           node --check student-home-catalog-v77.js
+          node --check student-inline-access-v79.js
           node --check admin-course-requests-v78.js
           node --check quiz-randomizer.js
           node --check premium-learning.js
@@ -93,13 +94,14 @@ jobs:
           test -s utah-official-cover-v73.js
           test -s course-access-request-v75.js
           test -s student-home-catalog-v77.js
+          test -s student-inline-access-v79.js
           test -s admin-course-requests-v78.js
           python -m json.tool manifest.json >/dev/null
           grep -q '"start_url": "./academia.html"' manifest.json
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260823.78' academia.html
+          grep -q 'bootstrap.js?v=20260823.79' academia.html
           grep -q 'utah-student-flow-v70.js?v=20260823.70' bootstrap.js
           grep -q 'academy-student-polish-v71.js?v=20260823.71' bootstrap.js
           grep -q 'academy-academic-polish-v72.js?v=20260823.72' bootstrap.js
@@ -109,13 +111,15 @@ jobs:
           grep -q 'utah-official-cover-v73.js?v=20260823.73' bootstrap.js
           grep -q 'course-access-request-v75.js?v=20260823.75' bootstrap.js
           grep -q 'student-home-catalog-v77.js?v=20260823.77' bootstrap.js
+          grep -q 'student-inline-access-v79.js?v=20260823.79' bootstrap.js
           grep -q 'admin-course-requests-v78.js?v=20260823.78' bootstrap.js
-          grep -q "academia-ag-v20260823.78" sw.js
-          grep -q './bootstrap.js?v=20260823.78' sw.js
+          grep -q "academia-ag-v20260823.79" sw.js
+          grep -q './bootstrap.js?v=20260823.79' sw.js
           grep -q './academy-academic-polish-v72.js?v=20260823.72' sw.js
           grep -q './utah-official-cover-v73.js?v=20260823.73' sw.js
           grep -q './course-access-request-v75.js?v=20260823.75' sw.js
           grep -q './student-home-catalog-v77.js?v=20260823.77' sw.js
+          grep -q './student-inline-access-v79.js?v=20260823.79' sw.js
           grep -q './admin-course-requests-v78.js?v=20260823.78' sw.js
 
       - name: Validate local assets linked from academia
