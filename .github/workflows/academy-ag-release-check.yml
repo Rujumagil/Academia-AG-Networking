@@ -54,9 +54,15 @@ jobs:
           test -s academia.html
           test -s manifest.json
           test -s logo-completo-oficial.png
+          test -s icon-192.png
+          test -s icon-512.png
           test -s supabase-config.js
           test -s sw.js
+          python -m json.tool manifest.json >/dev/null
           grep -q '"start_url": "./academia.html"' manifest.json
+          grep -q '"display": "standalone"' manifest.json
+          grep -q '"src":"icon-192.png"' manifest.json
+          grep -q '"src":"icon-512.png"' manifest.json
           grep -q 'bootstrap.js?v=20260822.67' academia.html
           grep -q "academia-ag-v20260823.68" sw.js
           grep -q 'utah-course-runtime.js?v=20260822.65' bootstrap.js
