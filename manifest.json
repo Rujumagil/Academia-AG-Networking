@@ -2,7 +2,7 @@
   "name": "Academia AG | AG Business Networking",
   "short_name": "Academia AG",
   "description": "Cursos, recursos y herramientas de formación práctica para crecer en Estados Unidos.",
-  "start_url": "./index.html#home",
+  "start_url": "./academia.html",
   "display": "standalone",
   "background_color": "#F9FAF9",
   "theme_color": "#1E293B",
