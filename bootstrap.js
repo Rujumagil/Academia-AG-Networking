@@ -80,6 +80,7 @@
       await loadScript('utah-module6-exam-v2.js?v=20260821.53');
       await loadScript('utah-sequential-lock-v57.js?v=20260823.57');
       await loadScript('utah-clean-ui-v66.js?v=20260822.66');
+      await loadScript('utah-student-flow-v70.js?v=20260823.70');
       await loadScript('utah-course-images-v67.js?v=20260822.67');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
