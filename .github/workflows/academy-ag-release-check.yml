@@ -25,6 +25,7 @@ jobs:
           node --check bootstrap.js
           node --check app.js
           node --check supabase-config.js
+          node --check sw.js
           node --check utah-course-runtime.js
           node --check utah-module-exam-v2.js
           node --check utah-module2-exam-v2.js
@@ -54,7 +55,9 @@ jobs:
           test -s manifest.json
           test -s logo-completo-oficial.png
           test -s supabase-config.js
+          test -s sw.js
           grep -q 'bootstrap.js?v=20260822.67' academia.html
+          grep -q "academia-ag-v20260823.68" sw.js
           grep -q 'utah-course-runtime.js?v=20260822.65' bootstrap.js
           grep -q 'utah-module-exam-v2.js?v=20260820.48' bootstrap.js
           grep -q 'utah-module6-exam-v2.js?v=20260821.53' bootstrap.js
