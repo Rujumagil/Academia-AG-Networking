@@ -132,6 +132,20 @@ jobs:
           grep -q 'save_my_push_subscription' supabase/migrations/20260823233000_web_push_notifications.sql
           grep -q 'generateVAPIDKeys' supabase/functions/send-web-push/index.ts
 
+      - name: Protect Web Push server secrets and dispatch logs
+        run: |
+          migration='supabase/migrations/20260823233000_web_push_notifications.sql'
+          function='supabase/functions/send-web-push/index.ts'
+          grep -q 'alter table public.push_server_config enable row level security' "$migration"
+          grep -q 'revoke all on public.push_server_config from anon, authenticated' "$migration"
+          grep -q 'alter table public.push_dispatch_log enable row level security' "$migration"
+          grep -q 'revoke all on public.push_dispatch_log from anon, authenticated' "$migration"
+          grep -q 'revoke all on function public.save_my_push_subscription' "$migration"
+          grep -q 'grant execute on function public.save_my_push_subscription' "$migration"
+          grep -q 'SERVICE_ROLE_KEY = Deno.env.get' "$function"
+          grep -q 'return json({ ok: true, publicKey: config.vapid_public_key' "$function"
+          ! grep -Eq 'return json\([^\n]*vapid_private_key' "$function"
+
       - name: Validate local assets linked from academia
         run: |
           python - <<'PY'
