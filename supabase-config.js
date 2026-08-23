@@ -6,8 +6,8 @@ window.SUPABASE_CONFIG = {
   publishableKey: "sb_publishable_zyQF2HTfErzNQ9oWAQPNaA_nxdxuGiA",
   adminEmail: "proyectocompas.info@gmail.com",
   whatsappNumber: "",
-  publicSiteUrl: "https://rujumagil.github.io/Academia-AG-Networking/",
-  academyUrl: "https://rujumagil.github.io/Academia-AG-Networking/academia.html",
+  publicSiteUrl: "https://agbusinessnetworking.com/",
+  academyUrl: "https://agbusinessnetworking.com/academia.html",
   legalVersion: "2026-08",
   organizationName: "AG Business Networking"
 };
