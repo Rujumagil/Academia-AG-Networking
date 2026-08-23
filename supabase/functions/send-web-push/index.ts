@@ -11,8 +11,11 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:proyectocompas.info@gmail.com";
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  throw new Error("Supabase runtime environment is incomplete");
+}
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
@@ -30,31 +33,33 @@ function bearer(req: Request) {
 async function currentUser(req: Request) {
   const token = bearer(req);
   if (!token) throw new Error("Autenticación requerida");
-  const authClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-  const { data, error } = await authClient.auth.getUser();
+  const { data, error } = await admin.auth.getUser(token);
   if (error || !data.user) throw new Error("Sesión inválida");
   return data.user;
 }
 
 async function roleFor(userId: string) {
-  const { data } = await admin
+  const { data, error } = await admin
     .from("profiles")
     .select("role,account_status,full_name,email")
     .eq("id", userId)
     .maybeSingle();
+  if (error) throw error;
   return data || null;
 }
 
-async function ensureVapid() {
-  const { data: existing, error: readError } = await admin
+async function readVapid() {
+  const { data, error } = await admin
     .from("push_server_config")
     .select("vapid_public_key,vapid_private_key,vapid_subject")
     .eq("id", 1)
     .maybeSingle();
-  if (readError) throw readError;
+  if (error) throw error;
+  return data || null;
+}
+
+async function ensureVapid() {
+  const existing = await readVapid();
   if (existing?.vapid_public_key && existing?.vapid_private_key) return existing;
 
   const generated = webpush.generateVAPIDKeys();
@@ -65,22 +70,33 @@ async function ensureVapid() {
     vapid_subject: VAPID_SUBJECT,
     updated_at: new Date().toISOString()
   };
+
   const { data, error } = await admin
     .from("push_server_config")
-    .upsert(row, { onConflict: "id" })
+    .insert(row)
     .select("vapid_public_key,vapid_private_key,vapid_subject")
     .single();
-  if (error) throw error;
-  return data;
+
+  if (!error && data) return data;
+
+  // Si dos dispositivos activan Push al mismo tiempo, sólo uno crea las claves.
+  // El segundo reutiliza inmediatamente el par que ya quedó guardado.
+  if (String((error as any)?.code || "") === "23505") {
+    const winner = await readVapid();
+    if (winner?.vapid_public_key && winner?.vapid_private_key) return winner;
+  }
+
+  throw error || new Error("No se pudo inicializar VAPID");
 }
 
 async function claim(eventKey: string) {
   const now = new Date().toISOString();
-  const { data: existing } = await admin
+  const { data: existing, error: readError } = await admin
     .from("push_dispatch_log")
     .select("status,updated_at")
     .eq("event_key", eventKey)
     .maybeSingle();
+  if (readError) throw readError;
 
   if (existing?.status === "done") return false;
 
