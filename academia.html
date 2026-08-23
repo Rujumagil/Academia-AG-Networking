@@ -37,25 +37,6 @@
   <link rel="stylesheet" href="student-experience-premium.css?v=20260819.6">
   <link rel="stylesheet" href="academy-agents.css?v=20260820.41">
   <link rel="stylesheet" href="cloudflare-stream-v46.css?v=20260821.63">
-  <script>
-    (() => {
-      const resetKey = 'ag-academy-clean-reset-20260822.67';
-      if (sessionStorage.getItem(resetKey)) return;
-      sessionStorage.setItem(resetKey, '1');
-      Promise.all([
-        'serviceWorker' in navigator
-          ? navigator.serviceWorker.getRegistrations().then(items => Promise.all(items.map(item => item.unregister())))
-          : Promise.resolve(),
-        'caches' in window
-          ? caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
-          : Promise.resolve()
-      ]).finally(() => {
-        const url = new URL(location.href);
-        url.searchParams.set('fresh', '20260822.67');
-        location.replace(url.toString());
-      });
-    })();
-  </script>
 </head>
 <body>
   <div id="app">
