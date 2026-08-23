@@ -9,7 +9,7 @@
     academy: 'https://static.wixstatic.com/media/11f124_b15578e5070d4270a41bbd44310e5370~mv2.png',
     community: 'https://static.wixstatic.com/media/11f124_0d0860da13cb4235b3429d945c18a6b5~mv2.png',
     courses: [
-      'https://static.wixstatic.com/media/11f124_61e158288a9146c897d629bcbd1a3f9e~mv2.png',
+      'https://drive.google.com/thumbnail?id=1tuyhiM-XDc8cyJzw1W_q6Jqdh91VrzMP&sz=w1600',
       'https://static.wixstatic.com/media/11f124_da720acf43f245949d576644333f7c91~mv2.png',
       'https://static.wixstatic.com/media/11f124_c63895cf900f4f9b9624c7a576ca7caf~mv2.png',
       'https://static.wixstatic.com/media/11f124_7860b768bbab446db851d96e3160dbe0~mv2.png',
