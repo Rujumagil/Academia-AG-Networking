@@ -5,15 +5,15 @@
   let timer = null;
   let observer = null;
 
-  const routeName = () => {
+  function routeName() {
     const hash = location.hash.replace(/^#/, '');
     if (hash) return hash.split('/')[0];
     try { return typeof state !== 'undefined' && state?.session ? 'home' : 'catalog'; }
     catch (_) { return 'catalog'; }
-  };
+  }
 
   function setText(node, value) {
-    if (node && node.textContent !== value) node.textContent = value;
+    if (node && node.textContent !== String(value)) node.textContent = String(value);
   }
 
   function injectStyles() {
@@ -96,8 +96,10 @@
       block.dataset.signature = signature;
       block.innerHTML = `
         <article><span>✓</span><div><strong>Cuenta activa</strong><small>Tu sesión y tus accesos están vinculados a este perfil.</small></div></article>
-        <article><span>↻</span><div><strong>Progreso sincronizado</strong><small>${completed} ${completed === 1 ? 'lección completada registrada' : 'lecciones completadas registradas'}.</small></div></article>
-        <article><span>AG</span><div><strong>Datos para constancias</strong><small>${fullName ? `Se utilizará “${fullName}” en tus constancias.` : 'Completa tu nombre para usarlo en tus constancias.'}</small></div></article>`;
+        <article><span>↻</span><div><strong>Progreso sincronizado</strong><small></small></div></article>
+        <article><span>AG</span><div><strong>Datos para constancias</strong><small></small></div></article>`;
+      setText(block.children[1].querySelector('small'), `${completed} ${completed === 1 ? 'lección completada registrada' : 'lecciones completadas registradas'}.`);
+      setText(block.children[2].querySelector('small'), fullName ? `Se utilizará “${fullName}” en tus constancias.` : 'Completa tu nombre para usarlo en tus constancias.');
     }
 
     const form = page.querySelector('#profile-form');
@@ -138,9 +140,12 @@
     if (summary.dataset.signature !== signature) {
       summary.dataset.signature = signature;
       summary.innerHTML = `
-        <article><span>?</span><div><strong>${open} ${open === 1 ? 'ticket abierto' : 'tickets abiertos'}</strong><small>Solicitudes pendientes de atención</small></div></article>
-        <article><span>↻</span><div><strong>${pending} en revisión · ${resolved} resueltos</strong><small>Estado de tus solicitudes recientes</small></div></article>
-        <article><span>@</span><div><strong>Cuenta de soporte</strong><small>${email}</small></div></article>`;
+        <article><span>?</span><div><strong></strong><small>Solicitudes pendientes de atención</small></div></article>
+        <article><span>↻</span><div><strong></strong><small>Estado de tus solicitudes recientes</small></div></article>
+        <article><span>@</span><div><strong>Cuenta de soporte</strong><small></small></div></article>`;
+      setText(summary.children[0].querySelector('strong'), `${open} ${open === 1 ? 'ticket abierto' : 'tickets abiertos'}`);
+      setText(summary.children[1].querySelector('strong'), `${pending} en revisión · ${resolved} resueltos`);
+      setText(summary.children[2].querySelector('small'), email);
     }
 
     page.querySelectorAll('.ticket-list article .status-pill').forEach(pill => {
