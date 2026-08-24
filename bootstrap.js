@@ -101,6 +101,7 @@
       await loadScript('admin-dashboard-tabs.js?v=20260818.2');
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('admin-import-link.js?v=20260818.5');
+      await loadScript('push-profile-panel-v81.js?v=20260824.81');
     } catch (error) {
       console.error('Error de inicio de Academia AG:', error);
       renderStatus('No pudimos abrir tu aula','Revisa tu conexión a internet y vuelve a intentarlo. Tu avance permanece guardado.',true);
