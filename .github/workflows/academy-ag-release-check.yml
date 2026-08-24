@@ -46,6 +46,7 @@ jobs:
           node --check admin-course-requests-v78.js
           node --check push-notifications-v80.js
           node --check academy-profile-support-mobile-v81.js
+          node --check push-profile-panel-v81.js
           node --check quiz-randomizer.js
           node --check premium-learning.js
           node --check sidebar-icons-premium.js
@@ -84,7 +85,7 @@ jobs:
           print(f'Validated {len(scripts)} local scripts loaded by bootstrap.js')
           PY
 
-      - name: Validate release wiring v81
+      - name: Validate release wiring v82
         run: |
           test -s academia.html
           test -s manifest.json
@@ -95,6 +96,7 @@ jobs:
           test -s sw.js
           test -s academy-profile-support-mobile-v81.js
           test -s push-notifications-v80.js
+          test -s push-profile-panel-v81.js
           test -s supabase/migrations/20260823233000_web_push_notifications.sql
           test -s supabase/functions/send-web-push/index.ts
           python -m json.tool manifest.json >/dev/null
@@ -102,13 +104,15 @@ jobs:
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260823.81' academia.html
+          grep -q 'bootstrap.js?v=20260824.82' academia.html
           grep -q 'academy-profile-support-mobile-v81.js?v=20260823.81' bootstrap.js
           grep -q 'push-notifications-v80.js?v=20260823.80' bootstrap.js
-          grep -q "academia-ag-v20260823.81" sw.js
-          grep -q './bootstrap.js?v=20260823.81' sw.js
+          grep -q 'push-profile-panel-v81.js?v=20260824.81' bootstrap.js
+          grep -q "academia-ag-v20260824.82" sw.js
+          grep -q './bootstrap.js?v=20260824.82' sw.js
           grep -q './academy-profile-support-mobile-v81.js?v=20260823.81' sw.js
           grep -q './push-notifications-v80.js?v=20260823.80' sw.js
+          grep -q './push-profile-panel-v81.js?v=20260824.81' sw.js
           grep -q "addEventListener('push'" sw.js
           grep -q "addEventListener('notificationclick'" sw.js
           grep -q 'save_my_push_subscription' supabase/migrations/20260823233000_web_push_notifications.sql
