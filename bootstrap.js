@@ -90,6 +90,7 @@
       await loadScript('student-inline-access-v79.js?v=20260823.79');
       await loadScript('admin-course-requests-v78.js?v=20260823.78');
       await loadScript('push-notifications-v80.js?v=20260823.80');
+      await loadScript('academy-profile-support-mobile-v81.js?v=20260823.81');
       await loadScript('quiz-randomizer.js?v=20260817.12');
       await loadScript('premium-learning.js?v=20260817.12');
       await loadScript('sidebar-icons-premium.js?v=20260817.15');
