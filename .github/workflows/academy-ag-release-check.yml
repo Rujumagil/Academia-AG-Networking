@@ -37,7 +37,7 @@ jobs:
           node --check utah-clean-ui-v66.js
           node --check utah-student-flow-v70.js
           node --check utah-auditor-hotfix-v83.js
-          node --check utah-c3-promo-integrity-v84.js
+          node --check utah-c3-promo-force-v85.js
           node --check academy-student-polish-v71.js
           node --check academy-academic-polish-v72.js
           node --check utah-course-images-v67.js
@@ -87,7 +87,7 @@ jobs:
           print(f'Validated {len(scripts)} local scripts loaded by bootstrap.js')
           PY
 
-      - name: Validate release wiring v84
+      - name: Validate release wiring v85
         run: |
           test -s academia.html
           test -s manifest.json
@@ -100,7 +100,7 @@ jobs:
           test -s push-notifications-v80.js
           test -s push-profile-panel-v81.js
           test -s utah-auditor-hotfix-v83.js
-          test -s utah-c3-promo-integrity-v84.js
+          test -s utah-c3-promo-force-v85.js
           test -s quiz-randomizer.js
           test -s supabase/migrations/20260823233000_web_push_notifications.sql
           test -s supabase/functions/send-web-push/index.ts
@@ -109,17 +109,17 @@ jobs:
           grep -q '"display": "standalone"' manifest.json
           grep -q '"src":"icon-192.png"' manifest.json
           grep -q '"src":"icon-512.png"' manifest.json
-          grep -q 'bootstrap.js?v=20260824.84' academia.html
+          grep -q 'bootstrap.js?v=20260824.85' academia.html
           grep -q 'utah-auditor-hotfix-v83.js?v=20260824.83' bootstrap.js
-          grep -q 'utah-c3-promo-integrity-v84.js?v=20260824.84' bootstrap.js
+          grep -q 'utah-c3-promo-force-v85.js?v=20260824.85' bootstrap.js
           grep -q 'quiz-randomizer.js?v=20260824.83' bootstrap.js
           grep -q 'academy-profile-support-mobile-v81.js?v=20260823.81' bootstrap.js
           grep -q 'push-notifications-v80.js?v=20260823.80' bootstrap.js
           grep -q 'push-profile-panel-v81.js?v=20260824.81' bootstrap.js
-          grep -q "academia-ag-v20260824.84" sw.js
-          grep -q './bootstrap.js?v=20260824.84' sw.js
+          grep -q "academia-ag-v20260824.85" sw.js
+          grep -q './bootstrap.js?v=20260824.85' sw.js
           grep -q './utah-auditor-hotfix-v83.js?v=20260824.83' sw.js
-          grep -q './utah-c3-promo-integrity-v84.js?v=20260824.84' sw.js
+          grep -q './utah-c3-promo-force-v85.js?v=20260824.85' sw.js
           grep -q './quiz-randomizer.js?v=20260824.83' sw.js
           grep -q './academy-profile-support-mobile-v81.js?v=20260823.81' sw.js
           grep -q './push-notifications-v80.js?v=20260823.80' sw.js
@@ -127,9 +127,10 @@ jobs:
           grep -q '.utah-v2-exam-options' quiz-randomizer.js
           grep -q "EXAM_ONLY_CODES = new Set(\['C6-25'\])" utah-auditor-hotfix-v83.js
           grep -q 'COMPLETE_PERCENTAGE = 98' utah-auditor-hotfix-v83.js
-          grep -q "C3_DRIVE_ID = '1z-1qOwXlYr0hlTAEhyfZQCDjpJAigck4'" utah-c3-promo-integrity-v84.js
-          grep -q 'duplicateStreamDetected' utah-c3-promo-integrity-v84.js
-          grep -q 'drive-integrity-fallback' utah-c3-promo-integrity-v84.js
+          grep -q "C3_DRIVE_ID = '1z-1qOwXlYr0hlTAEhyfZQCDjpJAigck4'" utah-c3-promo-force-v85.js
+          grep -q "MODULE3_ID = '7c4d9f60-1003-4b7b-9f2c-2d5e1a8c4001'" utah-c3-promo-force-v85.js
+          grep -q 'YO YA SE MANEJAR.mov' utah-c3-promo-force-v85.js
+          grep -q 'forceSourceOnState' utah-c3-promo-force-v85.js
           grep -q "addEventListener('push'" sw.js
           grep -q "addEventListener('notificationclick'" sw.js
           grep -q 'save_my_push_subscription' supabase/migrations/20260823233000_web_push_notifications.sql
