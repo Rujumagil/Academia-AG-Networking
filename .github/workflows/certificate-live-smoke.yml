@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/certificados-live-smoke
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
