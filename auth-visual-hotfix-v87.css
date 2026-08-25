@@ -1,10 +1,41 @@
-/* Academia AG · Auth visual hotfix v87
-   Corrige el logotipo blanco sólido y el botón secundario sin contraste
-   en la pantalla pública de acceso/registro. */
+/* Academia AG · Auth visual hotfix
+   Corrige logotipo, contraste de botones y evita que la etiqueta verde
+   se superponga sobre la marca en la pantalla de acceso/registro. */
+
+.auth-story{
+  position:relative;
+}
+
+.auth-story-brand{
+  position:static !important;
+  display:block !important;
+  width:max-content;
+  margin:0 0 24px 0 !important;
+  z-index:3;
+}
 
 .auth-story-brand img{
+  display:block;
+  width:205px;
+  height:72px;
+  object-fit:contain;
   filter:invert(1) grayscale(1) !important;
   mix-blend-mode:screen;
+}
+
+/* La etiqueta queda debajo del logo y sin líneas decorativas. */
+.auth-story > .eyebrow{
+  position:static !important;
+  margin:0 0 4px 0 !important;
+  padding:0 !important;
+  clear:both;
+  color:var(--gold-2) !important;
+}
+
+.auth-story > .eyebrow::before,
+.auth-story > .eyebrow::after{
+  content:none !important;
+  display:none !important;
 }
 
 .auth-story .btn-secondary{
