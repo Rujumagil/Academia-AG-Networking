@@ -1,0 +1,88 @@
+/* Registro asistido · Utah Driver Success Program™ */
+.registration{position:relative;overflow:hidden;background:radial-gradient(circle at 10% 5%,rgba(44,133,96,.24),transparent 30%),linear-gradient(145deg,#0b2f24 0%,#005134 58%,#03402b 100%)}
+.registration:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.65),transparent 86%)}
+.registration .shell{position:relative;z-index:1}
+.registration-grid{align-items:start}
+.registration-copy{padding-top:18px}
+.registration-copy .data-note{backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.registration-chat-card{padding:0;overflow:hidden;border-radius:30px;border:1px solid rgba(255,255,255,.34);box-shadow:0 36px 90px rgba(2,16,11,.34);background:#fff}
+.agent-card-heading{display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:start;padding:25px 26px 22px;background:linear-gradient(180deg,#ffffff 0%,#f7faf8 100%);border-bottom:1px solid #e4ebe8}
+.agent-avatar{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#0b6b49,#005134);color:#fff;font-weight:900;font-size:.82rem;letter-spacing:.04em;box-shadow:0 12px 28px rgba(0,81,52,.22)}
+.agent-card-heading>div:last-child{min-width:0}
+.agent-card-heading span{display:block;margin:1px 0 6px;color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.agent-card-heading h2{margin:0;color:var(--navy);font-family:var(--serif);font-size:clamp(1.75rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.035em;font-weight:500}
+.agent-card-heading p{display:flex;align-items:center;gap:8px;margin:10px 0 0;color:#697586;font-size:.78rem;font-weight:600}
+.agent-online-dot{width:8px;height:8px;border-radius:50%;background:#18a56d;box-shadow:0 0 0 4px rgba(24,165,109,.12);flex:0 0 auto}
+.registration-chat{display:grid;grid-template-rows:minmax(280px,1fr) auto auto auto;min-height:500px;background:#f5f8f7}
+.chat-messages{overflow-y:auto;padding:22px 22px 12px;display:grid;gap:13px;align-content:start;scrollbar-width:thin;scrollbar-color:#c7d4cf transparent}
+.registration-chat-row{display:flex;align-items:flex-end;gap:9px;max-width:100%}
+.registration-chat-row.is-user{justify-content:flex-end}
+.registration-chat-row.is-agent,.registration-chat-row.is-system{justify-content:flex-start}
+.registration-chat-avatar{width:30px;height:30px;min-width:30px;border-radius:10px;display:grid;place-items:center;background:#dfeee8;color:var(--green);font-size:.62rem;font-weight:900;border:1px solid #cfe2da}
+.registration-chat-bubble{max-width:min(84%,520px);padding:12px 14px;border-radius:17px;font-size:.9rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 5px 16px rgba(15,23,42,.05)}
+.is-agent .registration-chat-bubble{background:#fff;color:#26364d;border:1px solid #dfe8e4;border-bottom-left-radius:6px}
+.is-user .registration-chat-bubble{background:linear-gradient(145deg,#0b6b49,#005134);color:#fff;border-bottom-right-radius:6px;box-shadow:0 8px 18px rgba(0,81,52,.14)}
+.is-system .registration-chat-bubble{max-width:100%;background:#fff7df;color:#71520b;border:1px solid #f0dfaa;font-size:.78rem}
+.chat-quick-replies{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 12px}
+.chat-quick-reply{appearance:none;border:1px solid #cfe0d9;background:#fff;color:#07563c;border-radius:999px;padding:9px 12px;font:700 .76rem var(--sans);cursor:pointer;transition:.18s ease;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+.chat-quick-reply:hover,.chat-quick-reply:focus-visible{border-color:#0b6b49;background:#edf7f2;transform:translateY(-1px);outline:none}
+.chat-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:13px 16px;background:#fff;border-top:1px solid #dde7e3}
+.chat-composer input{width:100%;min-width:0;height:50px;border:1px solid #ccd9d4;border-radius:15px;background:#fbfcfc;padding:0 15px;color:#1e293b;font:500 .9rem var(--sans);outline:none;transition:.18s ease}
+.chat-composer input::placeholder{color:#87928f}
+.chat-composer input:focus{border-color:#0b6b49;background:#fff;box-shadow:0 0 0 4px rgba(11,107,73,.1)}
+.chat-composer button{height:50px;min-width:104px;border:0;border-radius:15px;background:linear-gradient(145deg,#0b6b49,#005134);color:#fff;padding:0 18px;font:800 .84rem var(--sans);cursor:pointer;box-shadow:0 12px 24px rgba(0,81,52,.19);transition:.18s ease}
+.chat-composer button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 15px 28px rgba(0,81,52,.23)}
+.chat-composer button:disabled,.chat-composer input:disabled{opacity:.55;cursor:not-allowed}
+.chat-status{min-height:0;padding:0 18px;background:#fff;color:#6b7280;font-size:.72rem;line-height:1.45}
+.chat-status:not(:empty){padding:0 18px 12px}
+.chat-status.is-busy{color:#0b6b49;font-weight:700}
+.chat-status.is-error{color:#a23b31;font-weight:700}
+.chat-privacy{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:14px 18px 17px;background:#fff;border-top:1px solid #edf1ef;color:#738079;font-size:.68rem;line-height:1.5}
+.chat-privacy span{grid-column:1/-1}
+.chat-privacy a{color:var(--green);font-weight:800;text-decoration:none}
+.chat-privacy a:hover{text-decoration:underline}
+.chat-privacy button{justify-self:end;border:1px solid #dce4e1;background:#f8faf9;color:#52605b;border-radius:11px;padding:8px 10px;font:700 .68rem var(--sans);cursor:pointer}
+.chat-privacy button:hover{background:#eef4f1;color:#26364d}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+
+@media(max-width:980px){
+  .registration-grid{gap:32px}
+  .registration-copy{padding-top:0;max-width:none}
+  .registration-chat-card{max-width:720px;width:100%;margin-inline:auto}
+}
+
+@media(max-width:640px){
+  .top-cta{white-space:nowrap;padding:9px 12px;font-size:.68rem}
+  .registration{padding:52px 0 62px}
+  .registration-grid{gap:26px}
+  .registration-copy h2{font-size:2.35rem}
+  .registration-copy>p{font-size:.9rem}
+  .data-note{margin:20px 0;padding:17px}
+  .registration-chat-card{border-radius:24px}
+  .agent-card-heading{grid-template-columns:42px 1fr;gap:12px;padding:20px 17px 17px}
+  .agent-avatar{width:42px;height:42px;border-radius:13px}
+  .agent-card-heading span{font-size:.6rem;letter-spacing:.09em}
+  .agent-card-heading h2{font-size:1.7rem}
+  .agent-card-heading p{font-size:.69rem;line-height:1.35}
+  .registration-chat{min-height:430px;grid-template-rows:minmax(220px,1fr) auto auto auto}
+  .chat-messages{padding:17px 14px 10px;gap:10px;max-height:340px}
+  .registration-chat-bubble{max-width:88%;padding:11px 12px;font-size:.83rem;line-height:1.5;border-radius:15px}
+  .registration-chat-avatar{width:27px;height:27px;min-width:27px;border-radius:9px}
+  .chat-quick-replies{padding:0 14px 10px;gap:7px}
+  .chat-quick-reply{padding:8px 10px;font-size:.7rem}
+  .chat-composer{grid-template-columns:1fr;gap:8px;padding:11px 13px}
+  .chat-composer input{height:48px;border-radius:13px}
+  .chat-composer button{height:46px;width:100%;border-radius:13px}
+  .chat-status:not(:empty){padding:0 14px 10px}
+  .chat-privacy{grid-template-columns:1fr;padding:12px 14px 15px;gap:7px;font-size:.64rem}
+  .chat-privacy span{grid-column:1}
+  .chat-privacy button{justify-self:start}
+}
+
+@media(max-width:380px){
+  .topbar-inner{gap:10px}
+  .brand img{width:138px}
+  .top-cta{padding:8px 10px;font-size:.62rem}
+  .agent-card-heading h2{font-size:1.52rem}
+  .registration-chat-bubble{font-size:.8rem}
+}
