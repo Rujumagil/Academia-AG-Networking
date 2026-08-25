@@ -91,6 +91,7 @@
       await loadScript('student-home-catalog-v77.js?v=20260823.77');
       await loadScript('student-inline-access-v79.js?v=20260823.79');
       await loadScript('admin-course-requests-v78.js?v=20260823.78');
+      await loadScript('admin-course-request-delivery-v86.js?v=20260824.86');
       await loadScript('push-notifications-v80.js?v=20260823.80');
       await loadScript('academy-profile-support-mobile-v81.js?v=20260823.81');
       await loadScript('quiz-randomizer.js?v=20260824.83');
