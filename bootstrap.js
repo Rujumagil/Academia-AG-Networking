@@ -82,6 +82,7 @@
       await loadScript('utah-clean-ui-v66.js?v=20260822.66');
       await loadScript('utah-student-flow-v70.js?v=20260823.70');
       await loadScript('utah-auditor-hotfix-v83.js?v=20260824.83');
+      await loadScript('utah-c3-promo-integrity-v84.js?v=20260824.84');
       await loadScript('academy-student-polish-v71.js?v=20260823.71');
       await loadScript('academy-academic-polish-v72.js?v=20260823.72');
       await loadScript('utah-course-images-v67.js?v=20260822.67');
