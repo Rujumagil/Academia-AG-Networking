@@ -1,0 +1,112 @@
+name: Certificate live smoke test
+
+on:
+  push:
+    branches:
+      - feature/certificados-live-smoke
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate local certificate helper
+        run: |
+          node --check certificate-auto-pdf-v91.js
+          grep -q "const RELEASE = '20260825.91'" certificate-auto-pdf-v91.js
+          grep -q "issue_my_certificate" certificate-auto-pdf-v91.js
+          grep -q "verify/" certificate-auto-pdf-v91.js
+          grep -q "Descargar PDF" certificate-auto-pdf-v91.js
+          grep -q "certificate-auto-pdf-v91.js?v=20260825.91" bootstrap.js
+
+      - name: Check live academy deployment
+        run: |
+          set -euo pipefail
+          curl -fSL --retry 5 --retry-all-errors --connect-timeout 15 \
+            https://agbusinessnetworking.com/academia.html -o /tmp/academia.html
+          grep -q "bootstrap.js" /tmp/academia.html
+
+          curl -fSL --retry 5 --retry-all-errors --connect-timeout 15 \
+            'https://agbusinessnetworking.com/certificate-auto-pdf-v91.js?v=20260825.91' \
+            -o /tmp/certificate-auto-pdf-v91.js
+          grep -q "const RELEASE = '20260825.91'" /tmp/certificate-auto-pdf-v91.js
+          grep -q "Descargar PDF" /tmp/certificate-auto-pdf-v91.js
+          echo "Live academy and certificate helper are reachable."
+
+      - name: Check live Supabase certificate RPCs
+        run: |
+          set -euo pipefail
+          SUPABASE_URL=$(node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('supabase-config.js','utf8');
+          const m=s.match(/url:\s*"([^"]+)"/);
+          if(!m) process.exit(1);
+          process.stdout.write(m[1]);
+          NODE
+          )
+          PUBLISHABLE_KEY=$(node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('supabase-config.js','utf8');
+          const m=s.match(/publishableKey:\s*"([^"]+)"/);
+          if(!m) process.exit(1);
+          process.stdout.write(m[1]);
+          NODE
+          )
+
+          VERIFY_STATUS=$(curl -sS -o /tmp/verify.json -w '%{http_code}' \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/verify_certificate" \
+            -H "apikey: $PUBLISHABLE_KEY" \
+            -H 'Content-Type: application/json' \
+            --data '{"target_code":"AG-SMOKE-DOES-NOT-EXIST"}')
+          echo "verify_certificate HTTP $VERIFY_STATUS"
+          cat /tmp/verify.json
+          echo
+          test "$VERIFY_STATUS" = "200"
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/verify.json', encoding='utf-8'))
+          assert data == [], f'Expected [] for a nonexistent folio, got {data!r}'
+          print('Anonymous certificate verification RPC is active.')
+          PY
+
+          ISSUE_STATUS=$(curl -sS -o /tmp/issue.json -w '%{http_code}' \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/issue_my_certificate" \
+            -H "apikey: $PUBLISHABLE_KEY" \
+            -H 'Content-Type: application/json' \
+            --data '{"target_course":"7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01"}')
+          echo "issue_my_certificate anonymous HTTP $ISSUE_STATUS"
+          cat /tmp/issue.json
+          echo
+          test "$ISSUE_STATUS" != "200"
+          grep -qi "Autenticación requerida\|authentication\|JWT\|permission" /tmp/issue.json
+          echo "Anonymous issuance is correctly blocked."
+
+      - name: Probe new certificate columns through REST schema
+        run: |
+          set -euo pipefail
+          SUPABASE_URL=$(node - <<'NODE'
+          const fs=require('fs'); const s=fs.readFileSync('supabase-config.js','utf8');
+          process.stdout.write(s.match(/url:\s*"([^"]+)"/)[1]);
+          NODE
+          )
+          PUBLISHABLE_KEY=$(node - <<'NODE'
+          const fs=require('fs'); const s=fs.readFileSync('supabase-config.js','utf8');
+          process.stdout.write(s.match(/publishableKey:\s*"([^"]+)"/)[1]);
+          NODE
+          )
+          STATUS=$(curl -sS -o /tmp/columns.json -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/certificates?select=completed_at,student_name_snapshot,course_title_snapshot,pdf_version&limit=0" \
+            -H "apikey: $PUBLISHABLE_KEY")
+          echo "certificate column probe HTTP $STATUS"
+          cat /tmp/columns.json
+          echo
+          if [ "$STATUS" = "200" ]; then
+            echo "New certificate columns are exposed to the REST schema."
+          else
+            echo "REST row/table policy blocks anonymous table probing; RPC checks above remain authoritative for public verification."
+          fi
