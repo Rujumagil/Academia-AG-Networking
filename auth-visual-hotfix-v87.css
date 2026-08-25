@@ -1,0 +1,28 @@
+/* Academia AG · Auth visual hotfix v87
+   Corrige el logotipo blanco sólido y el botón secundario sin contraste
+   en la pantalla pública de acceso/registro. */
+
+.auth-story-brand img{
+  filter:invert(1) grayscale(1) !important;
+  mix-blend-mode:screen;
+}
+
+.auth-story .btn-secondary{
+  background:#ffffff !important;
+  color:#1E293B !important;
+  border-color:#ffffff !important;
+  box-shadow:0 10px 26px rgba(0,0,0,.14);
+}
+
+.auth-story .btn-secondary:hover,
+.auth-story .btn-secondary:focus-visible{
+  background:#F9FAF9 !important;
+  color:#0f172a !important;
+  border-color:#F9FAF9 !important;
+}
+
+@media (max-width:720px){
+  .auth-story-brand img{
+    max-width:190px;
+  }
+}
