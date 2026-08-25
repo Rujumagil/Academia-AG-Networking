@@ -251,7 +251,11 @@ begin
 end;
 $$;
 
-create or replace function public.verify_certificate(target_code text)
+-- La versión anterior devolvía cinco columnas. PostgreSQL requiere eliminarla
+-- antes de ampliar el resultado con completed_at.
+drop function if exists public.verify_certificate(text);
+
+create function public.verify_certificate(target_code text)
 returns table(
   credential_code text,
   status text,
