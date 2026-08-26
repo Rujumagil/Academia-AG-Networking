@@ -4,6 +4,19 @@
   const COMPAS_PUBLIC_KEY = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
   const COMPAS_API_BASE = 'https://app.proyectocompas.com';
   const COMPAS_STORAGE_KEY = `compas-one-web-chat:${COMPAS_PUBLIC_KEY}`;
+  const COMPAS_VISITOR_KEY = `compas-one-marketing-visitor:${COMPAS_PUBLIC_KEY}`;
+  const AG_ATTRIBUTION_KEY = 'ag-compas-utm-session-v1';
+  const ATTRIBUTION_PARAMS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'utm_id',
+    'fbclid',
+    'gclid',
+    'msclkid'
+  ];
 
   const CLEAN_LANDING_IMAGES = {
     academy: 'https://static.wixstatic.com/media/11f124_b15578e5070d4270a41bbd44310e5370~mv2.png',
@@ -40,8 +53,132 @@
 
   function uniqueId() {
     if (window.crypto?.randomUUID) return window.crypto.randomUUID();
-    return `ag-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+      const random = Math.floor(Math.random() * 16);
+      const value = character === 'x' ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
   }
+
+  function safeStorageGet(storage, key) {
+    try {
+      return storage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function safeStorageSet(storage, key, value) {
+    try {
+      storage.setItem(key, value);
+    } catch {
+      // El seguimiento no debe bloquear la experiencia si el navegador restringe storage.
+    }
+  }
+
+  function getVisitorId() {
+    const stored = safeStorageGet(window.localStorage, COMPAS_VISITOR_KEY);
+    if (stored && stored.length >= 8) return stored;
+    const visitorId = uniqueId();
+    safeStorageSet(window.localStorage, COMPAS_VISITOR_KEY, visitorId);
+    return visitorId;
+  }
+
+  function buildTrackingPageUrl() {
+    const url = new URL(window.location.href);
+    const currentAttribution = {};
+
+    ATTRIBUTION_PARAMS.forEach(key => {
+      const value = url.searchParams.get(key)?.trim();
+      if (value) currentAttribution[key] = value;
+    });
+
+    if (Object.keys(currentAttribution).length > 0) {
+      safeStorageSet(window.sessionStorage, AG_ATTRIBUTION_KEY, JSON.stringify(currentAttribution));
+    } else {
+      try {
+        const stored = JSON.parse(safeStorageGet(window.sessionStorage, AG_ATTRIBUTION_KEY) || '{}');
+        if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+          ATTRIBUTION_PARAMS.forEach(key => {
+            const value = typeof stored[key] === 'string' ? stored[key].trim() : '';
+            if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
+          });
+        }
+      } catch {
+        // Si la atribución guardada no es válida se continúa con la URL actual.
+      }
+    }
+
+    url.searchParams.set('compas_product', 'ag-business-networking');
+    url.searchParams.set('compas_funnel', 'captacion');
+    url.searchParams.set('compas_entry', 'landing-ag');
+    return url.toString();
+  }
+
+  const visitorId = getVisitorId();
+  const trackingPageUrl = buildTrackingPageUrl();
+
+  async function recordMarketingEvent(eventName, options = {}) {
+    try {
+      const response = await fetch(
+        `${COMPAS_API_BASE}/api/public/marketing/events?key=${encodeURIComponent(COMPAS_PUBLIC_KEY)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            publicKey: COMPAS_PUBLIC_KEY,
+            clientEventId: uniqueId(),
+            visitorId,
+            eventName,
+            pageUrl: trackingPageUrl,
+            contactId: options.contactId || undefined,
+            conversationId: options.conversationId || undefined,
+            metadata: {
+              site: 'AG Business Networking',
+              entry_point: 'landing-ag',
+              ...(options.metadata || {})
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        console.warn('AG_COMPAS_MARKETING_EVENT_FAILED', eventName, response.status);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn('AG_COMPAS_MARKETING_EVENT_FAILED', eventName, error);
+      return false;
+    }
+  }
+
+  void recordMarketingEvent('page_view', {
+    metadata: { page: window.location.pathname || '/' }
+  });
+
+  function attachCompasLauncherTracking(attempt = 0) {
+    const host = document.querySelector('compas-one-web-chat');
+    const launcher = host?.shadowRoot?.querySelector('.launcher');
+
+    if (launcher) {
+      if (!launcher.dataset.agUtmTracking) {
+        launcher.dataset.agUtmTracking = '1';
+        launcher.addEventListener('click', () => {
+          void recordMarketingEvent('agent_open', {
+            metadata: { route: 'sales' }
+          });
+        });
+      }
+      return;
+    }
+
+    if (attempt < 60) {
+      window.setTimeout(() => attachCompasLauncherTracking(attempt + 1), 200);
+    }
+  }
+
+  attachCompasLauncherTracking();
 
   function waitForCompasLauncher(attempt = 0) {
     const host = document.querySelector('compas-one-web-chat');
@@ -124,7 +261,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             publicKey: COMPAS_PUBLIC_KEY,
-            sessionToken: window.localStorage.getItem(COMPAS_STORAGE_KEY) || undefined,
+            sessionToken: safeStorageGet(window.localStorage, COMPAS_STORAGE_KEY) || undefined,
             clientMessageId: uniqueId(),
             message,
             name,
@@ -132,7 +269,7 @@
             phone: phone || undefined,
             company: company || 'AG Business Networking',
             consent: true,
-            pageUrl: window.location.href,
+            pageUrl: trackingPageUrl,
             serviceRoute: 'sales'
           })
         }
@@ -144,8 +281,18 @@
       }
 
       if (payload.sessionToken) {
-        window.localStorage.setItem(COMPAS_STORAGE_KEY, payload.sessionToken);
+        safeStorageSet(window.localStorage, COMPAS_STORAGE_KEY, payload.sessionToken);
       }
+
+      await recordMarketingEvent('lead_created', {
+        contactId: payload.contactId,
+        conversationId: payload.conversationId,
+        metadata: {
+          intent,
+          company: company || null,
+          form: 'ag-lead-form'
+        }
+      });
 
       const reply = typeof payload.reply === 'string' ? payload.reply.trim() : '';
       setResult(reply || 'Tu solicitud fue enviada a Compás One. El equipo de AG podrá darle seguimiento con los datos que proporcionaste.', 'success');
@@ -164,7 +311,10 @@
   form?.addEventListener('submit', submitLead);
 
   document.querySelector('[data-continue-compas]')?.addEventListener('click', () => {
-    const target = `${window.location.pathname}?compas_agent=sales&open_compas=1#contacto`;
-    window.location.assign(target);
+    const target = new URL(window.location.href);
+    target.searchParams.set('compas_agent', 'sales');
+    target.searchParams.set('open_compas', '1');
+    target.hash = 'contacto';
+    window.location.assign(target.toString());
   });
 })();
