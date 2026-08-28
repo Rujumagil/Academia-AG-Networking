@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20260824.86';
+const CACHE = 'academia-ag-v20260828.92';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -16,7 +16,7 @@ const STATIC_ASSETS = [
   './quiz-randomizer.js?v=20260824.83','./premium-learning.js?v=20260817.12','./sidebar-icons-premium.js?v=20260817.15',
   './evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20','./calendario-premium.js?v=20260817.22',
   './admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2','./first-login-password.js?v=20260818.4',
-  './admin-import-link.js?v=20260818.5','./supabase-config.js?v=20260817.13',
+  './admin-import-link.js?v=20260818.5','./admin-access-queue-v92.js?v=20260828.92','./supabase-config.js?v=20260817.13',
   './manifest.json','./diagnostico.html','./limpiar-cache.html','./verificar-imagenes.html',
   './curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp','./curso-ingles.webp',
   './hero-academia.webp','./icon-192.png','./icon-512.png','./icono-oficial.png','./logo-completo-oficial.png','./logo-texto-oficial.png',
