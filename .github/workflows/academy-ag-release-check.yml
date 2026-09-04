@@ -88,7 +88,7 @@ jobs:
           print(f'Validated {len(scripts)} local scripts loaded by bootstrap.js')
           PY
 
-      - name: Validate release wiring v86
+      - name: Validate release wiring v94
         run: |
           test -s academia.html
           test -s manifest.json
@@ -119,7 +119,7 @@ jobs:
           grep -q 'academy-profile-support-mobile-v81.js?v=20260823.81' bootstrap.js
           grep -q 'push-notifications-v80.js?v=20260823.80' bootstrap.js
           grep -q 'push-profile-panel-v81.js?v=20260824.81' bootstrap.js
-          grep -q "academia-ag-v20260824.86" sw.js
+          grep -q "academia-ag-v20260828.94" sw.js
           grep -q './bootstrap.js?v=20260824.86' sw.js
           grep -q './utah-auditor-hotfix-v83.js?v=20260824.83' sw.js
           grep -q './utah-c3-promo-force-v85.js?v=20260824.85' sw.js
