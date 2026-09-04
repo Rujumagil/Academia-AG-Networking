@@ -1,4 +1,8 @@
 (() => {
+  const COMPAS_PUBLIC_KEY = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
+  const COMPAS_ATTRIBUTION_URL = 'https://app.proyectocompas.com/compas-attribution.js?v=1.1';
+  const COMPAS_CHAT_URL = 'https://app.proyectocompas.com/compas-chat.js';
+
   const menuButton = document.querySelector('.menu-toggle');
   const nav = document.querySelector('#main-nav');
   menuButton?.addEventListener('click', () => {
@@ -10,7 +14,8 @@
     menuButton?.setAttribute('aria-expanded', 'false');
   }));
 
-  document.querySelector('#year').textContent = new Date().getFullYear();
+  const yearNode = document.querySelector('#year');
+  if (yearNode) yearNode.textContent = new Date().getFullYear();
 
   const reveal = new IntersectionObserver(entries => {
     entries.forEach(entry => {
@@ -40,6 +45,7 @@
   }
 
   function renderCalendar() {
+    if (!title || !days || !list) return;
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
     title.textContent = `${monthNames[month]} ${year}`;
@@ -90,8 +96,8 @@
     if (document.querySelector('script[data-ag-compas-agent]')) return;
 
     const script = document.createElement('script');
-    script.src = 'https://app.proyectocompas.com/compas-chat.js';
-    script.dataset.key = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
+    script.src = COMPAS_CHAT_URL;
+    script.dataset.key = COMPAS_PUBLIC_KEY;
     script.dataset.agCompasAgent = 'v1';
     script.async = true;
     script.onerror = () => {
@@ -100,6 +106,29 @@
     document.body.appendChild(script);
   }
 
+  function loadCompasAttribution() {
+    if (window.CompasTracking?.__initialized) {
+      loadCompasOneAgent();
+      return;
+    }
+
+    if (document.querySelector('script[data-ag-compas-attribution]')) return;
+
+    const script = document.createElement('script');
+    script.src = COMPAS_ATTRIBUTION_URL;
+    script.dataset.key = COMPAS_PUBLIC_KEY;
+    script.dataset.product = 'ag-business-networking';
+    script.dataset.funnel = 'business-networking';
+    script.dataset.agCompasAttribution = 'v1';
+    script.async = true;
+    script.onload = loadCompasOneAgent;
+    script.onerror = () => {
+      console.warn('No fue posible cargar temporalmente la atribución de Compás One.');
+      loadCompasOneAgent();
+    };
+    document.head.appendChild(script);
+  }
+
   renderCalendar();
-  loadCompasOneAgent();
+  loadCompasAttribution();
 })();
