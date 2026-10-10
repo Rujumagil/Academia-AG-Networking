@@ -2,7 +2,7 @@
   'use strict';
 
   const RELEASE = '20260818.1';
-  const COMPAS_ONE_URL = 'https://app.proyectocompas.com/';
+  const CRM_AG_URL = 'crm/';
   const cfg = window.SUPABASE_CONFIG;
   let client = null;
   let timer = null;
@@ -323,11 +323,11 @@
           <div class="adminexec-hero-copy">
             <span class="adminexec-eyebrow">Centro de control · Academia AG</span>
             <h1>Dashboard ejecutivo</h1>
-            <p>Supervisa la operación académica desde un solo lugar: alumnos, compras, accesos, registros y métricas. El CRM, prospectos y seguimiento comercial permanecen centralizados en Compás One.</p>
+            <p>Supervisa la operación académica desde un solo lugar: alumnos, compras, accesos, registros y métricas. El CRM, prospectos y seguimiento comercial se gestionan ahora en CRM AG.</p>
             <div class="adminexec-hero-actions">
               <button class="adminexec-button primary" type="button" data-open-general="admin-users">Gestionar alumnos</button>
               <button class="adminexec-button secondary" type="button" data-open-general="access-center">Compras y accesos</button>
-              <a class="adminexec-button ghost" href="${COMPAS_ONE_URL}" target="_blank" rel="noopener">Abrir Compás One ${icon('external')}</a>
+              <a class="adminexec-button ghost" href="${CRM_AG_URL}">Abrir CRM AG ${icon('external')}</a>
             </div>
           </div>
           <div class="adminexec-hero-side">
@@ -372,12 +372,12 @@
           </article>
 
           <article class="adminexec-panel adminexec-boundary">
-            <div class="adminexec-compas-mark">C1</div>
+            <div class="adminexec-compas-mark">AG</div>
             <span class="adminexec-eyebrow">Sin duplicar funciones</span>
-            <h2>Compás One concentra el CRM</h2>
-            <p>Prospectos, conversaciones, seguimiento comercial, campañas y relación con clientes se gestionan en Compás One. Este panel se enfoca únicamente en la operación de Academia AG.</p>
-            <ul><li>Academia AG: alumnos, cursos, compras, accesos y progreso.</li><li>Compás One: CRM, leads, ventas y seguimiento.</li></ul>
-            <a class="adminexec-button primary" href="${COMPAS_ONE_URL}" target="_blank" rel="noopener">Ir a Compás One ${icon('external')}</a>
+            <h2>CRM AG concentra el seguimiento</h2>
+            <p>Prospectos, candidatos, tareas, notas y seguimiento comercial se gestionan directamente en el CRM propio de AG Business Networking. Este panel continúa enfocado en la operación académica.</p>
+            <ul><li>Academia AG: alumnos, cursos, compras, accesos y progreso.</li><li>CRM AG: candidatos, pipeline, tareas, interacciones y conversión.</li></ul>
+            <a class="adminexec-button primary" href="${CRM_AG_URL}">Ir a CRM AG ${icon('external')}</a>
           </article>
         </section>
 
