@@ -2,10 +2,35 @@
 'use strict';
 
 var root=document.getElementById('crm-admin-app');
-var cfg=window.SUPABASE_CONFIG||{};
-var db=window.supabase&&window.supabase.createClient?window.supabase.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
-var masterCfg=window.AG_CRM_MASTER_CONFIG||{};
-var crmDb=window.supabase&&window.supabase.createClient&&masterCfg.url&&masterCfg.publishableKey?window.supabase.createClient(masterCfg.url,masterCfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+var cfg=window.SUPABASE_CONFIG||window.AG_CRM_MASTER_CONFIG||{};
+var ACADEMY_TABLES={
+  profiles:'academy_profiles',
+  courses:'academy_courses',
+  modules:'academy_modules',
+  lessons:'academy_lessons',
+  lesson_progress:'academy_lesson_progress',
+  enrollments:'academy_enrollments',
+  resources:'academy_resources',
+  lesson_blocks:'academy_lesson_blocks',
+  course_versions:'academy_course_versions',
+  assessments:'academy_assessments',
+  assessment_questions:'academy_assessment_questions',
+  assessment_options:'academy_assessment_options',
+  lesson_quizzes:'academy_lesson_quizzes',
+  orders:'academy_orders',
+  student_access:'academy_student_access',
+  products:'academy_products',
+  certificates:'academy_certificates',
+  support_tickets:'academy_support_tickets'
+};
+var db=null;
+if(window.supabase&&window.supabase.createClient&&cfg.url&&cfg.publishableKey){
+  db=window.supabase.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  var nativeFrom=db.from.bind(db);
+  db.from=function(name){return nativeFrom(ACADEMY_TABLES[name]||name);};
+}
+var masterCfg=cfg;
+var crmDb=db;
 
 var state={
   user:null,profile:null,section:'summary',crmReady:true,
@@ -114,48 +139,121 @@ async function safeMaster(table,query){
 }
 
 async function loadAll(){
-  var r=await Promise.all([
-    safe('profiles',db.from('profiles').select('*').order('created_at',{ascending:false})),
-    safe('courses',db.from('courses').select('*').order('created_at',{ascending:false})),
-    safe('modules',db.from('modules').select('*').order('position',{ascending:true})),
-    safe('lessons',db.from('lessons').select('*').order('position',{ascending:true})),
-    safe('lesson_progress',db.from('lesson_progress').select('*').limit(10000)),
-    safe('enrollments',db.from('enrollments').select('*').order('enrolled_at',{ascending:false})),
-    safe('resources',db.from('resources').select('*').limit(3000)),
-    safe('lesson_blocks',db.from('lesson_blocks').select('*').order('position',{ascending:true}).limit(10000)),
-    safe('course_versions',db.from('course_versions').select('*').limit(3000)),
-    safe('assessments',db.from('assessments').select('*').limit(3000)),
-    safe('assessment_questions',db.from('assessment_questions').select('*').order('position',{ascending:true}).limit(10000)),
-    safe('assessment_options',db.from('assessment_options').select('*').order('position',{ascending:true}).limit(20000)),
-    safe('lesson_quizzes',db.from('lesson_quizzes').select('*').limit(10000)),
-    safe('orders',db.from('orders').select('*').order('created_at',{ascending:false}).limit(1000)),
-    safe('student_access',db.from('student_access').select('*').order('granted_at',{ascending:false}).limit(1000)),
-    safe('products',db.from('products').select('*').order('created_at',{ascending:false})),
-    safe('certificates',db.from('certificates').select('*').order('issued_at',{ascending:false}).limit(1000)),
-    safe('support_tickets',db.from('support_tickets').select('*').order('created_at',{ascending:false}).limit(1000))
+  var workspaceId=cfg.workspaceId||'fa4411f8-65c6-4762-8302-50789998e5b7';
+
+  var courses=await safe('courses',
+    db.from('courses').select('*').eq('workspace_id',workspaceId).order('created_at',{ascending:false})
+  );
+  var courseIds=courses.map(function(x){return x.id;});
+
+  var modules=courseIds.length
+    ? await safe('modules',db.from('modules').select('*').in('course_id',courseIds).order('position',{ascending:true}))
+    : [];
+  var moduleIds=modules.map(function(x){return x.id;});
+
+  var lessons=moduleIds.length
+    ? await safe('lessons',db.from('lessons').select('*').in('module_id',moduleIds).order('position',{ascending:true}))
+    : [];
+  var lessonIds=lessons.map(function(x){return x.id;});
+
+  var enrollments=courseIds.length
+    ? await safe('enrollments',db.from('enrollments').select('*').in('course_id',courseIds).order('enrolled_at',{ascending:false}))
+    : [];
+
+  var migrationMap=await safeMaster(
+    'ag_academy_student_migration_map',
+    db.from('ag_academy_student_migration_map').select('target_user_id')
+  );
+
+  var agUserIds=new Set();
+  if(state.user&&state.user.id)agUserIds.add(state.user.id);
+  enrollments.forEach(function(x){if(x.user_id)agUserIds.add(x.user_id);});
+  migrationMap.forEach(function(x){if(x.target_user_id)agUserIds.add(x.target_user_id);});
+
+  var profileIds=Array.from(agUserIds);
+  var profiles=profileIds.length
+    ? await safe('profiles',db.from('profiles').select('*').in('id',profileIds).order('created_at',{ascending:false}))
+    : [];
+
+  var assessments=courseIds.length
+    ? await safe('assessments',db.from('assessments').select('*').in('course_id',courseIds).limit(3000))
+    : [];
+  var assessmentIds=assessments.map(function(x){return x.id;});
+
+  var assessmentQuestions=assessmentIds.length
+    ? await safe('assessment_questions',db.from('assessment_questions').select('*').in('assessment_id',assessmentIds).order('position',{ascending:true}).limit(10000))
+    : [];
+  var questionIds=assessmentQuestions.map(function(x){return x.id;});
+
+  var products=await safe('products',
+    db.from('products').select('*').eq('workspace_id',workspaceId).order('created_at',{ascending:false})
+  );
+  var productIds=products.map(function(x){return x.id;});
+
+  var rest=await Promise.all([
+    lessonIds.length
+      ? safe('lesson_progress',db.from('lesson_progress').select('*').in('lesson_id',lessonIds).limit(10000))
+      : Promise.resolve([]),
+    safe('resources',db.from('resources').select('*').eq('workspace_id',workspaceId).limit(3000)),
+    lessonIds.length
+      ? safe('lesson_blocks',db.from('lesson_blocks').select('*').in('lesson_id',lessonIds).order('position',{ascending:true}).limit(10000))
+      : Promise.resolve([]),
+    courseIds.length
+      ? safe('course_versions',db.from('course_versions').select('*').in('course_id',courseIds).limit(3000))
+      : Promise.resolve([]),
+    questionIds.length
+      ? safe('assessment_options',db.from('assessment_options').select('*').in('question_id',questionIds).order('position',{ascending:true}).limit(20000))
+      : Promise.resolve([]),
+    lessonIds.length
+      ? safe('lesson_quizzes',db.from('lesson_quizzes').select('*').in('lesson_id',lessonIds).limit(10000))
+      : Promise.resolve([]),
+    safe('orders',db.from('orders').select('*').eq('workspace_id',workspaceId).order('created_at',{ascending:false}).limit(1000)),
+    productIds.length
+      ? safe('student_access',db.from('student_access').select('*').in('product_id',productIds).order('granted_at',{ascending:false}).limit(1000))
+      : Promise.resolve([]),
+    courseIds.length
+      ? safe('certificates',db.from('certificates').select('*').in('course_id',courseIds).order('issued_at',{ascending:false}).limit(1000))
+      : Promise.resolve([]),
+    profileIds.length
+      ? safe('support_tickets',db.from('support_tickets').select('*').in('user_id',profileIds).order('created_at',{ascending:false}).limit(1000))
+      : Promise.resolve([])
   ]);
 
   var candidates=[],tasks=[];
   state.crmReady=false;
-  if(crmDb){
-    try{
-      var ms=await crmDb.auth.getSession();
-      if(ms.data&&ms.data.session){
-        var cr=await Promise.all([
-          safeMaster('ag_crm_candidates',crmDb.from('ag_crm_candidates').select('*').order('created_at',{ascending:false}).limit(1500)),
-          safeMaster('ag_crm_tasks',crmDb.from('ag_crm_tasks').select('*').order('due_at',{ascending:true}).limit(2000))
-        ]);
-        candidates=cr[0];tasks=cr[1];state.crmReady=true;
-      }
-    }catch(e){console.warn('[Back Office · master session]',e);}
+  try{
+    var cr=await Promise.all([
+      safeMaster('ag_crm_candidates',db.from('ag_crm_candidates').select('*').order('created_at',{ascending:false}).limit(1500)),
+      safeMaster('ag_crm_tasks',db.from('ag_crm_tasks').select('*').order('due_at',{ascending:true}).limit(2000))
+    ]);
+    candidates=cr[0];
+    tasks=cr[1];
+    state.crmReady=true;
+  }catch(e){
+    console.warn('[Back Office · CRM master]',e);
   }
 
   state.data={
-    profiles:r[0],courses:r[1],modules:r[2],lessons:r[3],lessonProgress:r[4],
-    enrollments:r[5],resources:r[6],lessonBlocks:r[7],courseVersions:r[8],
-    assessments:r[9],assessmentQuestions:r[10],assessmentOptions:r[11],lessonQuizzes:r[12],
-    orders:r[13],accesses:r[14],products:r[15],certificates:r[16],
-    tickets:r[17],candidates:candidates,tasks:tasks
+    profiles:profiles,
+    courses:courses,
+    modules:modules,
+    lessons:lessons,
+    lessonProgress:rest[0],
+    enrollments:enrollments,
+    resources:rest[1],
+    lessonBlocks:rest[2],
+    courseVersions:rest[3],
+    assessments:assessments,
+    assessmentQuestions:assessmentQuestions,
+    assessmentOptions:rest[4],
+    lessonQuizzes:rest[5],
+    orders:rest[6],
+    accesses:rest[7],
+    products:products,
+    certificates:rest[8],
+    tickets:rest[9],
+    candidates:candidates,
+    tasks:tasks
   };
 }
 
@@ -310,7 +408,7 @@ function renderStudentPipeline(){
 
   var note='<div class="back-note student-pipeline-note"><strong>Teléfonos</strong><span>Se muestra el teléfono guardado en el perfil cuando exista; mientras Academia termina de migrarse al Supabase maestro, también se cruza por correo con el CRM AG. Los alumnos antiguos sin teléfono registrado aparecerán como “Sin teléfono”.</span></div>';
 
-  return panel('Pipeline de alumnos','Academia AG · progreso por curso',metrics+board+note,'<a href="../academia.html?crm_admin=1#workspace/general">Abrir Academia</a>');
+  return panel('Pipeline de alumnos','Academia AG · progreso por curso',metrics+board+note,'<a href="../academia.html?crm_admin=1#workspace/general/students">Abrir Academia</a>');
 }
 
 function renderStudents(){
@@ -326,7 +424,7 @@ function renderStudents(){
       esc(fmt(s.created_at)),
       '<div class="back-actions">'+
         (s.account_status==='active'?'<button data-user-status="'+s.id+'" data-status="suspended">Suspender</button>':'<button data-user-status="'+s.id+'" data-status="active">Activar</button>')+
-        '<a href="../academia.html?crm_admin=1#workspace/general">Gestionar</a>'+
+        '<a href="../academia.html?crm_admin=1#workspace/general/students">Gestionar</a>'+
       '</div>'
     ]);
   });
@@ -410,23 +508,17 @@ function renderSupport(){
 
 function renderSettings(){
   var studentCount=state.data.profiles.filter(function(x){return x.role==='student';}).length;
-  var migration='<div class="migration-tool">'+
-    '<div class="migration-copy"><strong>Migrar alumnos anteriores al Supabase maestro</strong><span>'+studentCount+' alumnos detectados en la Academia actual. Como no tienen avance académico, se migrarán perfiles y se guardarán sus inscripciones originales para reasignarlas al copiar los cursos.</span></div>'+
-    '<button class="migration-button" id="migrate-old-students">Migrar '+studentCount+' alumnos</button>'+
-    '<div class="migration-result" id="migration-result"></div>'+
-  '</div>';
   var courseCount=state.data.courses.length;
-  var courseMigration='<div class="migration-tool">'+
-    '<div class="migration-copy"><strong>Migrar cursos y contenido al Supabase maestro</strong><span>'+courseCount+' cursos detectados · '+state.data.modules.length+' módulos · '+state.data.lessons.length+' lecciones. También se copiarán videos, recursos, bloques, evaluaciones, preguntas y se reasignarán las inscripciones guardadas de los alumnos migrados.</span></div>'+
-    '<button class="migration-button" id="migrate-old-courses">Migrar '+courseCount+' cursos</button>'+
-    '<div class="migration-result" id="course-migration-result"></div>'+
+  var enrollmentCount=state.data.enrollments.filter(function(x){return x.status==='active';}).length;
+  var masterStatus='<div class="migration-tool">'+
+    '<div class="migration-copy"><strong>Supabase maestro activo</strong><span>Back Office, CRM y Academia AG ya leen y escriben sobre la base maestra compartida. El Supabase anterior queda únicamente como respaldo temporal y ya no participa en la operación diaria.</span></div>'+
+    '<div class="migration-result"><strong>Operación validada</strong><span>'+studentCount+' alumnos · '+courseCount+' cursos · '+enrollmentCount+' inscripciones activas</span></div>'+
   '</div>';
   return '<section class="back-grid two">'+
     panel('Estructura del sistema','Arquitectura','<div class="back-setting-list"><div><strong>CRM AG</strong><span>agbusinessnetworking.com/crm/</span></div><div><strong>Administrador AG</strong><span>agbusinessnetworking.com/crm/admin.html</span></div><div><strong>Academia AG</strong><span>agbusinessnetworking.com/academia.html</span></div></div>')+
-    panel('Migración de alumnos','Supabase maestro',migration)+
-    panel('Migración de cursos','Contenido académico',courseMigration)+
+    panel('Base de datos','Supabase maestro',masterStatus)+
     panel('Documentos legales','Sitio público','<div class="back-setting-list"><a href="../privacidad/" target="_blank"><strong>Privacidad</strong><span>/privacidad/</span></a><a href="../terminos/" target="_blank"><strong>Términos</strong><span>/terminos/</span></a><a href="../reembolsos/" target="_blank"><strong>Reembolsos</strong><span>/reembolsos/</span></a><a href="../conducta/" target="_blank"><strong>Conducta</strong><span>/conducta/</span></a><a href="../derechos-de-autor/" target="_blank"><strong>Derechos de autor</strong><span>/derechos-de-autor/</span></a><a href="../accesibilidad/" target="_blank"><strong>Accesibilidad</strong><span>/accesibilidad/</span></a></div>')+
-    panel('Seguridad','Accesos internos','<div class="back-warning"><strong>Administración separada de la Academia</strong><span>Las cuentas admin se redirigen a este Back Office. Los alumnos e instructores permanecen en Academia AG.</span></div>')+
+    panel('Seguridad','Accesos internos','<div class="back-warning"><strong>Administración separada de la Academia</strong><span>Las cuentas admin se administran desde este Back Office. Los alumnos e instructores permanecen en Academia AG, con datos aislados por el workspace de AG.</span></div>')+
     panel('Operación','Herramientas','<div class="back-quick"><a href="../importar-alumnos.html">Importar alumnos</a><button data-open-legacy="admin-users">Administración avanzada de alumnos</button><button data-open-legacy="admin-courses">Editor avanzado de cursos</button><button data-open-legacy="access-center">Centro avanzado de accesos</button></div>')+
   '</section>';
 }
@@ -458,147 +550,14 @@ function bindSection(){
   document.querySelectorAll('[data-ticket-status]').forEach(function(s){s.onchange=async function(){var r=await db.from('support_tickets').update({status:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.ticketStatus);if(r.error)return toast(r.error.message,true);toast('Ticket actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-editor-course]').forEach(function(b){b.onclick=function(){openAcademyEditor(b.dataset.editorCourse||'');};});
   document.querySelectorAll('[data-open-legacy]').forEach(function(b){b.onclick=function(){openAcademyAdmin(b.dataset.openLegacy||'');};});
-  var migrateButton=document.getElementById('migrate-old-students');
-  if(migrateButton)migrateButton.onclick=migrateOldStudents;
-  var migrateCoursesButton=document.getElementById('migrate-old-courses');
-  if(migrateCoursesButton)migrateCoursesButton.onclick=migrateOldCourses;
-}
-
-function csvCell(v){var s=String(v==null?'':v);return '"'+s.replace(/"/g,'""')+'"';}
-function downloadMigrationCredentials(results){
-  var created=(results||[]).filter(function(x){return x.status==='created'&&x.temporary_password;});
-  if(!created.length)return;
-  var lines=[['Nombre','Correo','Teléfono','Contraseña temporal','ID nuevo'].map(csvCell).join(',')];
-  created.forEach(function(x){lines.push([x.full_name,x.email,x.phone||'',x.temporary_password,x.target_user_id].map(csvCell).join(','));});
-  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='AG-alumnos-migrados-credenciales.csv';document.body.appendChild(a);a.click();a.remove();
-  setTimeout(function(){URL.revokeObjectURL(url);},2000);
-}
-async function migrateOldStudents(){
-  var button=document.getElementById('migrate-old-students'),box=document.getElementById('migration-result');
-  var students=state.data.profiles.filter(function(x){return x.role==='student';});
-  if(!students.length){if(box)box.innerHTML='<strong>No hay alumnos para migrar.</strong>';return;}
-  if(!crmDb||!masterCfg.url){if(box)box.innerHTML='<strong>No hay conexión con el Supabase maestro.</strong>';return;}
-  var masterSession=await crmDb.auth.getSession();
-  var session=masterSession.data&&masterSession.data.session;
-  if(!session){
-    if(box)box.innerHTML='<strong>Falta iniciar sesión en el CRM maestro.</strong><span>Abre “CRM candidatos”, inicia sesión y vuelve a esta pantalla.</span>';
-    return;
-  }
-  if(!window.confirm('Se migrarán '+students.length+' alumnos al Supabase maestro. No se borrará nada del Supabase anterior. ¿Continuar?'))return;
-  button.disabled=true;button.textContent='Migrando alumnos…';
-  if(box)box.innerHTML='<span>Preparando perfiles e inscripciones anteriores…</span>';
-  var payload=students.map(function(s){
-    return {
-      source_user_id:s.id,
-      email:s.email,
-      full_name:s.full_name,
-      account_status:s.account_status||'active',
-      created_at:s.created_at||null,
-      enrollments:state.data.enrollments.filter(function(e){return e.user_id===s.id;}).map(function(e){
-        return {course_id:e.course_id,status:e.status,enrolled_at:e.enrolled_at,completed_at:e.completed_at||null,expires_at:e.expires_at||null};
-      })
-    };
-  });
-  try{
-    var response=await fetch(masterCfg.url+'/functions/v1/ag-migrate-academy-students',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':masterCfg.publishableKey,
-        'Authorization':'Bearer '+session.access_token
-      },
-      body:JSON.stringify({students:payload})
-    });
-    var data=await response.json().catch(function(){return {};});
-    if(!response.ok||!data.ok)throw new Error(data.error||'No fue posible completar la migración.');
-    var s=data.summary||{};
-    if(box)box.innerHTML='<strong>Migración terminada</strong><span>Procesados: '+(s.processed||0)+' · Nuevos: '+(s.created||0)+' · Existentes: '+((s.existing||0)+(s.already_migrated||0))+' · Errores: '+(s.errors||0)+'</span><small>El Supabase anterior permanece intacto. Las inscripciones originales quedaron guardadas para el siguiente paso.</small>';
-    downloadMigrationCredentials(data.results||[]);
-    toast('Alumnos migrados al Supabase maestro.');
-  }catch(e){
-    console.error('[AG migration]',e);
-    if(box)box.innerHTML='<strong>No se completó la migración</strong><span>'+esc(e.message||String(e))+'</span>';
-    toast(e.message||'Error de migración',true);
-  }finally{
-    button.disabled=false;button.textContent='Migrar '+students.length+' alumnos';
-  }
-}
-
-async function migrateOldCourses(){
-  var button=document.getElementById('migrate-old-courses'),box=document.getElementById('course-migration-result');
-  var courses=state.data.courses||[];
-  if(!courses.length){if(box)box.innerHTML='<strong>No hay cursos para migrar.</strong>';return;}
-  if(!crmDb||!masterCfg.url){if(box)box.innerHTML='<strong>No hay conexión con el Supabase maestro.</strong>';return;}
-  var masterSession=await crmDb.auth.getSession();
-  var session=masterSession.data&&masterSession.data.session;
-  if(!session){
-    if(box)box.innerHTML='<strong>Falta iniciar sesión en el CRM maestro.</strong><span>Abre “CRM candidatos”, inicia sesión y vuelve a esta pantalla.</span>';
-    return;
-  }
-  if(!window.confirm('Se copiarán '+courses.length+' cursos y todo su contenido al Supabase maestro. No se borrará nada del Supabase anterior. ¿Continuar?'))return;
-
-  button.disabled=true;
-  button.textContent='Migrando cursos…';
-  if(box)box.innerHTML='<span>Copiando cursos, módulos, lecciones, videos, evaluaciones e inscripciones…</span>';
-
-  var courseIds=new Set(courses.map(function(x){return x.id;}));
-  var modules=(state.data.modules||[]).filter(function(x){return courseIds.has(x.course_id);});
-  var moduleIds=new Set(modules.map(function(x){return x.id;}));
-  var lessons=(state.data.lessons||[]).filter(function(x){return moduleIds.has(x.module_id);});
-  var lessonIds=new Set(lessons.map(function(x){return x.id;}));
-  var assessments=(state.data.assessments||[]).filter(function(x){return courseIds.has(x.course_id);});
-  var assessmentIds=new Set(assessments.map(function(x){return x.id;}));
-  var questions=(state.data.assessmentQuestions||[]).filter(function(x){return assessmentIds.has(x.assessment_id);});
-  var questionIds=new Set(questions.map(function(x){return x.id;}));
-
-  var payload={
-    courses:courses,
-    modules:modules,
-    lessons:lessons,
-    resources:(state.data.resources||[]).filter(function(x){return !x.course_id||courseIds.has(x.course_id);}),
-    lesson_blocks:(state.data.lessonBlocks||[]).filter(function(x){return lessonIds.has(x.lesson_id);}),
-    course_versions:(state.data.courseVersions||[]).filter(function(x){return courseIds.has(x.course_id);}),
-    assessments:assessments,
-    assessment_questions:questions,
-    assessment_options:(state.data.assessmentOptions||[]).filter(function(x){return questionIds.has(x.question_id);}),
-    lesson_quizzes:(state.data.lessonQuizzes||[]).filter(function(x){return lessonIds.has(x.lesson_id);})
-  };
-
-  try{
-    var response=await fetch(masterCfg.url+'/functions/v1/ag-migrate-academy-courses',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':masterCfg.publishableKey,
-        'Authorization':'Bearer '+session.access_token
-      },
-      body:JSON.stringify(payload)
-    });
-    var data=await response.json().catch(function(){return {};});
-    if(!response.ok||!data.ok)throw new Error(data.detail||data.error||'No fue posible completar la migración de cursos.');
-    var s=data.summary||{};
-    if(box)box.innerHTML='<strong>Migración académica terminada</strong>'+
-      '<span>Cursos: '+(s.courses||0)+' · Módulos: '+(s.modules||0)+' · Lecciones: '+(s.lessons||0)+' · Recursos: '+(s.resources||0)+' · Evaluaciones: '+(s.assessments||0)+' · Inscripciones: '+(s.enrollments||0)+'</span>'+
-      '<small>El Supabase anterior permanece intacto. Todavía no cambiaremos la Academia al Supabase maestro hasta validar los conteos.</small>';
-    toast('Cursos y contenido migrados al Supabase maestro.');
-  }catch(e){
-    console.error('[AG course migration]',e);
-    if(box)box.innerHTML='<strong>No se completó la migración de cursos</strong><span>'+esc(e.message||String(e))+'</span>';
-    toast(e.message||'Error de migración de cursos',true);
-  }finally{
-    button.disabled=false;
-    button.textContent='Migrar '+courses.length+' cursos';
-  }
 }
 
 function openAcademyEditor(courseId){
-  openEmbedded('../academia.html?crm_admin=1#'+(courseId?'course/'+encodeURIComponent(courseId):'workspace/general'),'Editor académico');
+  openEmbedded('../academia.html?crm_admin=1#'+(courseId?'course/'+encodeURIComponent(courseId):'workspace/general/courses'),'Editor académico');
 }
 function openAcademyAdmin(target){
-  try{sessionStorage.setItem('ag-admin-scroll-target',target||'');}catch(_){}
-  openEmbedded('../academia.html?crm_admin=1#workspace/general','Administración avanzada');
+  var pageMap={'admin-users':'students','admin-courses':'courses','access-center':'access'};
+  openEmbedded('../academia.html?crm_admin=1#workspace/general/'+(pageMap[target]||'overview'),'Administración avanzada');
 }
 function openEmbedded(src,title){
   var box=document.getElementById('back-content');if(!box)return;
