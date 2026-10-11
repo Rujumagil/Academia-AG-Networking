@@ -379,15 +379,38 @@ function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Se
 function renderFollowups(){
   if(!state.crmReady)return renderCandidates();
   var tasks=state.data.tasks.filter(function(x){return x.status==='pending';});
-  var rows=tasks.map(function(t){var c=state.data.candidates.find(function(x){return x.id===t.candidate_id;});return row([
-    '<strong>'+esc(c?c.full_name:'Candidato')+'</strong><small>'+esc(t.title||'Seguimiento')+'</small>',
-    esc(t.task_type||'follow_up'),
-    badge(t.priority,t.priority),
-    esc(fmt(t.due_at)),
-    t.due_at&&new Date(t.due_at)<new Date()?badge('lost','Vencido'):badge('active','Pendiente'),
-    '<a class="back-link" href="./">Gestionar</a>'
-  ]);});
-  return panel('Seguimientos pendientes','CRM comercial',rows.length?table(['Candidato / tarea','Tipo','Prioridad','Fecha','Estado',''],rows):empty('No hay seguimientos pendientes.'),'<a href="./">Abrir CRM</a>');
+
+  var rows=tasks.map(function(t){
+    var candidate=state.data.candidates.find(function(x){return x.id===t.candidate_id;});
+    var academic=Boolean(t.metadata&&t.metadata.automation==='academy_inactivity');
+    var threshold=academic?Number(t.metadata.threshold_days||0):0;
+    var cleanPhone=String(candidate&&candidate.phone||'').replace(/[^0-9]/g,'');
+    var actions='<div class="back-actions">'+
+      (candidate&&candidate.email?'<a href="mailto:'+esc(candidate.email)+'">Correo</a>':'')+
+      (cleanPhone.length>=10?'<a href="https://wa.me/'+esc(cleanPhone)+'" target="_blank" rel="noopener">WhatsApp</a>':'')+
+      '<button data-complete-task="'+esc(t.id)+'">Atendido</button>'+
+    '</div>';
+
+    return row([
+      '<strong>'+esc(candidate?candidate.full_name:'Candidato')+'</strong><small>'+esc(t.title||'Seguimiento')+'</small>'+
+        (academic?'<small class="followup-origin">Academia AG · '+threshold+' días</small>':''),
+      esc(t.task_type||'follow_up'),
+      badge(t.priority,t.priority),
+      esc(fmt(t.due_at)),
+      t.due_at&&new Date(t.due_at)<new Date()?badge('lost','Vencido'):badge('active','Pendiente'),
+      actions
+    ]);
+  });
+
+  var autoCount=tasks.filter(function(t){return t.metadata&&t.metadata.automation==='academy_inactivity';}).length;
+  var header='<div class="followup-summary"><strong>'+autoCount+' seguimientos académicos automáticos</strong><span>Se generan a los 7 y 14 días sin actividad.</span></div>';
+
+  return panel(
+    'Seguimientos pendientes',
+    'CRM comercial · Academia AG',
+    header+(rows.length?table(['Candidato / tarea','Tipo','Prioridad','Fecha','Estado','Acciones'],rows):empty('No hay seguimientos pendientes.')),
+    '<a href="./">Abrir CRM</a>'
+  );
 }
 
 function renderStudentPipeline(){
@@ -684,6 +707,14 @@ function bindSection(){
   document.querySelectorAll('[data-user-status]').forEach(function(b){b.onclick=async function(){var r=await db.rpc('admin_set_account_status',{target_user:b.dataset.userStatus,new_status:b.dataset.status});if(r.error)return toast(r.error.message,true);toast('Estado del alumno actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-course-status]').forEach(function(b){b.onclick=async function(){var r=await db.from('courses').update({status:b.dataset.status}).eq('id',b.dataset.courseStatus);if(r.error)return toast(r.error.message,true);toast('Curso actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-ticket-status]').forEach(function(s){s.onchange=async function(){var r=await db.from('support_tickets').update({status:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.ticketStatus);if(r.error)return toast(r.error.message,true);toast('Ticket actualizado.');await loadAll();render();};});
+  document.querySelectorAll('[data-complete-task]').forEach(function(b){b.onclick=async function(){
+    b.disabled=true;
+    var r=await db.rpc('ag_complete_crm_task',{target_task:b.dataset.completeTask});
+    if(r.error){b.disabled=false;return toast(r.error.message,true);}
+    toast('Seguimiento marcado como atendido.');
+    await loadAll();
+    render();
+  };});
   document.querySelectorAll('[data-editor-course]').forEach(function(b){b.onclick=function(){openAcademyEditor(b.dataset.editorCourse||'');};});
   document.querySelectorAll('[data-open-legacy]').forEach(function(b){b.onclick=function(){openAcademyAdmin(b.dataset.openLegacy||'');};});
 }
