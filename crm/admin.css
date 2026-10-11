@@ -116,3 +116,30 @@ button,input,select,textarea{font:inherit}
 .migration-result strong{font-size:.76rem}
 .migration-result span{font-size:.7rem;color:#667085;margin-top:4px;line-height:1.45}
 .migration-result small{font-size:.64rem;color:#98a2b3;margin-top:5px;line-height:1.45}
+
+
+/* Pipeline académico v2 */
+.student-pipeline-tools{display:grid;grid-template-columns:minmax(260px,1.4fr) minmax(220px,1fr) auto;gap:12px;align-items:end;margin:0 0 16px;padding:14px;border:1px solid #e4eaf1;border-radius:14px;background:#fff}
+.student-pipeline-tools>div>span{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:#7a8798;font-weight:900;margin-bottom:6px}
+.student-pipeline-tools input,.student-pipeline-tools select{width:100%;border:1px solid #dbe3eb;border-radius:10px;background:#fbfcfd;color:#1e293b;padding:10px 11px;font-size:.76rem;outline:none}
+.student-pipeline-tools input:focus,.student-pipeline-tools select:focus{border-color:#6fa894;box-shadow:0 0 0 3px rgba(0,81,52,.08)}
+.student-pipeline-tool-status{min-width:120px;padding:9px 11px;border-radius:10px;background:#f5f8fb;border:1px solid #e3e9ef}
+.student-pipeline-tool-status strong{font-size:.8rem;color:#1e293b}
+.student-contact-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:9px}
+.student-contact-row .student-phone-row{margin-top:0}
+.student-contact-actions{display:flex;gap:5px}
+.student-contact-btn{height:31px;min-width:31px;padding:0 7px;border-radius:8px;display:grid;place-items:center;border:1px solid #dce4eb;background:#fff;color:#0c5139;text-decoration:none;font-size:.65rem;font-weight:900}
+.student-contact-btn:hover{background:#eff8f4;border-color:#bcd8cd}
+.student-current-lesson{margin-top:9px;padding:9px 10px;border-radius:9px;background:#f8fafc;border:1px solid #e8edf2}
+.student-current-lesson span,.student-current-lesson strong,.student-current-lesson small{display:block}
+.student-current-lesson span{font-size:.59rem;text-transform:uppercase;letter-spacing:.05em;color:#8995a5;font-weight:900}
+.student-current-lesson strong{font-size:.7rem;color:#344054;line-height:1.4;margin-top:3px}
+.student-current-lesson small{font-size:.64rem;color:#607086;margin-top:4px}
+.student-activity{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:7px 9px;border-radius:8px;background:#f7f9fb;border-left:3px solid #cdd6e0}
+.student-activity span{font-size:.59rem;text-transform:uppercase;letter-spacing:.04em;color:#7f8b9c;font-weight:900}
+.student-activity strong{font-size:.66rem;color:#667085;text-align:right}
+.student-activity.fresh{background:#edf8f3;border-left-color:#2e8a68}.student-activity.fresh strong{color:#0b6b50}
+.student-activity.stale{background:#fff7e8;border-left-color:#d8a43a}.student-activity.stale strong{color:#8a6110}
+.student-pipeline-card[hidden]{display:none!important}
+@media(max-width:900px){.student-pipeline-tools{grid-template-columns:1fr 1fr}.student-pipeline-tool-status{grid-column:1/-1}}
+@media(max-width:620px){.student-pipeline-tools{grid-template-columns:1fr}.student-pipeline-tool-status{grid-column:auto}.student-contact-row{grid-template-columns:1fr}.student-contact-actions{justify-content:flex-end}}
