@@ -239,3 +239,34 @@ button,input,select,textarea{font:inherit}
   .student-record-hero,.back-panel,.record-course-status>div{box-shadow:none!important}
   .back-grid.two{grid-template-columns:1fr!important}
 }
+
+
+/* Centro de reportes académicos */
+.reports-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:16px;padding:18px;border:1px solid #e1e8ee;border-radius:18px;background:linear-gradient(180deg,#fff,#f8faf9)}
+.reports-heading h2{margin:3px 0 5px;font-family:Georgia,'Times New Roman',serif;font-size:1.6rem;color:#1e293b}
+.reports-heading p{margin:0;max-width:760px;color:#6f7b8a;font-size:.76rem;line-height:1.55}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap}
+.report-actions button{border:1px solid #d9e3df;background:#fff;color:#0b5d44;border-radius:9px;padding:8px 10px;font-size:.64rem;font-weight:900;cursor:pointer}
+.report-actions button:hover{background:#f0f8f4}
+.report-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+.report-top-grid{align-items:start}
+.report-funnel{display:grid;gap:12px}
+.report-funnel-row>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px}
+.report-funnel-row strong{font-size:.72rem;color:#2a3748}
+.report-funnel-row span{font-size:.63rem;color:#758294}
+.report-funnel-track{height:10px;border-radius:999px;background:#edf1f4;overflow:hidden}
+.report-funnel-track i{display:block;height:100%;border-radius:inherit;min-width:2px}
+.report-mini-bar{height:5px;border-radius:999px;background:#e8edf1;overflow:hidden;margin-top:4px;min-width:72px}
+.report-mini-bar i{display:block;height:100%;border-radius:inherit;background:#005134}
+.report-risk{font-weight:900;color:#9b6b10}
+.report-risk.high{color:#a33a3a}
+.back-table-row button[data-student-record]{border:1px solid #dbe4df;background:#fff;color:#0b5d44;border-radius:8px;padding:6px 8px;font-size:.59rem;font-weight:900;cursor:pointer}
+.back-table-row button[data-student-record]:hover{background:#eef7f3}
+@media(max-width:1180px){.report-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.reports-heading{flex-direction:column}.report-actions{width:100%}.report-actions button{flex:1}.report-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.report-metrics{grid-template-columns:1fr}}
+@media print{
+  .reports-heading .report-actions,.back-sidebar,.back-topbar{display:none!important}
+  .reports-heading,.back-panel,.back-metric{box-shadow:none!important}
+  .back-main,.back-content{margin:0!important;padding:0!important;width:100%!important}
+}
