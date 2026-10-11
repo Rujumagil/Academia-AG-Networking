@@ -196,6 +196,7 @@
         resultHost.innerHTML = `<p class="utah-v2-exam-result ${percentage < 80 ? 'is-low' : ''}">${esc(data?.message || '')} Resultado: ${Number(data?.score || 0)}/${Number(data?.total || 0)} · ${percentage}%.</p>`;
         applyReview(form, data?.review || []);
         markSidebar(percentage);
+        window.dispatchEvent(new CustomEvent('academy:module-exam-completed', { detail: { moduleId: MODULE_ID, result: data } }));
         resultHost.scrollIntoView({ behavior:'smooth', block:'center' });
       } catch (error) {
         errorNode.hidden = false;
