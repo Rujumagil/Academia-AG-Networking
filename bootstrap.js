@@ -60,6 +60,7 @@
   }
 
   async function start() {
+    const crmAdminEmbed = new URLSearchParams(location.search).get('crm_admin') === '1';
     renderStatus('Academia AG', 'Preparando tu acceso…');
     try {
       const cfg = window.SUPABASE_CONFIG;
@@ -93,8 +94,11 @@
       await loadScript('student-sales-discovery-v89.js?v=20260825.89');
       await loadScript('manual-cover-hotfix-v90.js?v=20260825.90');
       await loadScript('student-inline-access-v79.js?v=20260823.79');
-      await loadScript('admin-course-requests-v78.js?v=20260823.78');
-      await loadScript('admin-course-request-delivery-v86.js?v=20260824.86');
+      if (crmAdminEmbed) {
+        await loadScript('admin-course-requests-v78.js?v=20260823.78');
+        await loadScript('admin-course-request-delivery-v86.js?v=20260824.86');
+        await loadScript('admin-access-queue-v92.js?v=20260828.92');
+      }
       await loadScript('push-notifications-v80.js?v=20260823.80');
       await loadScript('academy-profile-support-mobile-v81.js?v=20260823.81');
       await loadScript('quiz-randomizer.js?v=20260824.83');
@@ -103,10 +107,12 @@
       await loadScript('evaluaciones-premium.js?v=20260817.17');
       await loadScript('perfil-premium.js?v=20260817.20');
       await loadScript('calendario-premium.js?v=20260817.22');
-      await loadScript('admin-dashboard-ejecutivo.js?v=20260818.1');
-      await loadScript('admin-dashboard-tabs.js?v=20260818.2');
+      if (crmAdminEmbed) {
+        await loadScript('admin-dashboard-ejecutivo.js?v=20260818.1');
+        await loadScript('admin-dashboard-tabs.js?v=20260818.2');
+        await loadScript('admin-import-link.js?v=20260818.5');
+      }
       await loadScript('first-login-password.js?v=20260818.4');
-      await loadScript('admin-import-link.js?v=20260818.5');
       await loadScript('push-profile-panel-v81.js?v=20260824.81');
     } catch (error) {
       console.error('Error de inicio de Academia AG:', error);
