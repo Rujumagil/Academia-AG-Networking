@@ -46,6 +46,19 @@ function getDefaultKey(raw: string | undefined) {
   }
 }
 
+function jwtSubject(token: string) {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return ''
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = payload + '='.repeat((4 - payload.length % 4) % 4)
+    const data = JSON.parse(atob(padded))
+    return String(data?.sub || '').trim()
+  } catch {
+    return ''
+  }
+}
+
 function normalizeEmail(value: string) {
   return String(value || '').trim().toLowerCase()
 }
@@ -179,14 +192,13 @@ Deno.serve(async (req: Request) => {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
 
-    const { data: userData, error: userError } = await userClient.auth.getUser()
-    if (userError || !userData?.user) return json(req, 401, { error: 'Sesión inválida o vencida.' })
+    const actingAdminId = jwtSubject(accessToken)
+    if (!actingAdminId) return json(req, 401, { error: 'Sesión inválida o vencida.' })
 
-    const actingAdmin = userData.user
-    const { data: profile, error: profileError } = await userClient
+    const { data: profile, error: profileError } = await adminClient
       .from('academy_profiles')
       .select('id,role,account_status,email')
-      .eq('id', actingAdmin.id)
+      .eq('id', actingAdminId)
       .maybeSingle()
 
     if (profileError) return json(req, 403, { error: profileError.message })
@@ -204,7 +216,7 @@ Deno.serve(async (req: Request) => {
 
     const courseId = String(body.course_id || DEFAULT_COURSE_ID)
     const source = String(body.source || 'bulk_import').slice(0, 80)
-    const { productId, course } = await ensureProduct(adminClient, actingAdmin.id, courseId)
+    const { productId, course } = await ensureProduct(adminClient, actingAdminId, courseId)
     const batchId = crypto.randomUUID()
 
     const deduped = new Map<string, StudentInput>()
