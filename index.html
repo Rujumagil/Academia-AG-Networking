@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#07182d">
   <meta name="description" content="AG Business Networking conecta emprendedores y empresas con formación práctica, aliados especializados, Academia AG y una comunidad para crecer en Utah.">
   <meta property="og:title" content="AG Business Networking | Sueña, conéctate y triunfa">
-  <meta property="og:description" content="Conexiones, formación, comunidad y acompañamiento empresarial con seguimiento conectado a Compás One.">
+  <meta property="og:description" content="Conexiones, formación, comunidad y acompañamiento empresarial con seguimiento propio de AG Business Networking.">
   <meta property="og:image" content="https://rujumagil.github.io/Academia-AG-Networking/logo-completo-oficial.png">
   <meta property="og:type" content="website">
   <title>AG Business Networking | Sueña, conéctate y triunfa</title>
@@ -57,7 +57,7 @@
             <div class="value-item"><div class="value-icon">01</div><div><strong>Comunidad</strong><span>Relaciones profesionales con propósito</span></div></div>
             <div class="value-item"><div class="value-icon">02</div><div><strong>Formación</strong><span>Contenido práctico para avanzar</span></div></div>
             <div class="value-item"><div class="value-icon">03</div><div><strong>Alianzas</strong><span>Especialistas para cada necesidad</span></div></div>
-            <div class="value-item"><div class="value-icon">04</div><div><strong>Seguimiento</strong><span>Continuidad conectada con Compás One</span></div></div>
+            <div class="value-item"><div class="value-icon">04</div><div><strong>Seguimiento</strong><span>Continuidad desde el CRM propio de AG</span></div></div>
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@
         </div>
         <div class="visual-frame process-frame reveal">
           <div class="official-visual-brand"><img src="logo-completo-oficial.png" alt="AG Business Networking"></div>
-          <img loading="lazy" src="https://static.wixstatic.com/media/11f124_4f7ccd270f9e45669287b7ccd5c14d17~mv2.png" alt="Proceso AG: cuéntanos, te orientamos, te conectamos, avanzas y Compás One da seguimiento">
+          <img loading="lazy" src="https://static.wixstatic.com/media/11f124_4f7ccd270f9e45669287b7ccd5c14d17~mv2.png" alt="Proceso AG: cuéntanos, te orientamos, te conectamos, avanzas y AG da seguimiento">
         </div>
       </div>
     </section>
@@ -251,7 +251,7 @@
       <div class="container">
         <div class="section-intro reveal">
           <div><span class="eyebrow">Da el siguiente paso</span><h2>Conversemos sobre lo que necesitas.</h2></div>
-          <p>La solicitud se envía al canal de atención de AG conectado con Compás One, para conservar el contexto y facilitar el seguimiento.</p>
+          <p>La solicitud se registra directamente en el CRM de AG Business Networking para conservar el contexto y facilitar el seguimiento.</p>
         </div>
         <div class="contact-shell reveal">
           <div class="contact-visual" aria-hidden="true">
@@ -259,7 +259,7 @@
             <img loading="lazy" src="https://static.wixstatic.com/media/11f124_51326fb9bcd14ed08d499fb579bf0916~mv2.png" alt="">
           </div>
           <form class="lead-form" id="ag-lead-form">
-            <span class="form-kicker">Atención AG · conectada con Compás One</span>
+            <span class="form-kicker">Atención AG · seguimiento directo</span>
             <h2>Cuéntanos qué necesitas.</h2>
             <p class="form-intro">Déjanos tus datos y el contexto básico. No es necesario compartir información sensible.</p>
             <label class="lead-field"><span>¿En qué podemos ayudarte? *</span><select name="intent" required><option value="">Selecciona una opción</option><option>Quiero tomar un curso</option><option>Necesito apoyo para mi negocio</option><option>Quiero asistir a un evento</option><option>Busco un proveedor</option><option>Quiero información de membresía</option></select></label>
@@ -272,10 +272,10 @@
               <label class="lead-field"><span>Teléfono</span><input name="phone" type="tel" autocomplete="tel" maxlength="80"></label>
             </div>
             <label class="lead-field"><span>Cuéntanos un poco más</span><textarea name="message" maxlength="1200" placeholder="Describe brevemente lo que necesitas."></textarea></label>
-            <label class="lead-consent"><input name="consent" type="checkbox" required><span>Acepto que AG Business Networking use estos datos para atender y dar seguimiento a mi solicitud mediante su sistema conectado con Compás One. Consulta el <a href="academia.html#legal/privacidad">aviso de privacidad</a>.</span></label>
+            <label class="lead-consent"><input name="consent" type="checkbox" required><span>Acepto que AG Business Networking use estos datos para atender y dar seguimiento a mi solicitud mediante su CRM propio. Consulta el <a href="privacidad/">aviso de privacidad</a>.</span></label>
             <button class="button button-primary button-full" type="submit">Enviar solicitud</button>
             <div class="lead-result" id="ag-lead-result" role="status" aria-live="polite"></div>
-            <div class="lead-followup" id="ag-lead-followup"><button type="button" data-continue-compas>Continuar en el asistente</button><a href="https://www.instagram.com/agbusinessnetworkingut/" target="_blank" rel="noopener">Instagram de AG</a></div>
+            <div class="lead-followup" id="ag-lead-followup"><a href="https://www.instagram.com/agbusinessnetworkingut/" target="_blank" rel="noopener">Instagram de AG</a></div>
           </form>
         </div>
       </div>
@@ -292,7 +292,9 @@
     <div class="container footer-bottom"><span>© <span id="year"></span> AG Business Networking.</span><a href="#top">Volver arriba ↑</a></div>
   </footer>
 
-  <script src="landing.js?v=20260818.1"></script>
-  <script src="landing-enhancements.js?v=20260818.1"></script>
+  <script src="crm/supabase-config.js?v=20261011.1"></script>
+  <script src="landing.js?v=20261011.1"></script>
+  <script src="landing-enhancements.js?v=20261011.1"></script>
+  <script src="crm-public-capture.js?v=20261011.1"></script>
 </body>
 </html>
