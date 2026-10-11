@@ -134,7 +134,7 @@
 
       await loadSupabaseLibrary();
       installAcademyDataAdapter();
-      await loadScript('app.js?v=20261011.65');
+      await loadScript('app.js?v=20261011.66');
       await loadScript('utah-course-runtime.js?v=20260822.65');
       await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('utah-module2-exam-v2.js?v=20260820.49');
@@ -158,7 +158,7 @@
       await loadScript('manual-cover-hotfix-v90.js?v=20260825.90');
       await loadScript('student-inline-access-v79.js?v=20260823.79');
       if (crmAdminEmbed) {
-        await loadScript('admin-course-requests-v78.js?v=20260823.78');
+        await loadScript('admin-course-requests-v78.js?v=20261011.2');
         await loadScript('admin-course-request-delivery-v86.js?v=20260824.86');
         await loadScript('admin-access-queue-v92.js?v=20260828.92');
       }
