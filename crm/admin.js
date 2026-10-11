@@ -86,7 +86,10 @@ function studentPipelineItems(){
       var course=d.courses.find(function(x){return x.id===e.course_id;})||{id:e.course_id,title:'Curso'};
       var modules=d.modules.filter(function(m){return m.course_id===e.course_id;}).sort(function(a,b){return Number(a.position||0)-Number(b.position||0);});
       var moduleIds=new Set(modules.map(function(m){return m.id;}));
-      var lessons=d.lessons.filter(function(l){return moduleIds.has(l.module_id);});
+      var lessons=d.lessons.filter(function(l){
+        return moduleIds.has(l.module_id)
+          && String(l.lesson_kind||'lesson').toLowerCase()!=='promo';
+      });
       var lessonIds=new Set(lessons.map(function(l){return l.id;}));
       var progress=d.lessonProgress.filter(function(p){return p.user_id===e.user_id&&lessonIds.has(p.lesson_id);});
       var progressByLesson={};
