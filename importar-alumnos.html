@@ -23,7 +23,7 @@
   <main class="shell">
     <header class="top">
       <div class="brand"><img src="icono-oficial.png" alt="AG"><div><strong>Academia AG</strong><span>Administración académica</span></div></div>
-      <a class="back" href="academia.html#admin">← Volver al dashboard</a>
+      <a class="back" href="crm/admin.html#students">← Volver al dashboard</a>
     </header>
 
     <section class="hero">
@@ -55,7 +55,7 @@
       <aside class="card">
         <h2>Qué hará la importación</h2>
         <p>El proceso es idempotente: si una cuenta ya existe como alumno, no reemplaza su contraseña y únicamente asegura su acceso académico.</p>
-        <div class="notice info" style="margin-top:18px"><strong>Curso:</strong><br>UTAH DRIVER SUCCESS PROGRAM™<br><small>11111111-1111-4111-8111-111111111111</small></div>
+        <div class="notice info" style="margin-top:18px"><strong>Curso:</strong><br>UTAH DRIVER SUCCESS PROGRAM™<br><small>7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01</small></div>
         <div class="notice warn"><strong>Contraseñas temporales</strong><br>Se generan dentro de Supabase y solo se muestran una vez en el resultado. Descarga el archivo de credenciales y guárdalo de forma segura. Nunca lo subas a GitHub.</div>
       </aside>
     </section>
@@ -73,11 +73,11 @@
     </section>
   </main>
 
-  <script src="supabase-config.js?v=20260817.13"></script>
+  <script src="supabase-config.js?v=20261011.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   (()=>{
-    const COURSE_ID='11111111-1111-4111-8111-111111111111';
+    const COURSE_ID='7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
     const cfg=window.SUPABASE_CONFIG||{};
     const db=window.supabase.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
     const fileInput=document.querySelector('#csv-file'); const importBtn=document.querySelector('#import-btn'); const clearBtn=document.querySelector('#clear-btn');
@@ -88,7 +88,7 @@
     function parseCSV(text){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];if(ch==='"'){if(quoted&&next==='"'){field+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(field);field='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(field);field='';if(row.some(v=>v!==''))rows.push(row);row=[];}else field+=ch;}if(field||row.length){row.push(field);if(row.some(v=>v!==''))rows.push(row);}if(!rows.length)return[];const headers=rows.shift().map(h=>h.replace(/^\uFEFF/,'').trim());return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]??'').trim()])));}
     function suspicious(email){const d=(email.split('@')[1]||'').toLowerCase();const common=new Set(['gmail.com','hotmail.com','icloud.com','outlook.com','yahoo.com','live.com','msn.com']);return d&&!common.has(d);}
     function updateCounts(rows){const emails=rows.map(x=>x.email).filter(Boolean);const unique=new Set(emails);const review=rows.filter(x=>suspicious(x.email));document.querySelector('#hero-count').textContent=rows.length;document.querySelector('#count-total').textContent=rows.length;document.querySelector('#count-unique').textContent=unique.size;document.querySelector('#count-review').textContent=review.length;if(review.length){reviewNotice.classList.remove('hidden');reviewNotice.innerHTML='<strong>Correos que conviene revisar antes de compartir accesos:</strong><br>'+review.map(x=>esc(x.email)).join(' · ')+'<br><small>No se corregirán automáticamente; se importarán exactamente como aparecen en el CSV.</small>';}else reviewNotice.classList.add('hidden');}
-    async function validateSession(){const {data:{session:s}}=await db.auth.getSession();session=s;if(!session){sessionNotice.className='notice danger';sessionNotice.textContent='No hay una sesión activa. Entra primero a Academia AG como administrador.';return;}const {data:profile}=await db.from('profiles').select('role,account_status').eq('id',session.user.id).maybeSingle();if(profile?.role!=='admin'||profile?.account_status!=='active'){sessionNotice.className='notice danger';sessionNotice.textContent='La sesión actual no tiene permisos de administrador.';session=null;return;}sessionNotice.className='notice info';sessionNotice.textContent='Administrador validado. Puedes realizar la importación.';importBtn.disabled=!students.length;}
+    async function validateSession(){const {data:{session:s}}=await db.auth.getSession();session=s;if(!session){sessionNotice.className='notice danger';sessionNotice.textContent='No hay una sesión activa. Entra primero a Academia AG como administrador.';return;}const {data:profile}=await db.from('academy_profiles').select('role,account_status').eq('id',session.user.id).maybeSingle();if(profile?.role!=='admin'||profile?.account_status!=='active'){sessionNotice.className='notice danger';sessionNotice.textContent='La sesión actual no tiene permisos de administrador.';session=null;return;}sessionNotice.className='notice info';sessionNotice.textContent='Administrador validado. Puedes realizar la importación.';importBtn.disabled=!students.length;}
     fileInput.addEventListener('change',async()=>{const file=fileInput.files?.[0];if(!file)return;const text=await file.text();const rows=parseCSV(text);students=rows.map(r=>({first_name:r['Nombre']||'',last_name:r['Apellido']||'',email:(r['Email 1']||'').trim().toLowerCase(),phone:r['Teléfono 1']||''})).filter(x=>x.email);updateCounts(students);drop.classList.toggle('is-ready',students.length>0);importBtn.disabled=!session||!students.length;});
     clearBtn.addEventListener('click',()=>{fileInput.value='';students=[];credentials=[];updateCounts([]);drop.classList.remove('is-ready');importBtn.disabled=true;reviewNotice.classList.add('hidden');document.querySelector('#result').classList.add('hidden');});
     importBtn.addEventListener('click',async()=>{if(!session||!students.length)return;const confirmed=confirm(`Se crearán o actualizarán ${students.length} alumnos y se les dará acceso al UTAH DRIVER SUCCESS PROGRAM™. ¿Continuar?`);if(!confirmed)return;importBtn.disabled=true;importBtn.textContent='Registrando alumnos…';try{const response=await fetch(`${cfg.url}/functions/v1/bulk-import-students`,{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.publishableKey,'Authorization':`Bearer ${session.access_token}`},body:JSON.stringify({students,course_id:COURSE_ID,source:'csv_admin_import'})});const payload=await response.json();if(!response.ok)throw new Error(payload.error||'No fue posible completar la importación.');renderResult(payload);}catch(error){alert(error.message||String(error));}finally{importBtn.disabled=false;importBtn.textContent='Registrar y dar acceso';}});
