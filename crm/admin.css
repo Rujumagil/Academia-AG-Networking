@@ -104,3 +104,15 @@ button,input,select,textarea{font:inherit}
 .student-pipeline-note{margin-top:14px;display:flex;gap:9px;align-items:flex-start;padding:12px 14px;background:#f8fafc;border:1px solid #e5ebf1;border-radius:12px}.student-pipeline-note strong{font-size:.72rem}.student-pipeline-note span{font-size:.7rem;line-height:1.5;color:#667085}
 @media(max-width:1180px){.student-pipeline-board{grid-template-columns:repeat(4,minmax(270px,1fr))}}
 @media(max-width:780px){.student-pipeline-board{display:flex}.student-pipeline-column{min-width:82vw;max-width:340px}.student-pipeline-list{max-height:none}}
+
+.migration-tool{display:grid;gap:12px;padding:14px}
+.migration-copy strong,.migration-copy span,.migration-result strong,.migration-result span,.migration-result small{display:block}
+.migration-copy strong{font-size:.86rem}
+.migration-copy span{font-size:.73rem;line-height:1.55;color:#667085;margin-top:5px}
+.migration-button{justify-self:start;border:0;border-radius:10px;background:#005134;color:#fff;padding:10px 14px;font-size:.75rem;font-weight:900;cursor:pointer}
+.migration-button:disabled{opacity:.55;cursor:wait}
+.migration-result{padding:10px 12px;border:1px solid #e5ebf1;background:#f8fafc;border-radius:10px;min-height:42px}
+.migration-result:empty{display:none}
+.migration-result strong{font-size:.76rem}
+.migration-result span{font-size:.7rem;color:#667085;margin-top:4px;line-height:1.45}
+.migration-result small{font-size:.64rem;color:#98a2b3;margin-top:5px;line-height:1.45}
