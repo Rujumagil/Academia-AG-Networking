@@ -93,21 +93,23 @@ Deno.serve(async (req: Request) => {
     deduped.set(email, { ...s, email, source_user_id: sourceUserId });
   }
 
-  const allUsers: any[] = [];
-  for (let page = 1; page <= 20; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) {
-      console.error("AG_MIGRATION_AUTH_LIST_FAILED", error);
-      return json(500, {
-        error: "No se pudieron consultar los usuarios destino.",
-        detail: error.message || "Error al consultar Auth."
-      });
-    }
-    const batch = data?.users ?? [];
-    allUsers.push(...batch);
-    if (batch.length < 1000) break;
+  const targetEmails = Array.from(deduped.keys());
+  const { data: existingAcademyProfiles, error: academyProfileLookupError } = await admin
+    .from("academy_profiles")
+    .select("id,email")
+    .in("email", targetEmails);
+
+  if (academyProfileLookupError) {
+    console.error("AG_MIGRATION_ACADEMY_PROFILE_LOOKUP_FAILED", academyProfileLookupError);
+    return json(500, {
+      error: "No se pudieron consultar los alumnos destino.",
+      detail: academyProfileLookupError.message || "Error al consultar perfiles académicos."
+    });
   }
-  const usersByEmail = new Map(allUsers.map((u: any) => [normalizeEmail(u.email), u]));
+
+  const usersByEmail = new Map(
+    (existingAcademyProfiles ?? []).map((u: any) => [normalizeEmail(u.email), u])
+  );
 
   const sourceIds = Array.from(deduped.values()).map((s: any) => s.source_user_id);
   const { data: mappings, error: mappingsError } = await admin
@@ -166,7 +168,7 @@ Deno.serve(async (req: Request) => {
           targetUserId = createdUser?.user?.id ?? "";
           if (!targetUserId) throw new Error("No se recibió ID del usuario creado.");
           created = true;
-          usersByEmail.set(email, createdUser.user);
+          usersByEmail.set(email, { id: targetUserId, email });
         }
       }
 
