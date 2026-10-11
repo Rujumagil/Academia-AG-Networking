@@ -616,12 +616,18 @@ function allLessons(course) {
   return course.modules.flatMap(module => module.lessons || []);
 }
 
+function requiredProgressLessons(course) {
+  return allLessons(course).filter(lesson =>
+    String(lesson?.lesson_kind || 'lesson').toLowerCase() !== 'promo'
+  );
+}
+
 function isLessonCompleted(lessonId) {
   return state.progressRows.some(row => row.lesson_id === lessonId && row.completed);
 }
 
 function courseProgress(course) {
-  const lessons = allLessons(course);
+  const lessons = requiredProgressLessons(course);
   if (!lessons.length) return 0;
   const completed = lessons.filter(lesson => isLessonCompleted(lesson.id)).length;
   return Math.round((completed / lessons.length) * 100);
@@ -640,8 +646,8 @@ function findLesson(course, lessonId) {
 }
 
 function firstIncompleteLesson(course) {
-  const lessons = allLessons(course);
-  return lessons.find(lesson => !isLessonCompleted(lesson.id)) || lessons[0] || null;
+  const lessons = requiredProgressLessons(course);
+  return lessons.find(lesson => !isLessonCompleted(lesson.id)) || null;
 }
 
 function cover(course) {
@@ -1341,8 +1347,9 @@ function renderHome() {
   const firstLesson = firstIncompleteLesson(featured);
   const progress = courseProgress(featured);
 
-  const totalLessons = state.courses.reduce((sum, course) => sum + allLessons(course).length, 0);
-  const completedLessons = state.progressRows.filter(row => row.completed).length;
+  const requiredLessonIds = new Set(state.courses.flatMap(course => requiredProgressLessons(course).map(lesson => lesson.id)));
+  const totalLessons = requiredLessonIds.size;
+  const completedLessons = state.progressRows.filter(row => row.completed && requiredLessonIds.has(row.lesson_id)).length;
   const bookCount = state.resources.filter(resource => resource.resource_type === 'book').length;
   const webinar = ACADEMY_EVENTS.find(event => event.id === 'webinar');
 
@@ -2826,9 +2833,12 @@ async function renderCertificate(courseId) {
 function renderProfile() {
   const page = document.querySelector('#page');
   const completedCourses = state.courses.filter(course => courseProgress(course) === 100).length;
-  const completedLessons = state.progressRows.filter(row => row.completed).length;
-  const totalLessons = state.courses.reduce((sum, course) => sum + allLessons(course).length, 0);
-  const certificateCount = completedCourses;
+  const requiredLessonIds = new Set(state.courses.flatMap(course => requiredProgressLessons(course).map(lesson => lesson.id)));
+  const completedLessons = state.progressRows.filter(row => row.completed && requiredLessonIds.has(row.lesson_id)).length;
+  const totalLessons = requiredLessonIds.size;
+  const certificateCount = state.certificates.filter(item =>
+    item.user_id === state.user?.id && item.status !== 'revoked' && !item.revoked_at
+  ).length;
   const profileComplete = Boolean(state.profile?.full_name?.trim()) && Boolean(state.profile?.avatar_url?.trim());
   const joinedAt = state.user?.created_at
     ? new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(new Date(state.user.created_at))
