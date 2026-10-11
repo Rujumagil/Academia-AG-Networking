@@ -156,3 +156,11 @@ button,input,select,textarea{font:inherit}
 .student-followup-alert.urgent{background:#fff0f0;border-color:#efc4c4;color:#8f2f2f}
 .student-followup-alert.urgent button{background:#9c3838;color:#fff}
 @media(max-width:620px){.student-followup-alert{align-items:flex-start;flex-direction:column}.student-followup-alert button{width:100%}}
+
+
+.followup-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:11px 13px;border-radius:12px;background:#f7faf9;border:1px solid #dfe9e4}
+.followup-summary strong,.followup-summary span{display:block}
+.followup-summary strong{font-size:.76rem;color:#174838}
+.followup-summary span{font-size:.66rem;color:#708076}
+.followup-origin{display:block;margin-top:4px!important;color:#9a5b15!important;font-weight:800}
+@media(max-width:700px){.followup-summary{align-items:flex-start;flex-direction:column}}
