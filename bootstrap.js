@@ -174,6 +174,7 @@
         await loadScript('admin-dashboard-ejecutivo.js?v=20260818.1');
         await loadScript('admin-dashboard-tabs.js?v=20260818.2');
         await loadScript('admin-import-link.js?v=20260818.5');
+        await loadScript('admin-section-pages.js?v=20261011.1');
       }
       await loadScript('first-login-password.js?v=20260818.4');
       await loadScript('push-profile-panel-v81.js?v=20260824.81');
