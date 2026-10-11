@@ -1090,3 +1090,33 @@ h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:500}
 .notification-admin-list{display:grid;gap:12px}
 @media(max-width:900px){.notification-admin-form{grid-template-columns:1fr 1fr}.notification-admin-form textarea{grid-column:1/-1}}
 @media(max-width:620px){.notification-admin-form{grid-template-columns:1fr}.notification-admin-form textarea,.notification-admin-form>.field,.notification-admin-form>button{grid-column:auto}}
+
+
+/* Resumen académico por módulo */
+.academic-course-summary{margin:18px 0 22px;padding:20px;border:1px solid rgba(30,41,59,.09);border-radius:22px;background:#fff;box-shadow:0 14px 38px rgba(15,23,42,.05)}
+.academic-summary-head{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;margin-bottom:16px}
+.academic-summary-head h2{margin:3px 0 5px;color:#1e293b;font-family:Georgia,'Times New Roman',serif;font-size:1.55rem}
+.academic-summary-head p{margin:0;color:#6b7280;font-size:.78rem;line-height:1.55;max-width:720px}
+.academic-summary-kpis{display:grid;grid-template-columns:repeat(3,minmax(115px,1fr));gap:8px;min-width:min(430px,100%)}
+.academic-summary-kpis span{display:block;padding:10px 12px;border:1px solid #e3e9ef;border-radius:13px;background:#f9fbfa}
+.academic-summary-kpis strong,.academic-summary-kpis small{display:block}
+.academic-summary-kpis strong{font-size:1rem;color:#0f5138}
+.academic-summary-kpis small{font-size:.61rem;color:#738092;line-height:1.35;margin-top:2px}
+.academic-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.academic-module-card{padding:13px 14px;border:1px solid #e2e8ef;border-radius:15px;background:#fbfcfd}
+.academic-module-card.complete{border-color:#c9e4d8;background:#f4fbf7}
+.academic-module-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.academic-module-top span,.academic-module-top strong{display:block}
+.academic-module-top span{font-size:.59rem;text-transform:uppercase;letter-spacing:.07em;color:#758397;font-weight:900}
+.academic-module-top strong{font-size:.76rem;color:#243044;line-height:1.35;margin-top:2px}
+.academic-module-top b{font-size:.9rem;color:#0d6044}
+.academic-module-progress{height:7px;border-radius:999px;background:#e8edf1;overflow:hidden;margin:10px 0 9px}
+.academic-module-progress i{display:block;height:100%;background:#005134;border-radius:inherit}
+.academic-module-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.academic-module-meta>span:first-child{font-size:.64rem;color:#6f7b8a}
+.academic-exam-chip{display:inline-flex;padding:5px 7px;border-radius:999px;border:1px solid #e3e8ee;background:#fff;color:#697789;font-size:.59rem;font-weight:800}
+.academic-exam-chip.passed{background:#edf8f3;border-color:#cbe3d8;color:#0a6a4d}
+.academic-exam-chip.attempted{background:#fff7e9;border-color:#ead9aa;color:#8a6110}
+.academic-exam-chip.neutral{background:#f3f5f7;color:#8a95a3}
+@media(max-width:900px){.academic-summary-head{flex-direction:column}.academic-summary-kpis{min-width:0;width:100%}.academic-module-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.academic-summary-kpis{grid-template-columns:1fr}.academic-course-summary{padding:16px}.academic-module-meta{align-items:flex-start;flex-direction:column}}
