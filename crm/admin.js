@@ -17,6 +17,7 @@ var ACADEMY_TABLES={
   assessment_questions:'academy_assessment_questions',
   assessment_options:'academy_assessment_options',
   lesson_quizzes:'academy_lesson_quizzes',
+  module_exam_attempts:'academy_module_exam_attempts',
   orders:'academy_orders',
   student_access:'academy_student_access',
   products:'academy_products',
