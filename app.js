@@ -54,6 +54,7 @@ const state = {
   resourceAccess: [],
   assessments: [],
   assessmentAttempts: [],
+  moduleExamAttempts: [],
   supportTickets: [],
   consents: [],
   certificates: [],
@@ -156,6 +157,21 @@ const HELP_TOPICS = [
   ['¿Cómo obtengo mi certificado?', 'Completa las lecciones requeridas y, cuando el curso lo solicite, aprueba sus evaluaciones. El certificado aparecerá en “Certificados”.'],
   ['¿Cómo pido soporte?', 'Puedes crear un ticket desde el Centro de ayuda. Incluye tu nombre, correo y una descripción clara del problema.']
 ];
+
+window.addEventListener('academy:module-exam-completed', event => {
+  const detail = event.detail || {};
+  if (!detail.moduleId) return;
+  state.moduleExamAttempts.unshift({
+    id: `local-${Date.now()}`,
+    user_id: state.user?.id || null,
+    module_id: detail.moduleId,
+    score: Number(detail.result?.score || 0),
+    total_questions: Number(detail.result?.total || 0),
+    percentage: Number(detail.result?.percentage || 0),
+    passed: Boolean(detail.result?.passed),
+    attempted_at: new Date().toISOString()
+  });
+});
 
 window.addEventListener('beforeinstallprompt', event => {
   event.preventDefault();
@@ -322,6 +338,7 @@ function clearUserData() {
   state.resourceAccess = [];
   state.assessments = [];
   state.assessmentAttempts = [];
+  state.moduleExamAttempts = [];
   state.supportTickets = [];
   state.consents = [];
   state.certificates = [];
@@ -435,9 +452,10 @@ async function loadApplicationData() {
   if (resourcesResult.error) console.error('Resources error:', resourcesResult.error);
   state.resources = resourcesResult.data || [];
 
-  const [assessmentsResult, attemptsResult, ticketsResult, consentsResult, certificatesResult, courseInstructorsResult, notificationsResult, notificationReadsResult] = await Promise.all([
+  const [assessmentsResult, attemptsResult, moduleExamAttemptsResult, ticketsResult, consentsResult, certificatesResult, courseInstructorsResult, notificationsResult, notificationReadsResult] = await Promise.all([
     courseIds.length ? db.from('assessments').select('*').in('course_id', courseIds).order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
     db.from('assessment_attempts').select('*').order('submitted_at', { ascending: false }),
+    moduleIds.length ? db.from('module_exam_attempts').select('*').eq('user_id', state.user.id).in('module_id', moduleIds).order('attempted_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
     db.from('support_tickets').select('*').order('created_at', { ascending: false }),
     db.from('user_consents').select('*').order('accepted_at', { ascending: false }),
     db.from('certificates').select('*').order('issued_at', { ascending: false }),
@@ -447,6 +465,7 @@ async function loadApplicationData() {
   ]);
   if (assessmentsResult.error && !String(assessmentsResult.error.message || '').includes('does not exist')) console.error('Assessments error:', assessmentsResult.error);
   if (attemptsResult.error && !String(attemptsResult.error.message || '').includes('does not exist')) console.error('Assessment attempts error:', attemptsResult.error);
+  if (moduleExamAttemptsResult.error && !String(moduleExamAttemptsResult.error.message || '').includes('does not exist')) console.error('Module exam attempts error:', moduleExamAttemptsResult.error);
   if (ticketsResult.error && !String(ticketsResult.error.message || '').includes('does not exist')) console.error('Support tickets error:', ticketsResult.error);
   if (consentsResult.error && !String(consentsResult.error.message || '').includes('does not exist')) console.error('Consents error:', consentsResult.error);
   if (certificatesResult.error && !String(certificatesResult.error.message || '').includes('does not exist')) console.error('Certificates error:', certificatesResult.error);
@@ -455,6 +474,7 @@ async function loadApplicationData() {
   if (notificationReadsResult.error && !String(notificationReadsResult.error.message || '').includes('does not exist')) console.error('Notification reads error:', notificationReadsResult.error);
   state.assessments = assessmentsResult.data || [];
   state.assessmentAttempts = attemptsResult.data || [];
+  state.moduleExamAttempts = moduleExamAttemptsResult.data || [];
   state.supportTickets = ticketsResult.data || [];
   state.consents = consentsResult.data || [];
   state.certificates = certificatesResult.data || [];
@@ -631,6 +651,88 @@ function courseProgress(course) {
   if (!lessons.length) return 0;
   const completed = lessons.filter(lesson => isLessonCompleted(lesson.id)).length;
   return Math.round((completed / lessons.length) * 100);
+}
+
+function moduleRequiredLessons(module) {
+  return (module?.lessons || []).filter(lesson =>
+    String(lesson?.lesson_kind || 'lesson').toLowerCase() !== 'promo'
+  );
+}
+
+function moduleProgressPercent(module) {
+  const lessons = moduleRequiredLessons(module);
+  if (!lessons.length) return 0;
+  const done = lessons.filter(lesson => isLessonCompleted(lesson.id)).length;
+  return Math.min(100, Math.round((done / lessons.length) * 100));
+}
+
+function moduleExamAttempts(moduleId) {
+  return (state.moduleExamAttempts || [])
+    .filter(item => item.module_id === moduleId)
+    .sort((a, b) => new Date(b.attempted_at || 0) - new Date(a.attempted_at || 0));
+}
+
+function bestModuleExamAttempt(moduleId) {
+  return moduleExamAttempts(moduleId)
+    .slice()
+    .sort((a, b) => Number(b.percentage || 0) - Number(a.percentage || 0))[0] || null;
+}
+
+function moduleAcademicLabel(module, index = 0) {
+  const type = String(module?.section_type || '').toLowerCase();
+  if (type === 'introduction') return 'Introducción';
+  if (type === 'closing') return 'Cierre';
+  const number = Number(module?.academic_number || 0);
+  return number ? `Módulo ${number}` : `Módulo ${index + 1}`;
+}
+
+function courseAcademicSummaryMarkup(course) {
+  const modules = [...(course?.modules || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+  const rows = modules.map((module, index) => {
+    const lessons = moduleRequiredLessons(module);
+    const completed = lessons.filter(lesson => isLessonCompleted(lesson.id)).length;
+    const percent = moduleProgressPercent(module);
+    const attempts = moduleExamAttempts(module.id);
+    const best = bestModuleExamAttempt(module.id);
+    const academic = String(module.section_type || '').toLowerCase() === 'academic';
+    const exam = academic
+      ? (best
+        ? `<span class="academic-exam-chip ${best.passed ? 'passed' : 'attempted'}">Evaluación opcional · ${Math.round(Number(best.percentage || 0))}% · ${attempts.length} intento${attempts.length === 1 ? '' : 's'}</span>`
+        : '<span class="academic-exam-chip">Evaluación opcional · sin intento</span>')
+      : '<span class="academic-exam-chip neutral">Sin evaluación</span>';
+
+    return `
+      <article class="academic-module-card ${percent === 100 ? 'complete' : ''}">
+        <div class="academic-module-top">
+          <div><span>${escapeHtml(moduleAcademicLabel(module, index))}</span><strong>${escapeHtml(module.title || '')}</strong></div>
+          <b>${percent}%</b>
+        </div>
+        <div class="academic-module-progress"><i style="width:${percent}%"></i></div>
+        <div class="academic-module-meta">
+          <span>${completed}/${lessons.length} lecciones</span>
+          ${exam}
+        </div>
+      </article>`;
+  }).join('');
+
+  const academicModules = modules.filter(module => String(module.section_type || '').toLowerCase() === 'academic');
+  const finishedModules = modules.filter(module => moduleProgressPercent(module) === 100).length;
+  const examsDone = academicModules.filter(module => moduleExamAttempts(module.id).length > 0).length;
+  const bestScores = academicModules.map(module => bestModuleExamAttempt(module.id)).filter(Boolean).map(item => Number(item.percentage || 0));
+  const avg = bestScores.length ? Math.round(bestScores.reduce((sum, value) => sum + value, 0) / bestScores.length) : null;
+
+  return `
+    <section class="academic-course-summary glass">
+      <div class="academic-summary-head">
+        <div><span class="eyebrow">Resumen académico</span><h2>Avance por módulo</h2><p>Las evaluaciones de los módulos son opcionales y sirven como práctica. No bloquean tu certificado.</p></div>
+        <div class="academic-summary-kpis">
+          <span><strong>${finishedModules}/${modules.length}</strong><small>Secciones completas</small></span>
+          <span><strong>${examsDone}/${academicModules.length}</strong><small>Evaluaciones realizadas</small></span>
+          <span><strong>${avg === null ? '—' : avg + '%'}</strong><small>Promedio de mejores intentos</small></span>
+        </div>
+      </div>
+      <div class="academic-module-grid">${rows}</div>
+    </section>`;
 }
 
 function findCourse(id) {
@@ -1664,6 +1766,8 @@ function renderCourse(id) {
   page.innerHTML = `
     <a class="back-link" href="#courses">← Volver a mis cursos</a>
 
+    ${courseAcademicSummaryMarkup(course)}
+
     <section class="course-head">
       <article class="course-cover">
         <img src="${escapeHtml(cover(course))}" alt="${escapeHtml(course.title)}" onerror="imageErrorFallback(event)">
@@ -1695,7 +1799,7 @@ function moduleMarkup(course, module, index, activeLessonId = null) {
   return `
     <details class="module" ${index === 0 || module.lessons.some(item => item.id === activeLessonId) ? 'open' : ''}>
       <summary>
-        <div><strong>Módulo ${index + 1}: ${escapeHtml(module.title)}</strong><span>${module.lessons.length} lecciones</span></div>
+        <div><strong>${escapeHtml(moduleAcademicLabel(module, index))}: ${escapeHtml(module.title)}</strong><span>${moduleProgressPercent(module)}% · ${moduleRequiredLessons(module).length} lecciones obligatorias</span></div>
         <span>⌄</span>
       </summary>
       <div class="lesson-list">
@@ -1867,8 +1971,9 @@ async function saveNote(lessonId, note) {
 
 function renderProgress() {
   const page = document.querySelector('#page');
-  const totalLessons = state.courses.reduce((sum, course) => sum + allLessons(course).length, 0);
-  const completedLessons = state.progressRows.filter(row => row.completed).length;
+  const requiredLessonIds = new Set(state.courses.flatMap(course => requiredProgressLessons(course).map(lesson => lesson.id)));
+  const totalLessons = requiredLessonIds.size;
+  const completedLessons = state.progressRows.filter(row => row.completed && requiredLessonIds.has(row.lesson_id)).length;
   const completedCourses = state.courses.filter(course => courseProgress(course) === 100).length;
 
   page.innerHTML = `
