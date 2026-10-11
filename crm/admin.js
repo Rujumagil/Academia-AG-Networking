@@ -92,9 +92,17 @@ function studentPipelineItems(){
       var progressByLesson={};
       progress.forEach(function(p){progressByLesson[p.lesson_id]=p;});
       var completedLessons=lessons.filter(function(l){var p=progressByLesson[l.id];return p&&p.completed===true;}).length;
-      var started=progress.some(function(p){return p.completed===true||Number(p.progress_seconds||0)>0;});
+      var started=progress.some(function(p){return p.completed===true||Number(p.progress_seconds||0)>0||Number(p.watch_percentage||0)>0;});
       var total=lessons.length;
       var percent=total?Math.min(100,Math.round((completedLessons/total)*100)):(e.status==='completed'?100:0);
+      var lastProgress=progress.slice().sort(function(a,b){
+        var ad=new Date(a.last_watched_at||a.updated_at||a.completed_at||0).getTime()||0;
+        var bd=new Date(b.last_watched_at||b.updated_at||b.completed_at||0).getTime()||0;
+        return bd-ad;
+      })[0]||null;
+      var lastActivityAt=lastProgress?(lastProgress.last_watched_at||lastProgress.updated_at||lastProgress.completed_at||null):null;
+      var currentLesson=null;
+      var lessonWatch=0;
       var cert=d.certificates.find(function(x){return x.user_id===e.user_id&&x.course_id===e.course_id&&x.status!=='revoked';});
       var finished=e.status==='completed'||(total>0&&completedLessons>=total);
       var stage=cert?'certified':(finished?'completed':(started?'in_progress':'not_started'));
@@ -106,10 +114,24 @@ function studentPipelineItems(){
           return ls.length&&ls.some(function(l){var p=progressByLesson[l.id];return !(p&&p.completed===true);});
         })||modules[modules.length-1]||null;
       }
+
+      if(lastProgress){
+        currentLesson=lessons.find(function(l){return l.id===lastProgress.lesson_id;})||null;
+        lessonWatch=Math.max(0,Math.min(100,Number(lastProgress.watch_percentage||0)));
+      }
+      if(!currentLesson&&currentModule){
+        currentLesson=lessons.find(function(l){
+          if(l.module_id!==currentModule.id)return false;
+          var p=progressByLesson[l.id];
+          return !(p&&p.completed===true);
+        })||lessons.find(function(l){return l.module_id===currentModule.id;})||null;
+      }
+
       return {
         enrollment:e,profile:profile,course:course,stage:stage,percent:percent,
         completedLessons:completedLessons,totalLessons:total,
-        currentModule:currentModule,modules:modules,certificate:cert,
+        currentModule:currentModule,currentLesson:currentLesson,lessonWatch:lessonWatch,
+        lastActivityAt:lastActivityAt,modules:modules,certificate:cert,
         phone:studentPhone(profile)
       };
     });
@@ -360,6 +382,31 @@ function renderStudentPipeline(){
   var counts={not_started:0,in_progress:0,completed:0,certified:0};
   items.forEach(function(x){counts[x.stage]=(counts[x.stage]||0)+1;});
 
+  function relativeActivity(value){
+    if(!value)return 'Sin actividad';
+    var t=new Date(value).getTime();
+    if(!t)return 'Sin actividad';
+    var diff=Math.max(0,Date.now()-t);
+    var min=Math.floor(diff/60000);
+    if(min<1)return 'Ahora';
+    if(min<60)return 'Hace '+min+' min';
+    var hours=Math.floor(min/60);
+    if(hours<24)return 'Hace '+hours+' h';
+    var days=Math.floor(hours/24);
+    if(days===1)return 'Ayer';
+    if(days<30)return 'Hace '+days+' días';
+    return fmt(value);
+  }
+
+  function contactActions(x){
+    var actions=[];
+    var cleanPhone=String(x.phone||'').replace(/[^0-9]/g,'');
+    if(x.phone)actions.push('<a class="student-contact-btn" href="tel:'+esc(String(x.phone).replace(/[^+0-9]/g,''))+'" title="Llamar">☎</a>');
+    if(cleanPhone.length>=10)actions.push('<a class="student-contact-btn" href="https://wa.me/'+esc(cleanPhone)+'" target="_blank" rel="noopener" title="WhatsApp">WA</a>');
+    if(x.profile.email)actions.push('<a class="student-contact-btn" href="mailto:'+esc(x.profile.email)+'" title="Correo">✉</a>');
+    return actions.length?'<div class="student-contact-actions">'+actions.join('')+'</div>':'';
+  }
+
   function card(x){
     var moduleText='—';
     if(x.stage==='certified')moduleText='Curso finalizado · certificado emitido';
@@ -369,17 +416,34 @@ function renderStudentPipeline(){
       moduleText='Módulo '+idx+' de '+x.modules.length+' · '+(x.currentModule.title||'Sin título');
     }else if(!x.totalLessons)moduleText='Contenido pendiente de configurar';
 
+    var lessonText=x.currentLesson
+      ? (x.currentLesson.lesson_code?x.currentLesson.lesson_code+' · ':'')+(x.currentLesson.title||'Lección')
+      : (x.stage==='not_started'?'Pendiente de iniciar':'—');
+
+    var activityClass='student-activity';
+    if(x.lastActivityAt){
+      var age=Date.now()-new Date(x.lastActivityAt).getTime();
+      if(age>14*86400000)activityClass+=' stale';
+      else if(age<=3*86400000)activityClass+=' fresh';
+    }
+
     var cert=x.certificate
       ? '<span class="student-cert ok">✓ Certificado '+esc(x.certificate.credential_code||'emitido')+'</span>'
       : '<span class="student-cert">Sin certificado</span>';
 
-    return '<article class="student-pipeline-card">'+
+    var search=[x.profile.full_name,x.profile.email,x.phone,x.course.title].join(' ').toLowerCase();
+
+    return '<article class="student-pipeline-card" data-student-card data-course-id="'+esc(x.course.id)+'" data-search="'+esc(search)+'">'+
       '<div class="student-pipeline-person"><div><strong>'+esc(x.profile.full_name||x.profile.email||'Alumno')+'</strong><small>'+esc(x.profile.email||'')+'</small></div><span class="student-progress-number">'+x.percent+'%</span></div>'+
-      '<div class="student-phone-row"><span>Teléfono</span>'+phoneHtml(x.phone)+'</div>'+
+      '<div class="student-contact-row"><div class="student-phone-row"><span>Teléfono</span>'+phoneHtml(x.phone)+'</div>'+contactActions(x)+'</div>'+
       '<div class="student-course">'+esc(x.course.title||'Curso')+'</div>'+
       '<div class="student-progress"><i style="width:'+x.percent+'%"></i></div>'+
       '<div class="student-module">'+esc(moduleText)+'</div>'+
-      '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones</span>'+cert+'</div>'+
+      '<div class="student-current-lesson"><span>Lección actual</span><strong>'+esc(lessonText)+'</strong>'+
+        (x.stage==='in_progress'&&x.lessonWatch>0?'<small>Avance de esta lección: '+Math.round(x.lessonWatch)+'%</small>':'')+
+      '</div>'+
+      '<div class="'+activityClass+'"><span>Última actividad</span><strong>'+esc(relativeActivity(x.lastActivityAt))+'</strong></div>'+
+      '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones completadas</span>'+cert+'</div>'+
     '</article>';
   }
 
@@ -389,6 +453,13 @@ function renderStudentPipeline(){
     ['completed','Terminado','Curso completado'],
     ['certified','Certificado','Constancia emitida']
   ];
+
+  var courseOptions=state.data.courses.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>';}).join('');
+  var filters='<section class="student-pipeline-tools">'+
+    '<div><span>Buscar alumno</span><input id="pipeline-search" type="search" placeholder="Nombre, correo o teléfono"></div>'+
+    '<div><span>Curso</span><select id="pipeline-course"><option value="">Todos los cursos</option>'+courseOptions+'</select></div>'+
+    '<div class="student-pipeline-tool-status"><span>Seguimiento</span><strong id="pipeline-visible-count">'+items.length+' registros</strong></div>'+
+  '</section>';
 
   var metrics='<section class="back-metrics student-pipeline-metrics">'+
     metric('Alumnos / cursos',items.length,'inscripciones activas o terminadas','navy')+
@@ -401,14 +472,53 @@ function renderStudentPipeline(){
   var board='<section class="student-pipeline-board">'+columns.map(function(col){
     var list=items.filter(function(x){return x.stage===col[0];});
     return '<div class="student-pipeline-column" data-pipeline-stage="'+col[0]+'">'+
-      '<div class="student-pipeline-head"><div><strong>'+esc(col[1])+'</strong><small>'+esc(col[2])+'</small></div><b>'+list.length+'</b></div>'+
+      '<div class="student-pipeline-head"><div><strong>'+esc(col[1])+'</strong><small>'+esc(col[2])+'</small></div><b data-stage-count>'+list.length+'</b></div>'+
       '<div class="student-pipeline-list">'+(list.length?list.map(card).join(''):'<div class="student-pipeline-empty">Sin alumnos</div>')+'</div>'+
     '</div>';
   }).join('')+'</section>';
 
-  var note='<div class="back-note student-pipeline-note"><strong>Teléfonos</strong><span>Se muestra el teléfono guardado en el perfil cuando exista; mientras Academia termina de migrarse al Supabase maestro, también se cruza por correo con el CRM AG. Los alumnos antiguos sin teléfono registrado aparecerán como “Sin teléfono”.</span></div>';
+  var note='<div class="back-note student-pipeline-note"><strong>Seguimiento académico</strong><span>El pipeline se actualiza con el avance real guardado en Supabase maestro. La actividad reciente se marca en verde; después de 14 días sin actividad se resalta para seguimiento.</span></div>';
 
-  return panel('Pipeline de alumnos','Academia AG · progreso por curso',metrics+board+note,'<a href="../academia.html?crm_admin=1#workspace/general/students">Abrir Academia</a>');
+  return panel('Pipeline de alumnos','Academia AG · progreso por curso',metrics+filters+board+note,'<a href="../academia.html?crm_admin=1#workspace/general/students">Abrir Academia</a>');
+}
+
+function bindStudentPipelineFilters(){
+  var search=document.getElementById('pipeline-search');
+  var course=document.getElementById('pipeline-course');
+  if(!search&&!course)return;
+
+  function apply(){
+    var term=String(search&&search.value||'').trim().toLowerCase();
+    var courseId=String(course&&course.value||'');
+    var visible=0;
+
+    document.querySelectorAll('[data-student-card]').forEach(function(card){
+      var show=(!term||String(card.dataset.search||'').indexOf(term)>=0)&&(!courseId||card.dataset.courseId===courseId);
+      card.hidden=!show;
+      if(show)visible++;
+    });
+
+    document.querySelectorAll('[data-pipeline-stage]').forEach(function(column){
+      var n=Array.from(column.querySelectorAll('[data-student-card]')).filter(function(card){return !card.hidden;}).length;
+      var badge=column.querySelector('[data-stage-count]');
+      if(badge)badge.textContent=n;
+      var empty=column.querySelector('.student-pipeline-filter-empty');
+      if(!empty&&n===0){
+        empty=document.createElement('div');
+        empty.className='student-pipeline-empty student-pipeline-filter-empty';
+        empty.textContent='Sin coincidencias';
+        column.querySelector('.student-pipeline-list')?.appendChild(empty);
+      }else if(empty){
+        empty.hidden=n>0;
+      }
+    });
+
+    var counter=document.getElementById('pipeline-visible-count');
+    if(counter)counter.textContent=visible+' '+(visible===1?'registro':'registros');
+  }
+
+  if(search)search.addEventListener('input',apply);
+  if(course)course.addEventListener('change',apply);
 }
 
 function renderStudents(){
@@ -544,6 +654,7 @@ function renderSection(){
 }
 
 function bindSection(){
+  if(state.section==='student_pipeline')bindStudentPipelineFilters();
   document.querySelectorAll('[data-jump]').forEach(function(b){b.onclick=function(){state.section=b.dataset.jump;location.hash=state.section;render();};});
   document.querySelectorAll('[data-user-status]').forEach(function(b){b.onclick=async function(){var r=await db.rpc('admin_set_account_status',{target_user:b.dataset.userStatus,new_status:b.dataset.status});if(r.error)return toast(r.error.message,true);toast('Estado del alumno actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-course-status]').forEach(function(b){b.onclick=async function(){var r=await db.from('courses').update({status:b.dataset.status}).eq('id',b.dataset.courseStatus);if(r.error)return toast(r.error.message,true);toast('Curso actualizado.');await loadAll();render();};});
