@@ -188,3 +188,54 @@ button,input,select,textarea{font:inherit}
 .pipeline-exam.attempted{background:#fff7e9;border-color:#ebd9a7;color:#896010}
 .pipeline-exam.neutral{background:#f2f4f6;color:#8b96a4}
 @media(max-width:700px){.pipeline-module-row{grid-template-columns:1fr 52px}.pipeline-module-progress{grid-column:1/-1}.pipeline-exam{justify-self:start}.student-academic-detail>summary{align-items:flex-start;flex-direction:column}.student-academic-detail>summary strong{text-align:left}}
+
+
+/* Expediente académico individual */
+.student-record-hero{margin-bottom:16px;padding:18px;border:1px solid #e1e8ee;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f7faf9);box-shadow:0 12px 30px rgba(15,23,42,.04)}
+.student-record-breadcrumb{display:flex;justify-content:space-between;gap:10px;margin-bottom:16px}
+.student-record-breadcrumb button{border:1px solid #dbe4e9;background:#fff;color:#294236;border-radius:9px;padding:8px 10px;font-size:.67rem;font-weight:900;cursor:pointer}
+.student-record-identity{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.student-record-identity h2{margin:3px 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:1.55rem;color:#1e293b}
+.student-record-identity p{margin:0;color:#718096;font-size:.75rem}
+.record-contact-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;margin-top:9px}
+.record-contact-actions a{display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;border-radius:8px;border:1px solid #dce5e1;background:#fff;color:#0a5b42;text-decoration:none;font-size:.62rem;font-weight:900}
+.record-course-tabs{display:flex;gap:7px;overflow:auto;margin-top:14px;padding-top:12px;border-top:1px solid #e5ebef}
+.record-course-tabs button{flex:0 0 auto;border:1px solid #dfe6eb;background:#fff;color:#667085;border-radius:999px;padding:7px 11px;font-size:.63rem;font-weight:900;cursor:pointer}
+.record-course-tabs button.active{background:#005134;border-color:#005134;color:#fff}
+.record-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.record-course-status{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:16px}
+.record-course-status>div{padding:14px 15px;border:1px solid #e2e8ed;border-radius:14px;background:#fff}
+.record-course-status span,.record-course-status strong,.record-course-status small{display:block}
+.record-course-status span{font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;font-weight:900;color:#8290a0}
+.record-course-status strong{margin-top:4px;font-size:.82rem;color:#243044}
+.record-course-status small{margin-top:4px;font-size:.65rem;color:#748092}
+.record-certificate.valid{background:#eff9f4;border-color:#cde5da}
+.record-certificate.valid strong{color:#0b6a4e}
+.record-module-card{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(160px,1fr) auto;gap:14px;align-items:center;padding:12px 13px;border-bottom:1px solid #edf1f4}
+.record-module-card:last-child{border-bottom:0}
+.record-module-card.complete{background:#f4fbf7}
+.record-module-main span,.record-module-main strong,.record-module-main small{display:block}
+.record-module-main span{font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;color:#728093;font-weight:900}
+.record-module-main strong{font-size:.74rem;color:#2b3749;margin-top:2px}
+.record-module-main small{font-size:.61rem;color:#8390a0;margin-top:2px}
+.record-module-progress{display:grid;grid-template-columns:1fr 42px;gap:8px;align-items:center}
+.record-module-progress>div{height:7px;border-radius:999px;background:#e7edf1;overflow:hidden}
+.record-module-progress i{display:block;height:100%;background:#005134;border-radius:inherit}
+.record-module-progress b{font-size:.66rem;color:#0b6045;text-align:right}
+.record-exam{min-width:92px;padding:7px 9px;border-radius:10px;border:1px solid #e0e6eb;background:#fff;text-align:center}
+.record-exam strong,.record-exam small{display:block}
+.record-exam strong{font-size:.72rem;color:#657286}
+.record-exam small{font-size:.56rem;color:#8994a2;margin-top:1px}
+.record-exam.passed{background:#edf8f3;border-color:#c9e4d7}.record-exam.passed strong{color:#0b6c4f}
+.record-exam.attempted{background:#fff7e9;border-color:#ead7a7}.record-exam.attempted strong{color:#8b6111}
+.record-exam.neutral{background:#f4f6f8}
+.student-record-actions{margin-top:9px}
+.student-record-actions button{width:100%;border:1px solid #d8e3de;border-radius:9px;background:#f7fbf9;color:#0b5f45;padding:8px 9px;font-size:.63rem;font-weight:900;cursor:pointer}
+@media(max-width:1100px){.record-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.student-record-identity{flex-direction:column}.record-contact-actions{justify-content:flex-start}.record-course-status{grid-template-columns:1fr}.record-metrics{grid-template-columns:1fr 1fr}.record-module-card{grid-template-columns:1fr}.record-exam{justify-self:start}.student-record-breadcrumb{align-items:flex-start;flex-direction:column}.student-record-breadcrumb button{width:100%}}
+@media print{
+  .back-sidebar,.back-topbar,.student-record-breadcrumb,.record-contact-actions,.record-course-tabs{display:none!important}
+  .back-main,.back-content{margin:0!important;padding:0!important;width:100%!important}
+  .student-record-hero,.back-panel,.record-course-status>div{box-shadow:none!important}
+  .back-grid.two{grid-template-columns:1fr!important}
+}
