@@ -164,3 +164,27 @@ button,input,select,textarea{font:inherit}
 .followup-summary span{font-size:.66rem;color:#708076}
 .followup-origin{display:block;margin-top:4px!important;color:#9a5b15!important;font-weight:800}
 @media(max-width:700px){.followup-summary{align-items:flex-start;flex-direction:column}}
+
+
+/* Resumen académico expandible en Pipeline */
+.student-academic-detail{margin-top:9px;border:1px solid #e2e8ef;border-radius:10px;background:#fbfcfd;overflow:hidden}
+.student-academic-detail>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 10px}
+.student-academic-detail>summary::-webkit-details-marker{display:none}
+.student-academic-detail>summary span,.student-academic-detail>summary strong{display:block}
+.student-academic-detail>summary span{font-size:.61rem;text-transform:uppercase;letter-spacing:.05em;color:#6d7a8b;font-weight:900}
+.student-academic-detail>summary strong{font-size:.64rem;color:#224033;text-align:right}
+.student-academic-detail[open]>summary{border-bottom:1px solid #e5ebf0;background:#f7faf8}
+.student-academic-detail-body{padding:8px}
+.pipeline-module-row{display:grid;grid-template-columns:minmax(110px,1.2fr) minmax(80px,1fr) 38px auto;gap:7px;align-items:center;padding:7px 5px;border-bottom:1px solid #edf1f4}
+.pipeline-module-row:last-child{border-bottom:0}
+.pipeline-module-row strong,.pipeline-module-row small{display:block}
+.pipeline-module-row strong{font-size:.64rem;color:#2c394b}
+.pipeline-module-row small{font-size:.58rem;color:#8390a0;line-height:1.25;margin-top:2px}
+.pipeline-module-row>b{font-size:.64rem;color:#0c5c43;text-align:right}
+.pipeline-module-progress{height:6px;border-radius:999px;background:#e7edf1;overflow:hidden}
+.pipeline-module-progress i{display:block;height:100%;background:#005134;border-radius:inherit}
+.pipeline-exam{display:inline-flex;justify-content:center;padding:4px 6px;border-radius:999px;border:1px solid #e0e6eb;background:#fff;color:#788494;font-size:.55rem;font-weight:900;white-space:nowrap}
+.pipeline-exam.passed{background:#edf8f3;border-color:#cbe4d8;color:#0c6b50}
+.pipeline-exam.attempted{background:#fff7e9;border-color:#ebd9a7;color:#896010}
+.pipeline-exam.neutral{background:#f2f4f6;color:#8b96a4}
+@media(max-width:700px){.pipeline-module-row{grid-template-columns:1fr 52px}.pipeline-module-progress{grid-column:1/-1}.pipeline-exam{justify-self:start}.student-academic-detail>summary{align-items:flex-start;flex-direction:column}.student-academic-detail>summary strong{text-align:left}}
