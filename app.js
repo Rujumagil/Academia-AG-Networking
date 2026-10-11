@@ -1057,6 +1057,12 @@ async function route() {
     return renderAccountRestricted(state.profile.account_status);
   }
 
+  const crmAdminEmbed = new URLSearchParams(location.search).get('crm_admin') === '1';
+  if (isAdmin() && !crmAdminEmbed) {
+    window.location.replace('crm/');
+    return;
+  }
+
   renderShell(page);
 
   if (page === 'home') renderHome();
@@ -1162,10 +1168,10 @@ function renderShell(active) {
             Explorar cursos
           </a>
 
-          ${canManageContent() ? `
+          ${isInstructor() ? `
             <a class="nav-link admin-nav-link ${activeNav === 'admin' ? 'active' : ''}" href="#admin">
               <span class="nav-icon">⚙</span>
-              ${isAdmin() ? 'Administrar' : 'Mis contenidos'}
+              Mis contenidos
             </a>` : ''}
         </nav>
 
