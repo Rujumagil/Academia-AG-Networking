@@ -841,7 +841,9 @@ async function handleAuth(event, signup) {
         options: {
           data: {
             full_name: fullName,
-            legal_version: CONFIG.legalVersion || '2026-08',
+            academy_workspace_id: CONFIG.workspaceId || '',
+            academy_source: 'ag_business_networking',
+            legal_version: CONFIG.legalVersion || '2026-10',
             legal_accepted_at: new Date().toISOString(),
             privacy_accepted: true,
             terms_accepted: true,
