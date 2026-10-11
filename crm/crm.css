@@ -49,9 +49,9 @@ a{color:inherit}
 .crm-brand img{width:150px;max-height:48px;object-fit:contain;object-position:left center;filter:brightness(0) invert(1)}
 .crm-brand small{display:block;color:#9fb0c5;margin-top:3px}
 .crm-nav{display:grid;gap:7px;margin-top:22px}
-.crm-nav button{display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;color:#ccd8e6;border-radius:12px;padding:11px 12px;text-align:left}
-.crm-nav button:hover,.crm-nav button.active{background:rgba(255,255,255,.1);color:#fff}
-.crm-nav button span:last-child{font-size:.76rem;background:rgba(255,255,255,.11);padding:3px 7px;border-radius:999px}
+.crm-nav button,.crm-nav a{display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;color:#ccd8e6;border-radius:12px;padding:11px 12px;text-align:left;text-decoration:none}
+.crm-nav button:hover,.crm-nav button.active,.crm-nav a:hover,.crm-nav a.active{background:rgba(255,255,255,.1);color:#fff}
+.crm-nav button span:last-child,.crm-nav a span:last-child{font-size:.76rem;background:rgba(255,255,255,.11);padding:3px 7px;border-radius:999px}
 .crm-sidebar-footer{margin-top:auto;border-top:1px solid rgba(255,255,255,.09);padding:16px 8px 0}
 .crm-user strong{display:block;font-size:.9rem}
 .crm-user small{display:block;color:#9fb0c5;margin-top:3px;overflow:hidden;text-overflow:ellipsis}
