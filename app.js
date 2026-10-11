@@ -1059,7 +1059,7 @@ async function route() {
 
   const crmAdminEmbed = new URLSearchParams(location.search).get('crm_admin') === '1';
   if (isAdmin() && !crmAdminEmbed) {
-    window.location.replace('crm/');
+    window.location.replace('crm/admin.html');
     return;
   }
 
