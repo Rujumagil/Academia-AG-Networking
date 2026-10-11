@@ -127,12 +127,25 @@ function studentPipelineItems(){
         })||lessons.find(function(l){return l.module_id===currentModule.id;})||null;
       }
 
+      var candidate=d.candidates.find(function(item){
+        return (item.metadata&&String(item.metadata.academy_user_id||'')===String(e.user_id))
+          || (profile.email&&normalizeEmail(item.email)===normalizeEmail(profile.email));
+      })||null;
+      var pendingFollowup=candidate?d.tasks.find(function(task){
+        return task.candidate_id===candidate.id
+          && task.status==='pending'
+          && task.metadata
+          && task.metadata.automation==='academy_inactivity'
+          && String(task.metadata.academy_user_id||'')===String(e.user_id)
+          && String(task.metadata.academy_course_id||'')===String(e.course_id);
+      })||null:null;
+
       return {
         enrollment:e,profile:profile,course:course,stage:stage,percent:percent,
         completedLessons:completedLessons,totalLessons:total,
         currentModule:currentModule,currentLesson:currentLesson,lessonWatch:lessonWatch,
         lastActivityAt:lastActivityAt,modules:modules,certificate:cert,
-        phone:studentPhone(profile)
+        phone:studentPhone(profile),candidate:candidate,pendingFollowup:pendingFollowup
       };
     });
 }
@@ -431,6 +444,15 @@ function renderStudentPipeline(){
       ? '<span class="student-cert ok">✓ Certificado '+esc(x.certificate.credential_code||'emitido')+'</span>'
       : '<span class="student-cert">Sin certificado</span>';
 
+    var followup='';
+    if(x.pendingFollowup){
+      var threshold=Number(x.pendingFollowup.metadata&&x.pendingFollowup.metadata.threshold_days||0);
+      followup='<div class="student-followup-alert '+(threshold>=14?'urgent':'warning')+'">'+
+        '<div><span>Seguimiento automático</span><strong>⚠ '+threshold+' días sin actividad</strong></div>'+
+        '<button type="button" data-jump="followups">Abrir tarea</button>'+
+      '</div>';
+    }
+
     var search=[x.profile.full_name,x.profile.email,x.phone,x.course.title].join(' ').toLowerCase();
 
     return '<article class="student-pipeline-card" data-student-card data-course-id="'+esc(x.course.id)+'" data-search="'+esc(search)+'">'+
@@ -443,6 +465,7 @@ function renderStudentPipeline(){
         (x.stage==='in_progress'&&x.lessonWatch>0?'<small>Avance de esta lección: '+Math.round(x.lessonWatch)+'%</small>':'')+
       '</div>'+
       '<div class="'+activityClass+'"><span>Última actividad</span><strong>'+esc(relativeActivity(x.lastActivityAt))+'</strong></div>'+
+      followup+
       '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones completadas</span>'+cert+'</div>'+
     '</article>';
   }
@@ -455,10 +478,11 @@ function renderStudentPipeline(){
   ];
 
   var courseOptions=state.data.courses.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>';}).join('');
+  var pendingFollowups=items.filter(function(x){return Boolean(x.pendingFollowup);}).length;
   var filters='<section class="student-pipeline-tools">'+
     '<div><span>Buscar alumno</span><input id="pipeline-search" type="search" placeholder="Nombre, correo o teléfono"></div>'+
     '<div><span>Curso</span><select id="pipeline-course"><option value="">Todos los cursos</option>'+courseOptions+'</select></div>'+
-    '<div class="student-pipeline-tool-status"><span>Seguimiento</span><strong id="pipeline-visible-count">'+items.length+' registros</strong></div>'+
+    '<div class="student-pipeline-tool-status"><span>Seguimiento</span><strong id="pipeline-visible-count">'+items.length+' registros</strong><small>'+pendingFollowups+' tareas automáticas pendientes</small></div>'+
   '</section>';
 
   var metrics='<section class="back-metrics student-pipeline-metrics">'+
@@ -622,6 +646,7 @@ function renderSettings(){
   var enrollmentCount=state.data.enrollments.filter(function(x){return x.status==='active';}).length;
   var masterStatus='<div class="migration-tool">'+
     '<div class="migration-copy"><strong>Supabase maestro activo</strong><span>Back Office, CRM y Academia AG ya leen y escriben sobre la base maestra compartida. El Supabase anterior queda únicamente como respaldo temporal y ya no participa en la operación diaria.</span></div>'+
+    '<div class="migration-result"><strong>Seguimiento automático activo</strong><span>Revisión diaria de alumnos: tarea de prioridad alta a los 7 días sin actividad y urgente a los 14 días. Si el alumno vuelve a estudiar, la tarea pendiente se cierra automáticamente.</span></div>'+
     '<div class="migration-result"><strong>Operación validada</strong><span>'+studentCount+' alumnos · '+courseCount+' cursos · '+enrollmentCount+' inscripciones activas</span></div>'+
   '</div>';
   return '<section class="back-grid two">'+
