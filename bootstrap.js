@@ -134,14 +134,14 @@
 
       await loadSupabaseLibrary();
       installAcademyDataAdapter();
-      await loadScript('app.js?v=20261011.67');
+      await loadScript('app.js?v=20261011.68');
       await loadScript('utah-course-runtime.js?v=20260822.65');
-      await loadScript('utah-module-exam-v2.js?v=20260820.48');
-      await loadScript('utah-module2-exam-v2.js?v=20260820.49');
-      await loadScript('utah-module3-exam-v2.js?v=20260820.50');
-      await loadScript('utah-module4-exam-v2.js?v=20260820.51');
-      await loadScript('utah-module5-exam-v2.js?v=20260820.52');
-      await loadScript('utah-module6-exam-v2.js?v=20260821.53');
+      await loadScript('utah-module-exam-v2.js?v=20261011.54');
+      await loadScript('utah-module2-exam-v2.js?v=20261011.55');
+      await loadScript('utah-module3-exam-v2.js?v=20261011.56');
+      await loadScript('utah-module4-exam-v2.js?v=20261011.57');
+      await loadScript('utah-module5-exam-v2.js?v=20261011.58');
+      await loadScript('utah-module6-exam-v2.js?v=20261011.59');
       await loadScript('utah-sequential-lock-v57.js?v=20260823.57');
       await loadScript('certificate-auto-pdf-v91.js?v=20260825.91');
       await loadScript('utah-clean-ui-v66.js?v=20260822.66');
