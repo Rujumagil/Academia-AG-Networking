@@ -92,43 +92,5 @@
     renderCalendar();
   });
 
-  function loadCompasOneAgent() {
-    if (document.querySelector('script[data-ag-compas-agent]')) return;
-
-    const script = document.createElement('script');
-    script.src = COMPAS_CHAT_URL;
-    script.dataset.key = COMPAS_PUBLIC_KEY;
-    script.dataset.agCompasAgent = 'v1';
-    script.async = true;
-    script.onerror = () => {
-      console.warn('No fue posible cargar temporalmente el agente de Compás One.');
-    };
-    document.body.appendChild(script);
-  }
-
-  function loadCompasAttribution() {
-    if (window.CompasTracking?.__initialized) {
-      loadCompasOneAgent();
-      return;
-    }
-
-    if (document.querySelector('script[data-ag-compas-attribution]')) return;
-
-    const script = document.createElement('script');
-    script.src = COMPAS_ATTRIBUTION_URL;
-    script.dataset.key = COMPAS_PUBLIC_KEY;
-    script.dataset.product = 'ag-business-networking';
-    script.dataset.funnel = 'business-networking';
-    script.dataset.agCompasAttribution = 'v1';
-    script.async = true;
-    script.onload = loadCompasOneAgent;
-    script.onerror = () => {
-      console.warn('No fue posible cargar temporalmente la atribución de Compás One.');
-      loadCompasOneAgent();
-    };
-    document.head.appendChild(script);
-  }
-
   renderCalendar();
-  loadCompasAttribution();
 })();
