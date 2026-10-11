@@ -14,12 +14,13 @@ type ImportBody = {
   source?: string
 }
 
-const DEFAULT_COURSE_ID = '11111111-1111-4111-8111-111111111111'
-const ALLOWED_ORIGIN = 'https://rujumagil.github.io'
+const DEFAULT_COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01'
+const PRIMARY_ORIGIN = 'https://agbusinessnetworking.com'
+const ALLOWED_ORIGINS = new Set([PRIMARY_ORIGIN, 'https://www.agbusinessnetworking.com', 'https://rujumagil.github.io'])
 
 function corsHeaders(req: Request) {
   const origin = req.headers.get('origin') || ''
-  const allowed = origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : PRIMARY_ORIGIN
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -78,7 +79,7 @@ function sleep(ms: number) {
 
 async function ensureProduct(adminClient: any, actingAdminId: string, courseId: string) {
   const { data: course, error: courseError } = await adminClient
-    .from('courses')
+    .from('academy_courses')
     .select('id,title,slug,workspace_id,status')
     .eq('id', courseId)
     .maybeSingle()
@@ -88,7 +89,7 @@ async function ensureProduct(adminClient: any, actingAdminId: string, courseId: 
   if (!course.workspace_id) throw new Error('El curso no tiene workspace_id asignado.')
 
   const { data: mappingRows, error: mappingError } = await adminClient
-    .from('product_contents')
+    .from('academy_product_contents')
     .select('product_id')
     .eq('content_type', 'course')
     .eq('course_id', courseId)
@@ -102,7 +103,7 @@ async function ensureProduct(adminClient: any, actingAdminId: string, courseId: 
   let product: any = null
 
   const { data: byReference, error: byReferenceError } = await adminClient
-    .from('products')
+    .from('academy_products')
     .select('*')
     .eq('external_reference', externalReference)
     .maybeSingle()
@@ -111,7 +112,7 @@ async function ensureProduct(adminClient: any, actingAdminId: string, courseId: 
 
   if (!product) {
     const { data: bySlug, error: bySlugError } = await adminClient
-      .from('products')
+      .from('academy_products')
       .select('*')
       .eq('slug', preferredSlug)
       .maybeSingle()
@@ -121,7 +122,7 @@ async function ensureProduct(adminClient: any, actingAdminId: string, courseId: 
 
   if (!product) {
     const { data: created, error: createError } = await adminClient
-      .from('products')
+      .from('academy_products')
       .insert({
         workspace_id: course.workspace_id,
         name: course.title,
@@ -141,7 +142,7 @@ async function ensureProduct(adminClient: any, actingAdminId: string, courseId: 
   }
 
   const { error: mappingInsertError } = await adminClient
-    .from('product_contents')
+    .from('academy_product_contents')
     .insert({
       product_id: product.id,
       content_type: 'course',
@@ -183,7 +184,7 @@ Deno.serve(async (req: Request) => {
 
     const actingAdmin = userData.user
     const { data: profile, error: profileError } = await userClient
-      .from('profiles')
+      .from('academy_profiles')
       .select('id,role,account_status,email')
       .eq('id', actingAdmin.id)
       .maybeSingle()
@@ -230,7 +231,7 @@ Deno.serve(async (req: Request) => {
         let created = false
 
         const { data: existingProfile, error: existingProfileError } = await adminClient
-          .from('profiles')
+          .from('academy_profiles')
           .select('id,email,role,account_status,full_name')
           .eq('email', email)
           .maybeSingle()
@@ -248,31 +249,57 @@ Deno.serve(async (req: Request) => {
           }
           userId = existingProfile.id
           const { error: reactivateError } = await adminClient
-            .from('profiles')
-            .update({ full_name: fullName, account_status: 'active' })
+            .from('academy_profiles')
+            .update({ full_name: fullName, phone: phone || null, account_status: 'active', updated_at: new Date().toISOString() })
             .eq('id', userId)
           if (reactivateError) throw reactivateError
         } else {
           temporaryPassword = randomPassword()
-          const { data: createdUser, error: createUserError } = await adminClient.auth.admin.createUser({
-            email,
-            password: temporaryPassword,
-            email_confirm: true,
-            user_metadata: { full_name: fullName, phone },
-          })
-          if (createUserError) throw createUserError
-          userId = createdUser?.user?.id || ''
-          if (!userId) throw new Error('Supabase no devolvió el ID del usuario creado.')
-          created = true
+          const { data: authLookup } = await adminClient.rpc('ag_find_auth_user_by_email', { p_email: email })
+          const existingAuthId = String(authLookup || '')
 
+          if (existingAuthId) {
+            userId = existingAuthId
+            const { error: profileInsertError } = await adminClient
+              .from('academy_profiles')
+              .upsert({
+                id: userId,
+                email,
+                full_name: fullName,
+                phone: phone || null,
+                role: 'student',
+                account_status: 'active',
+                must_change_password: false,
+                updated_at: new Date().toISOString(),
+              }, { onConflict: 'id' })
+            if (profileInsertError) throw profileInsertError
+          } else {
+            const { data: createdUser, error: createUserError } = await adminClient.auth.admin.createUser({
+              email,
+              password: temporaryPassword,
+              email_confirm: true,
+              user_metadata: {
+                full_name: fullName,
+                phone,
+                academy_workspace_id: 'fa4411f8-65c6-4762-8302-50789998e5b7',
+                academy_source: 'ag_business_networking',
+              },
+            })
+            if (createUserError) throw createUserError
+            userId = createdUser?.user?.id || ''
+            if (!userId) throw new Error('Supabase no devolvió el ID del usuario creado.')
+            created = true
+          }
           const { error: profileUpdateError } = await adminClient
-            .from('profiles')
+            .from('academy_profiles')
             .update({
+              email,
               full_name: fullName,
+              phone: phone || null,
               role: 'student',
               account_status: 'active',
-              must_change_password: true,
-              password_changed_at: null,
+              must_change_password: created,
+              updated_at: new Date().toISOString(),
             })
             .eq('id', userId)
           if (profileUpdateError) throw profileUpdateError
