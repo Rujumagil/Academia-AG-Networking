@@ -9,7 +9,7 @@ var crmDb=window.supabase&&window.supabase.createClient&&masterCfg.url&&masterCf
 
 var state={
   user:null,profile:null,section:'summary',crmReady:true,
-  data:{profiles:[],courses:[],modules:[],lessons:[],lessonProgress:[],enrollments:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
+  data:{profiles:[],courses:[],modules:[],lessons:[],lessonProgress:[],enrollments:[],resources:[],lessonBlocks:[],courseVersions:[],assessments:[],assessmentQuestions:[],assessmentOptions:[],lessonQuizzes:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
 };
 
 var NAV=[
@@ -121,6 +121,13 @@ async function loadAll(){
     safe('lessons',db.from('lessons').select('*').order('position',{ascending:true})),
     safe('lesson_progress',db.from('lesson_progress').select('*').limit(10000)),
     safe('enrollments',db.from('enrollments').select('*').order('enrolled_at',{ascending:false})),
+    safe('resources',db.from('resources').select('*').limit(3000)),
+    safe('lesson_blocks',db.from('lesson_blocks').select('*').order('position',{ascending:true}).limit(10000)),
+    safe('course_versions',db.from('course_versions').select('*').limit(3000)),
+    safe('assessments',db.from('assessments').select('*').limit(3000)),
+    safe('assessment_questions',db.from('assessment_questions').select('*').order('position',{ascending:true}).limit(10000)),
+    safe('assessment_options',db.from('assessment_options').select('*').order('position',{ascending:true}).limit(20000)),
+    safe('lesson_quizzes',db.from('lesson_quizzes').select('*').limit(10000)),
     safe('orders',db.from('orders').select('*').order('created_at',{ascending:false}).limit(1000)),
     safe('student_access',db.from('student_access').select('*').order('granted_at',{ascending:false}).limit(1000)),
     safe('products',db.from('products').select('*').order('created_at',{ascending:false})),
@@ -145,8 +152,10 @@ async function loadAll(){
 
   state.data={
     profiles:r[0],courses:r[1],modules:r[2],lessons:r[3],lessonProgress:r[4],
-    enrollments:r[5],orders:r[6],accesses:r[7],products:r[8],certificates:r[9],
-    tickets:r[10],candidates:candidates,tasks:tasks
+    enrollments:r[5],resources:r[6],lessonBlocks:r[7],courseVersions:r[8],
+    assessments:r[9],assessmentQuestions:r[10],assessmentOptions:r[11],lessonQuizzes:r[12],
+    orders:r[13],accesses:r[14],products:r[15],certificates:r[16],
+    tickets:r[17],candidates:candidates,tasks:tasks
   };
 }
 
@@ -406,9 +415,16 @@ function renderSettings(){
     '<button class="migration-button" id="migrate-old-students">Migrar '+studentCount+' alumnos</button>'+
     '<div class="migration-result" id="migration-result"></div>'+
   '</div>';
+  var courseCount=state.data.courses.length;
+  var courseMigration='<div class="migration-tool">'+
+    '<div class="migration-copy"><strong>Migrar cursos y contenido al Supabase maestro</strong><span>'+courseCount+' cursos detectados · '+state.data.modules.length+' módulos · '+state.data.lessons.length+' lecciones. También se copiarán videos, recursos, bloques, evaluaciones, preguntas y se reasignarán las inscripciones guardadas de los alumnos migrados.</span></div>'+
+    '<button class="migration-button" id="migrate-old-courses">Migrar '+courseCount+' cursos</button>'+
+    '<div class="migration-result" id="course-migration-result"></div>'+
+  '</div>';
   return '<section class="back-grid two">'+
     panel('Estructura del sistema','Arquitectura','<div class="back-setting-list"><div><strong>CRM AG</strong><span>agbusinessnetworking.com/crm/</span></div><div><strong>Administrador AG</strong><span>agbusinessnetworking.com/crm/admin.html</span></div><div><strong>Academia AG</strong><span>agbusinessnetworking.com/academia.html</span></div></div>')+
     panel('Migración de alumnos','Supabase maestro',migration)+
+    panel('Migración de cursos','Contenido académico',courseMigration)+
     panel('Documentos legales','Sitio público','<div class="back-setting-list"><a href="../privacidad/" target="_blank"><strong>Privacidad</strong><span>/privacidad/</span></a><a href="../terminos/" target="_blank"><strong>Términos</strong><span>/terminos/</span></a><a href="../reembolsos/" target="_blank"><strong>Reembolsos</strong><span>/reembolsos/</span></a><a href="../conducta/" target="_blank"><strong>Conducta</strong><span>/conducta/</span></a><a href="../derechos-de-autor/" target="_blank"><strong>Derechos de autor</strong><span>/derechos-de-autor/</span></a><a href="../accesibilidad/" target="_blank"><strong>Accesibilidad</strong><span>/accesibilidad/</span></a></div>')+
     panel('Seguridad','Accesos internos','<div class="back-warning"><strong>Administración separada de la Academia</strong><span>Las cuentas admin se redirigen a este Back Office. Los alumnos e instructores permanecen en Academia AG.</span></div>')+
     panel('Operación','Herramientas','<div class="back-quick"><a href="../importar-alumnos.html">Importar alumnos</a><button data-open-legacy="admin-users">Administración avanzada de alumnos</button><button data-open-legacy="admin-courses">Editor avanzado de cursos</button><button data-open-legacy="access-center">Centro avanzado de accesos</button></div>')+
@@ -444,6 +460,8 @@ function bindSection(){
   document.querySelectorAll('[data-open-legacy]').forEach(function(b){b.onclick=function(){openAcademyAdmin(b.dataset.openLegacy||'');};});
   var migrateButton=document.getElementById('migrate-old-students');
   if(migrateButton)migrateButton.onclick=migrateOldStudents;
+  var migrateCoursesButton=document.getElementById('migrate-old-courses');
+  if(migrateCoursesButton)migrateCoursesButton.onclick=migrateOldCourses;
 }
 
 function csvCell(v){var s=String(v==null?'':v);return '"'+s.replace(/"/g,'""')+'"';}
@@ -505,6 +523,73 @@ async function migrateOldStudents(){
     toast(e.message||'Error de migración',true);
   }finally{
     button.disabled=false;button.textContent='Migrar '+students.length+' alumnos';
+  }
+}
+
+async function migrateOldCourses(){
+  var button=document.getElementById('migrate-old-courses'),box=document.getElementById('course-migration-result');
+  var courses=state.data.courses||[];
+  if(!courses.length){if(box)box.innerHTML='<strong>No hay cursos para migrar.</strong>';return;}
+  if(!crmDb||!masterCfg.url){if(box)box.innerHTML='<strong>No hay conexión con el Supabase maestro.</strong>';return;}
+  var masterSession=await crmDb.auth.getSession();
+  var session=masterSession.data&&masterSession.data.session;
+  if(!session){
+    if(box)box.innerHTML='<strong>Falta iniciar sesión en el CRM maestro.</strong><span>Abre “CRM candidatos”, inicia sesión y vuelve a esta pantalla.</span>';
+    return;
+  }
+  if(!window.confirm('Se copiarán '+courses.length+' cursos y todo su contenido al Supabase maestro. No se borrará nada del Supabase anterior. ¿Continuar?'))return;
+
+  button.disabled=true;
+  button.textContent='Migrando cursos…';
+  if(box)box.innerHTML='<span>Copiando cursos, módulos, lecciones, videos, evaluaciones e inscripciones…</span>';
+
+  var courseIds=new Set(courses.map(function(x){return x.id;}));
+  var modules=(state.data.modules||[]).filter(function(x){return courseIds.has(x.course_id);});
+  var moduleIds=new Set(modules.map(function(x){return x.id;}));
+  var lessons=(state.data.lessons||[]).filter(function(x){return moduleIds.has(x.module_id);});
+  var lessonIds=new Set(lessons.map(function(x){return x.id;}));
+  var assessments=(state.data.assessments||[]).filter(function(x){return courseIds.has(x.course_id);});
+  var assessmentIds=new Set(assessments.map(function(x){return x.id;}));
+  var questions=(state.data.assessmentQuestions||[]).filter(function(x){return assessmentIds.has(x.assessment_id);});
+  var questionIds=new Set(questions.map(function(x){return x.id;}));
+
+  var payload={
+    courses:courses,
+    modules:modules,
+    lessons:lessons,
+    resources:(state.data.resources||[]).filter(function(x){return !x.course_id||courseIds.has(x.course_id);}),
+    lesson_blocks:(state.data.lessonBlocks||[]).filter(function(x){return lessonIds.has(x.lesson_id);}),
+    course_versions:(state.data.courseVersions||[]).filter(function(x){return courseIds.has(x.course_id);}),
+    assessments:assessments,
+    assessment_questions:questions,
+    assessment_options:(state.data.assessmentOptions||[]).filter(function(x){return questionIds.has(x.question_id);}),
+    lesson_quizzes:(state.data.lessonQuizzes||[]).filter(function(x){return lessonIds.has(x.lesson_id);})
+  };
+
+  try{
+    var response=await fetch(masterCfg.url+'/functions/v1/ag-migrate-academy-courses',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':masterCfg.publishableKey,
+        'Authorization':'Bearer '+session.access_token
+      },
+      body:JSON.stringify(payload)
+    });
+    var data=await response.json().catch(function(){return {};});
+    if(!response.ok||!data.ok)throw new Error(data.detail||data.error||'No fue posible completar la migración de cursos.');
+    var s=data.summary||{};
+    if(box)box.innerHTML='<strong>Migración académica terminada</strong>'+
+      '<span>Cursos: '+(s.courses||0)+' · Módulos: '+(s.modules||0)+' · Lecciones: '+(s.lessons||0)+' · Recursos: '+(s.resources||0)+' · Evaluaciones: '+(s.assessments||0)+' · Inscripciones: '+(s.enrollments||0)+'</span>'+
+      '<small>El Supabase anterior permanece intacto. Todavía no cambiaremos la Academia al Supabase maestro hasta validar los conteos.</small>';
+    toast('Cursos y contenido migrados al Supabase maestro.');
+  }catch(e){
+    console.error('[AG course migration]',e);
+    if(box)box.innerHTML='<strong>No se completó la migración de cursos</strong><span>'+esc(e.message||String(e))+'</span>';
+    toast(e.message||'Error de migración de cursos',true);
+  }finally{
+    button.disabled=false;
+    button.textContent='Migrar '+courses.length+' cursos';
   }
 }
 
