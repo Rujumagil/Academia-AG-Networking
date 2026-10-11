@@ -143,3 +143,16 @@ button,input,select,textarea{font:inherit}
 .student-pipeline-card[hidden]{display:none!important}
 @media(max-width:900px){.student-pipeline-tools{grid-template-columns:1fr 1fr}.student-pipeline-tool-status{grid-column:1/-1}}
 @media(max-width:620px){.student-pipeline-tools{grid-template-columns:1fr}.student-pipeline-tool-status{grid-column:auto}.student-contact-row{grid-template-columns:1fr}.student-contact-actions{justify-content:flex-end}}
+
+
+.student-pipeline-tool-status small{display:block;margin-top:3px;font-size:.62rem;color:#7a8798}
+.student-followup-alert{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;padding:9px 10px;border-radius:9px;border:1px solid}
+.student-followup-alert span,.student-followup-alert strong{display:block}
+.student-followup-alert span{font-size:.58rem;text-transform:uppercase;letter-spacing:.05em;font-weight:900;opacity:.78}
+.student-followup-alert strong{font-size:.69rem;margin-top:2px}
+.student-followup-alert button{border:0;border-radius:8px;padding:7px 9px;font-size:.62rem;font-weight:900;cursor:pointer;white-space:nowrap}
+.student-followup-alert.warning{background:#fff8e8;border-color:#ead99f;color:#7d5a0d}
+.student-followup-alert.warning button{background:#8e6919;color:#fff}
+.student-followup-alert.urgent{background:#fff0f0;border-color:#efc4c4;color:#8f2f2f}
+.student-followup-alert.urgent button{background:#9c3838;color:#fff}
+@media(max-width:620px){.student-followup-alert{align-items:flex-start;flex-direction:column}.student-followup-alert button{width:100%}}
