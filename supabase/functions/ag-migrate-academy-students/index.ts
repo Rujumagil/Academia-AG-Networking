@@ -1,5 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { withSupabase } from "npm:@supabase/server";
+
+const AG_WORKSPACE_ID = "fa4411f8-65c6-4762-8302-50789998e5b7";
+const SOURCE_PROJECT_REF = "wtxlvmpolxacxnibaexj";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -7,258 +10,210 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-function getAdminKey() {
-  try {
-    const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.default) return String(parsed.default);
-    }
-  } catch (_) {}
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-}
-const SERVICE_ROLE_KEY = getAdminKey();
-const AG_WORKSPACE_ID = "fa4411f8-65c6-4762-8302-50789998e5b7";
-const SOURCE_PROJECT_REF = "wtxlvmpolxacxnibaexj";
-
-function json(status: number, body: unknown) {
+function reply(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
 }
 
-function normalizeEmail(value: unknown) {
-  return String(value ?? "").trim().toLowerCase();
+function clean(v: unknown) {
+  return String(v ?? "").trim();
 }
 
-function normalizePhone(value: unknown) {
-  return String(value ?? "").trim();
+function emailKey(v: unknown) {
+  return clean(v).toLowerCase();
 }
 
-function randomPassword() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+function makePassword() {
   const bytes = new Uint8Array(18);
   crypto.getRandomValues(bytes);
-  let out = "AG!";
-  for (const byte of bytes) out += alphabet[byte % alphabet.length];
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let out = "AG-";
+  for (const b of bytes) out += alphabet[b % alphabet.length];
   return out;
 }
 
-Deno.serve(async (req: Request) => {
+const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return json(405, { error: "Método no permitido." });
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return json(500, { error: "Configuración incompleta." });
+  if (req.method !== "POST") return reply(405, { error: "Método no permitido." });
 
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const actorId = ctx.userClaims?.sub;
+  if (!actorId) return reply(401, { error: "Sesión inválida." });
 
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return json(401, { error: "Autenticación requerida." });
+  const admin = ctx.supabaseAdmin;
 
-  const { data: userData, error: userError } = await admin.auth.getUser(token);
-  const actor = userData?.user;
-  if (userError || !actor) return json(401, { error: "Sesión inválida." });
-
-  const [{ data: platformProfile }, { data: member }] = await Promise.all([
-    admin.from("profiles").select("platform_role,status").eq("id", actor.id).maybeSingle(),
-    admin.from("workspace_members")
-      .select("role,status")
-      .eq("workspace_id", AG_WORKSPACE_ID)
-      .eq("user_id", actor.id)
-      .maybeSingle(),
+  const [{ data: platformProfile }, { data: membership }] = await Promise.all([
+    admin.from("profiles").select("platform_role,status").eq("id", actorId).maybeSingle(),
+    admin.from("workspace_members").select("role,status")
+      .eq("workspace_id", AG_WORKSPACE_ID).eq("user_id", actorId).maybeSingle(),
   ]);
 
   const allowed =
     (platformProfile?.platform_role === "super_admin" && platformProfile?.status === "active") ||
-    (member?.status === "active" && ["owner", "admin"].includes(String(member?.role ?? "")));
+    (membership?.status === "active" && ["owner", "admin"].includes(String(membership?.role ?? "")));
 
-  if (!allowed) return json(403, { error: "No tienes permisos para migrar alumnos de AG." });
+  if (!allowed) return reply(403, { error: "No tienes permisos para migrar alumnos." });
 
   let body: any;
-  try { body = await req.json(); } catch { return json(400, { error: "Solicitud inválida." }); }
+  try { body = await req.json(); } catch { return reply(400, { error: "Solicitud inválida." }); }
 
-  const rawStudents = Array.isArray(body?.students) ? body.students : [];
-  if (!rawStudents.length) return json(400, { error: "No se recibieron alumnos." });
-  if (rawStudents.length > 500) return json(400, { error: "Máximo 500 alumnos por migración." });
+  const incoming = Array.isArray(body?.students) ? body.students : [];
+  if (!incoming.length) return reply(400, { error: "No se recibieron alumnos." });
+  if (incoming.length > 500) return reply(400, { error: "Máximo 500 alumnos." });
 
-  const deduped = new Map<string, any>();
-  for (const s of rawStudents) {
-    const email = normalizeEmail(s?.email);
-    const sourceUserId = String(s?.source_user_id ?? "").trim();
-    if (!email || !sourceUserId || deduped.has(email)) continue;
-    deduped.set(email, { ...s, email, source_user_id: sourceUserId });
+  const unique = new Map<string, any>();
+  for (const s of incoming) {
+    const email = emailKey(s?.email);
+    const sourceId = clean(s?.source_user_id);
+    if (!email || !sourceId || unique.has(email)) continue;
+    unique.set(email, { ...s, email, source_user_id: sourceId });
   }
 
-  const targetEmails = Array.from(deduped.keys());
-  const { data: existingAcademyProfiles, error: academyProfileLookupError } = await admin
+  const emails = Array.from(unique.keys());
+  const { data: existingProfiles, error: existingError } = await admin
     .from("academy_profiles")
     .select("id,email")
-    .in("email", targetEmails);
+    .in("email", emails);
 
-  if (academyProfileLookupError) {
-    console.error("AG_MIGRATION_ACADEMY_PROFILE_LOOKUP_FAILED", academyProfileLookupError);
-    return json(500, {
-      error: "No se pudieron consultar los alumnos destino.",
-      detail: academyProfileLookupError.message || "Error al consultar perfiles académicos."
-    });
+  if (existingError) {
+    console.error("AG_MIGRATION_PROFILE_LOOKUP_FAILED", existingError);
+    return reply(500, { error: "No se pudieron consultar los alumnos destino.", detail: existingError.message });
   }
 
-  const usersByEmail = new Map(
-    (existingAcademyProfiles ?? []).map((u: any) => [normalizeEmail(u.email), u])
+  const existingByEmail = new Map(
+    (existingProfiles ?? []).map((p: any) => [emailKey(p.email), p])
   );
 
-  const sourceIds = Array.from(deduped.values()).map((s: any) => s.source_user_id);
-  const { data: mappings, error: mappingsError } = await admin
+  const sourceIds = Array.from(unique.values()).map((s: any) => s.source_user_id);
+  const { data: maps, error: mapError } = await admin
     .from("ag_academy_student_migration_map")
-    .select("source_user_id,target_user_id,source_email,migration_status")
+    .select("source_user_id,target_user_id")
     .eq("source_project_ref", SOURCE_PROJECT_REF)
     .in("source_user_id", sourceIds);
 
-  if (mappingsError) return json(500, { error: mappingsError.message });
-  const mappingBySource = new Map((mappings ?? []).map((m: any) => [m.source_user_id, m]));
+  if (mapError) return reply(500, { error: "No se pudo leer el mapa de migración.", detail: mapError.message });
 
+  const mapBySource = new Map((maps ?? []).map((m: any) => [m.source_user_id, m]));
   const results: any[] = [];
 
-  for (const student of deduped.values()) {
-    const email = student.email;
-    const fullName = String(student.full_name ?? "").trim() || email.split("@")[0];
-    let phone = normalizePhone(student.phone);
-    const sourceStatus = String(student.account_status ?? "active");
-    const sourceEnrollments = Array.isArray(student.enrollments) ? student.enrollments : [];
+  for (const student of unique.values()) {
+    const fullName = clean(student.full_name) || student.email.split("@")[0];
+    const sourceStatus = clean(student.account_status) || "active";
+    const enrollments = Array.isArray(student.enrollments) ? student.enrollments : [];
 
     try {
-      const existingMap = mappingBySource.get(student.source_user_id);
-      let targetUserId = existingMap?.target_user_id ?? "";
+      let targetId = mapBySource.get(student.source_user_id)?.target_user_id ?? "";
       let created = false;
-      let temporaryPassword = "";
+      let password = "";
+      let phone = clean(student.phone);
 
-      if (!targetUserId) {
-        const known = usersByEmail.get(email);
-        if (known?.id) {
-          targetUserId = known.id;
+      if (!targetId) {
+        const existing = existingByEmail.get(student.email);
+        if (existing?.id) {
+          targetId = existing.id;
         } else {
           if (!phone) {
-            const { data: candidate } = await admin
-              .from("ag_crm_candidates")
-              .select("phone")
-              .eq("email", email)
-              .not("phone", "is", null)
-              .order("updated_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            phone = normalizePhone(candidate?.phone);
+            const { data: candidate } = await admin.from("ag_crm_candidates")
+              .select("phone").eq("email", student.email).not("phone", "is", null)
+              .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+            phone = clean(candidate?.phone);
           }
 
-          temporaryPassword = randomPassword();
-          const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
-            email,
-            password: temporaryPassword,
+          password = makePassword();
+          const { data: createdData, error: createError } = await admin.auth.admin.createUser({
+            email: student.email,
+            password,
             email_confirm: true,
-            user_metadata: {
-              full_name: fullName,
-              phone,
-              source: "ag_academy_migration",
-            },
+            user_metadata: { full_name: fullName, phone, source: "ag_academy_migration" },
           });
+
           if (createError) throw createError;
-          targetUserId = createdUser?.user?.id ?? "";
-          if (!targetUserId) throw new Error("No se recibió ID del usuario creado.");
+          targetId = createdData?.user?.id ?? "";
+          if (!targetId) throw new Error("No se recibió el ID del usuario.");
           created = true;
-          usersByEmail.set(email, { id: targetUserId, email });
         }
       }
 
       if (!phone) {
-        const { data: candidate } = await admin
-          .from("ag_crm_candidates")
-          .select("phone")
-          .eq("email", email)
-          .not("phone", "is", null)
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        phone = normalizePhone(candidate?.phone);
+        const { data: candidate } = await admin.from("ag_crm_candidates")
+          .select("phone").eq("email", student.email).not("phone", "is", null)
+          .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        phone = clean(candidate?.phone);
       }
 
-      const targetStatus = sourceStatus === "active" ? "active" : "suspended";
+      const status = sourceStatus === "active" ? "active" : "suspended";
 
       const { error: profileError } = await admin.from("profiles").upsert({
-        id: targetUserId,
+        id: targetId,
         full_name: fullName,
         display_name: fullName,
         phone: phone || null,
         platform_role: "user",
-        status: targetStatus,
+        status,
         updated_at: new Date().toISOString(),
       }, { onConflict: "id" });
       if (profileError) throw profileError;
 
-      const academyProfilePayload: any = {
-        id: targetUserId,
-        email,
+      const { error: academyError } = await admin.from("academy_profiles").upsert({
+        id: targetId,
+        email: student.email,
         full_name: fullName,
+        phone: phone || null,
         role: "student",
         updated_at: new Date().toISOString(),
-      };
-      if (phone) academyProfilePayload.phone = phone;
+      }, { onConflict: "id" });
+      if (academyError) throw academyError;
 
-      const { error: academyProfileError } = await admin
-        .from("academy_profiles")
-        .upsert(academyProfilePayload, { onConflict: "id" });
-      if (academyProfileError) throw academyProfileError;
-
-      const { error: mapError } = await admin.from("ag_academy_student_migration_map").upsert({
+      const { error: saveMapError } = await admin.from("ag_academy_student_migration_map").upsert({
         source_project_ref: SOURCE_PROJECT_REF,
         source_user_id: student.source_user_id,
-        target_user_id: targetUserId,
-        source_email: email,
+        target_user_id: targetId,
+        source_email: student.email,
         source_account_status: sourceStatus,
         source_created_at: student.created_at || null,
-        source_enrollments: sourceEnrollments,
-        migration_status: existingMap ? "existing" : "migrated",
+        source_enrollments: enrollments,
+        migration_status: mapBySource.has(student.source_user_id) ? "existing" : "migrated",
         metadata: {
           full_name: fullName,
           phone: phone || null,
-          migrated_by: actor.id,
+          migrated_by: actorId,
           no_progress_expected: true,
         },
         migrated_at: new Date().toISOString(),
       }, { onConflict: "source_project_ref,source_user_id" });
-      if (mapError) throw mapError;
+      if (saveMapError) throw saveMapError;
 
       results.push({
         source_user_id: student.source_user_id,
-        target_user_id: targetUserId,
-        email,
+        target_user_id: targetId,
+        email: student.email,
         full_name: fullName,
         phone,
-        status: created ? "created" : (existingMap ? "already_migrated" : "existing_user"),
-        temporary_password: created ? temporaryPassword : "",
-        enrollments_saved: sourceEnrollments.length,
+        status: created ? "created" : "existing_user",
+        temporary_password: created ? password : "",
+        enrollments_saved: enrollments.length,
       });
-    } catch (error) {
+    } catch (e) {
       results.push({
         source_user_id: student.source_user_id,
-        email,
+        email: student.email,
         full_name: fullName,
         status: "error",
-        error: error instanceof Error ? error.message : String(error),
+        error: e instanceof Error ? e.message : String(e),
       });
     }
   }
 
   const summary = {
-    received: rawStudents.length,
+    received: incoming.length,
     processed: results.length,
     created: results.filter((x) => x.status === "created").length,
     existing: results.filter((x) => x.status === "existing_user").length,
-    already_migrated: results.filter((x) => x.status === "already_migrated").length,
     errors: results.filter((x) => x.status === "error").length,
   };
 
-  return json(200, { ok: true, summary, results });
+  return reply(200, { ok: true, summary, results });
 });
+
+Deno.serve(handler);
