@@ -130,6 +130,27 @@ function studentPipelineItems(){
         })||lessons.find(function(l){return l.module_id===currentModule.id;})||null;
       }
 
+      var academicModules=modules.map(function(m,index){
+        var ls=lessons.filter(function(l){return l.module_id===m.id;});
+        var done=ls.filter(function(l){var p=progressByLesson[l.id];return p&&p.completed===true;}).length;
+        var pct=ls.length?Math.min(100,Math.round((done/ls.length)*100)):0;
+        var attempts=(d.moduleExamAttempts||[]).filter(function(a){return a.user_id===e.user_id&&a.module_id===m.id;});
+        var best=attempts.slice().sort(function(a,b){return Number(b.percentage||0)-Number(a.percentage||0);})[0]||null;
+        var type=String(m.section_type||'').toLowerCase();
+        var number=Number(m.academic_number||0);
+        var label=type==='introduction'?'Introducción':(type==='closing'?'Cierre':(number?'Módulo '+number:'Módulo '+(index+1)));
+        return {
+          module:m,label:label,percent:pct,completed:done,total:ls.length,
+          examApplicable:type==='academic',attempts:attempts.length,bestExam:best
+        };
+      });
+      var scoredModules=academicModules.filter(function(m){return m.examApplicable&&m.bestExam;});
+      var examAverage=scoredModules.length
+        ? Math.round(scoredModules.reduce(function(sum,m){return sum+Number(m.bestExam.percentage||0);},0)/scoredModules.length)
+        : null;
+      var examsDone=scoredModules.length;
+      var examsAvailable=academicModules.filter(function(m){return m.examApplicable;}).length;
+
       var candidate=d.candidates.find(function(item){
         return (item.metadata&&String(item.metadata.academy_user_id||'')===String(e.user_id))
           || (profile.email&&normalizeEmail(item.email)===normalizeEmail(profile.email));
@@ -148,7 +169,9 @@ function studentPipelineItems(){
         completedLessons:completedLessons,totalLessons:total,
         currentModule:currentModule,currentLesson:currentLesson,lessonWatch:lessonWatch,
         lastActivityAt:lastActivityAt,modules:modules,certificate:cert,
-        phone:studentPhone(profile),candidate:candidate,pendingFollowup:pendingFollowup
+        phone:studentPhone(profile),candidate:candidate,pendingFollowup:pendingFollowup,
+        academicModules:academicModules,examAverage:examAverage,
+        examsDone:examsDone,examsAvailable:examsAvailable
       };
     });
 }
@@ -228,6 +251,10 @@ async function loadAll(){
   );
   var productIds=products.map(function(x){return x.id;});
 
+  var moduleExamAttempts=moduleIds.length
+    ? await safe('module_exam_attempts',db.from('module_exam_attempts').select('*').in('module_id',moduleIds).order('attempted_at',{ascending:false}).limit(20000))
+    : [];
+
   var rest=await Promise.all([
     lessonIds.length
       ? safe('lesson_progress',db.from('lesson_progress').select('*').in('lesson_id',lessonIds).limit(10000))
@@ -285,6 +312,7 @@ async function loadAll(){
     assessmentQuestions:assessmentQuestions,
     assessmentOptions:rest[4],
     lessonQuizzes:rest[5],
+    moduleExamAttempts:moduleExamAttempts,
     orders:rest[6],
     accesses:rest[7],
     products:products,
@@ -479,6 +507,25 @@ function renderStudentPipeline(){
       '</div>';
     }
 
+    var academicRows=(x.academicModules||[]).map(function(m){
+      var exam=m.examApplicable
+        ? (m.bestExam
+          ? '<span class="pipeline-exam '+(m.bestExam.passed?'passed':'attempted')+'">'+Math.round(Number(m.bestExam.percentage||0))+'% · '+m.attempts+' intento'+(m.attempts===1?'':'s')+'</span>'
+          : '<span class="pipeline-exam">Sin intento</span>')
+        : '<span class="pipeline-exam neutral">No aplica</span>';
+      return '<div class="pipeline-module-row">'+
+        '<div><strong>'+esc(m.label)+'</strong><small>'+esc(m.module.title||'')+'</small></div>'+
+        '<div class="pipeline-module-progress"><i style="width:'+m.percent+'%"></i></div>'+
+        '<b>'+m.percent+'%</b>'+
+        exam+
+      '</div>';
+    }).join('');
+
+    var academicDetail='<details class="student-academic-detail">'+
+      '<summary><span>Resumen académico</span><strong>'+x.examsDone+'/'+x.examsAvailable+' evaluaciones · '+(x.examAverage==null?'sin promedio':x.examAverage+'% promedio')+'</strong></summary>'+
+      '<div class="student-academic-detail-body">'+academicRows+'</div>'+
+    '</details>';
+
     var search=[x.profile.full_name,x.profile.email,x.phone,x.course.title].join(' ').toLowerCase();
 
     return '<article class="student-pipeline-card" data-student-card data-course-id="'+esc(x.course.id)+'" data-search="'+esc(search)+'">'+
@@ -492,6 +539,7 @@ function renderStudentPipeline(){
       '</div>'+
       '<div class="'+activityClass+'"><span>Última actividad</span><strong>'+esc(relativeActivity(x.lastActivityAt))+'</strong></div>'+
       followup+
+      academicDetail+
       '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones completadas</span>'+cert+'</div>'+
     '</article>';
   }
