@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20261011.96';
+const CACHE = 'academia-ag-v20261011.97';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20260817.13','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
@@ -8,7 +8,7 @@ const STATIC_ASSETS = [
   './admin-dashboard-ejecutivo.css?v=20260818.1','./admin-dashboard-tabs.css?v=20260818.2','./admin-dashboard-corporativo.css?v=20260818.3',
   './first-login-password.css?v=20260818.4','./student-experience-premium.css?v=20260819.6','./academy-agents.css?v=20260820.41',
   './cloudflare-stream-v46.css?v=20260821.63',
-  './app.js?v=20261011.65','./bootstrap.js?v=20261011.87','./utah-course-runtime.js?v=20260822.65','./utah-sequential-lock-v57.js?v=20260823.57','./certificate-auto-pdf-v91.js?v=20260825.91','./certificate-layout-hotfix-v93.js?v=20260828.93','./certificate-screen-polish-v94.js?v=20260828.94',
+  './app.js?v=20261011.65','./bootstrap.js?v=20261011.88','./utah-course-runtime.js?v=20260822.65','./utah-sequential-lock-v57.js?v=20260823.57','./certificate-auto-pdf-v91.js?v=20260825.91','./certificate-layout-hotfix-v93.js?v=20260828.93','./certificate-screen-polish-v94.js?v=20260828.94',
   './utah-clean-ui-v66.js?v=20260822.66','./utah-student-flow-v70.js?v=20260823.70','./utah-auditor-hotfix-v83.js?v=20260824.83','./utah-c3-promo-force-v85.js?v=20260824.85','./academy-student-polish-v71.js?v=20260823.71','./academy-academic-polish-v72.js?v=20260823.72','./utah-course-images-v67.js?v=20260822.67','./utah-official-cover-v73.js?v=20260823.73','./course-access-request-v75.js?v=20260823.75','./student-home-catalog-v77.js?v=20260823.77','./student-inline-access-v79.js?v=20260823.79','./admin-course-requests-v78.js?v=20260823.78','./admin-course-request-delivery-v86.js?v=20260824.86','./push-notifications-v80.js?v=20260823.80','./academy-profile-support-mobile-v81.js?v=20260823.81','./push-profile-panel-v81.js?v=20260824.81',
   './utah-module-exam-v2.js?v=20260820.48','./utah-module2-exam-v2.js?v=20260820.49','./utah-module3-exam-v2.js?v=20260820.50',
   './utah-module4-exam-v2.js?v=20260820.51','./utah-module5-exam-v2.js?v=20260820.52','./utah-module6-exam-v2.js?v=20260821.53',
@@ -16,7 +16,7 @@ const STATIC_ASSETS = [
   './quiz-randomizer.js?v=20260824.83','./premium-learning.js?v=20260817.12','./sidebar-icons-premium.js?v=20260817.15',
   './evaluaciones-premium.js?v=20260817.17','./perfil-premium.js?v=20260817.20','./calendario-premium.js?v=20260817.22',
   './admin-dashboard-ejecutivo.js?v=20260818.1','./admin-dashboard-tabs.js?v=20260818.2','./first-login-password.js?v=20260818.4',
-  './admin-import-link.js?v=20260818.5','./admin-access-queue-v92.js?v=20260828.92','./academy-supabase-config.js?v=20261011.1',
+  './admin-import-link.js?v=20260818.5','./admin-section-pages.js?v=20261011.1','./admin-access-queue-v92.js?v=20260828.92','./academy-supabase-config.js?v=20261011.1',
   './manifest.json','./diagnostico.html','./limpiar-cache.html','./verificar-imagenes.html',
   './curso-emprende-utah.webp','./curso-finanzas.webp','./curso-marketing.webp','./curso-ingles.webp',
   './hero-academia.webp','./icon-192.png','./icon-512.png','./icono-oficial.png','./logo-completo-oficial.png','./logo-texto-oficial.png',
