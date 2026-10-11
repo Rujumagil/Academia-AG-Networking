@@ -400,8 +400,15 @@ function renderSupport(){
 }
 
 function renderSettings(){
+  var studentCount=state.data.profiles.filter(function(x){return x.role==='student';}).length;
+  var migration='<div class="migration-tool">'+
+    '<div class="migration-copy"><strong>Migrar alumnos anteriores al Supabase maestro</strong><span>'+studentCount+' alumnos detectados en la Academia actual. Como no tienen avance académico, se migrarán perfiles y se guardarán sus inscripciones originales para reasignarlas al copiar los cursos.</span></div>'+
+    '<button class="migration-button" id="migrate-old-students">Migrar '+studentCount+' alumnos</button>'+
+    '<div class="migration-result" id="migration-result"></div>'+
+  '</div>';
   return '<section class="back-grid two">'+
     panel('Estructura del sistema','Arquitectura','<div class="back-setting-list"><div><strong>CRM AG</strong><span>agbusinessnetworking.com/crm/</span></div><div><strong>Administrador AG</strong><span>agbusinessnetworking.com/crm/admin.html</span></div><div><strong>Academia AG</strong><span>agbusinessnetworking.com/academia.html</span></div></div>')+
+    panel('Migración de alumnos','Supabase maestro',migration)+
     panel('Documentos legales','Sitio público','<div class="back-setting-list"><a href="../privacidad/" target="_blank"><strong>Privacidad</strong><span>/privacidad/</span></a><a href="../terminos/" target="_blank"><strong>Términos</strong><span>/terminos/</span></a><a href="../reembolsos/" target="_blank"><strong>Reembolsos</strong><span>/reembolsos/</span></a><a href="../conducta/" target="_blank"><strong>Conducta</strong><span>/conducta/</span></a><a href="../derechos-de-autor/" target="_blank"><strong>Derechos de autor</strong><span>/derechos-de-autor/</span></a><a href="../accesibilidad/" target="_blank"><strong>Accesibilidad</strong><span>/accesibilidad/</span></a></div>')+
     panel('Seguridad','Accesos internos','<div class="back-warning"><strong>Administración separada de la Academia</strong><span>Las cuentas admin se redirigen a este Back Office. Los alumnos e instructores permanecen en Academia AG.</span></div>')+
     panel('Operación','Herramientas','<div class="back-quick"><a href="../importar-alumnos.html">Importar alumnos</a><button data-open-legacy="admin-users">Administración avanzada de alumnos</button><button data-open-legacy="admin-courses">Editor avanzado de cursos</button><button data-open-legacy="access-center">Centro avanzado de accesos</button></div>')+
@@ -435,6 +442,70 @@ function bindSection(){
   document.querySelectorAll('[data-ticket-status]').forEach(function(s){s.onchange=async function(){var r=await db.from('support_tickets').update({status:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.ticketStatus);if(r.error)return toast(r.error.message,true);toast('Ticket actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-editor-course]').forEach(function(b){b.onclick=function(){openAcademyEditor(b.dataset.editorCourse||'');};});
   document.querySelectorAll('[data-open-legacy]').forEach(function(b){b.onclick=function(){openAcademyAdmin(b.dataset.openLegacy||'');};});
+  var migrateButton=document.getElementById('migrate-old-students');
+  if(migrateButton)migrateButton.onclick=migrateOldStudents;
+}
+
+function csvCell(v){var s=String(v==null?'':v);return '"'+s.replace(/"/g,'""')+'"';}
+function downloadMigrationCredentials(results){
+  var created=(results||[]).filter(function(x){return x.status==='created'&&x.temporary_password;});
+  if(!created.length)return;
+  var lines=[['Nombre','Correo','Teléfono','Contraseña temporal','ID nuevo'].map(csvCell).join(',')];
+  created.forEach(function(x){lines.push([x.full_name,x.email,x.phone||'',x.temporary_password,x.target_user_id].map(csvCell).join(','));});
+  var blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='AG-alumnos-migrados-credenciales.csv';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+}
+async function migrateOldStudents(){
+  var button=document.getElementById('migrate-old-students'),box=document.getElementById('migration-result');
+  var students=state.data.profiles.filter(function(x){return x.role==='student';});
+  if(!students.length){if(box)box.innerHTML='<strong>No hay alumnos para migrar.</strong>';return;}
+  if(!crmDb||!masterCfg.url){if(box)box.innerHTML='<strong>No hay conexión con el Supabase maestro.</strong>';return;}
+  var masterSession=await crmDb.auth.getSession();
+  var session=masterSession.data&&masterSession.data.session;
+  if(!session){
+    if(box)box.innerHTML='<strong>Falta iniciar sesión en el CRM maestro.</strong><span>Abre “CRM candidatos”, inicia sesión y vuelve a esta pantalla.</span>';
+    return;
+  }
+  if(!window.confirm('Se migrarán '+students.length+' alumnos al Supabase maestro. No se borrará nada del Supabase anterior. ¿Continuar?'))return;
+  button.disabled=true;button.textContent='Migrando alumnos…';
+  if(box)box.innerHTML='<span>Preparando perfiles e inscripciones anteriores…</span>';
+  var payload=students.map(function(s){
+    return {
+      source_user_id:s.id,
+      email:s.email,
+      full_name:s.full_name,
+      account_status:s.account_status||'active',
+      created_at:s.created_at||null,
+      enrollments:state.data.enrollments.filter(function(e){return e.user_id===s.id;}).map(function(e){
+        return {course_id:e.course_id,status:e.status,enrolled_at:e.enrolled_at,completed_at:e.completed_at||null,expires_at:e.expires_at||null};
+      })
+    };
+  });
+  try{
+    var response=await fetch(masterCfg.url+'/functions/v1/ag-migrate-academy-students',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':masterCfg.publishableKey,
+        'Authorization':'Bearer '+session.access_token
+      },
+      body:JSON.stringify({students:payload})
+    });
+    var data=await response.json().catch(function(){return {};});
+    if(!response.ok||!data.ok)throw new Error(data.error||'No fue posible completar la migración.');
+    var s=data.summary||{};
+    if(box)box.innerHTML='<strong>Migración terminada</strong><span>Procesados: '+(s.processed||0)+' · Nuevos: '+(s.created||0)+' · Existentes: '+((s.existing||0)+(s.already_migrated||0))+' · Errores: '+(s.errors||0)+'</span><small>El Supabase anterior permanece intacto. Las inscripciones originales quedaron guardadas para el siguiente paso.</small>';
+    downloadMigrationCredentials(data.results||[]);
+    toast('Alumnos migrados al Supabase maestro.');
+  }catch(e){
+    console.error('[AG migration]',e);
+    if(box)box.innerHTML='<strong>No se completó la migración</strong><span>'+esc(e.message||String(e))+'</span>';
+    toast(e.message||'Error de migración',true);
+  }finally{
+    button.disabled=false;button.textContent='Migrar '+students.length+' alumnos';
+  }
 }
 
 function openAcademyEditor(courseId){
