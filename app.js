@@ -356,8 +356,8 @@ async function loadApplicationData() {
   state.workspaceMembers = [];
   if (isAdmin() || isInstructor()) {
     const [workspacesResult, workspaceMembersResult] = await Promise.all([
-      db.from('workspaces').select('*').order('name', { ascending: true }),
-      db.from('workspace_members').select('*')
+      db.from('workspaces').select('*').eq('id', CONFIG.workspaceId).order('name', { ascending: true }),
+      db.from('workspace_members').select('*').eq('workspace_id', CONFIG.workspaceId)
     ]);
     if (workspacesResult.error) console.error('Workspaces error:', workspacesResult.error);
     if (workspaceMembersResult.error) console.error('Workspace members error:', workspaceMembersResult.error);
@@ -368,6 +368,7 @@ async function loadApplicationData() {
   const coursesResult = await db
     .from('courses')
     .select('*')
+    .eq('workspace_id', CONFIG.workspaceId)
     .neq('status', 'archived')
     .order('featured', { ascending: false })
     .order('created_at', { ascending: true });
@@ -424,18 +425,19 @@ async function loadApplicationData() {
   const resourcesResult = await db
     .from('resources')
     .select('*')
+    .eq('workspace_id', CONFIG.workspaceId)
     .order('created_at', { ascending: false });
 
   if (resourcesResult.error) console.error('Resources error:', resourcesResult.error);
   state.resources = resourcesResult.data || [];
 
   const [assessmentsResult, attemptsResult, ticketsResult, consentsResult, certificatesResult, courseInstructorsResult, notificationsResult, notificationReadsResult] = await Promise.all([
-    db.from('assessments').select('*').order('created_at', { ascending: true }),
+    courseIds.length ? db.from('assessments').select('*').in('course_id', courseIds).order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
     db.from('assessment_attempts').select('*').order('submitted_at', { ascending: false }),
     db.from('support_tickets').select('*').order('created_at', { ascending: false }),
     db.from('user_consents').select('*').order('accepted_at', { ascending: false }),
     db.from('certificates').select('*').order('issued_at', { ascending: false }),
-    db.from('course_instructors').select('*').order('created_at', { ascending: true }),
+    courseIds.length ? db.from('course_instructors').select('*').in('course_id', courseIds).order('created_at', { ascending: true }) : Promise.resolve({ data: [], error: null }),
     db.from('notifications').select('*').order('created_at', { ascending: false }),
     db.from('notification_reads').select('*').eq('user_id', state.user.id).order('read_at', { ascending: false })
   ]);
@@ -469,11 +471,11 @@ async function loadApplicationData() {
     ] = await Promise.all([
       db.from('profiles').select('*').order('created_at', { ascending: false }),
       db.from('enrollments').select('*').order('enrolled_at', { ascending: false }),
-      db.from('products').select('*').order('created_at', { ascending: false }),
+      db.from('products').select('*').eq('workspace_id', CONFIG.workspaceId).order('created_at', { ascending: false }),
       db.from('product_contents').select('*').order('created_at', { ascending: true }),
       db.from('student_access').select('*').order('granted_at', { ascending: false }),
       db.from('access_history').select('*').order('created_at', { ascending: false }).limit(250),
-      db.from('orders').select('*').order('created_at', { ascending: false }).limit(250),
+      db.from('orders').select('*').eq('workspace_id', CONFIG.workspaceId).order('created_at', { ascending: false }).limit(250),
       db.from('resource_access').select('*').order('granted_at', { ascending: false })
     ]);
 
