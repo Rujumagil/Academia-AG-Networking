@@ -61,6 +61,28 @@
       || null;
   }
 
+  function avatarPath(value = '') {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const publicMarker = '/storage/v1/object/public/avatars/';
+    const signedMarker = '/storage/v1/object/sign/avatars/';
+    if (raw.includes(publicMarker)) return decodeURIComponent(raw.split(publicMarker)[1].split('?')[0]);
+    if (raw.includes(signedMarker)) return decodeURIComponent(raw.split(signedMarker)[1].split('?')[0]);
+    if (/^https?:/i.test(raw)) return '';
+    return raw.replace(/^\/+/, '');
+  }
+
+  async function signedAvatarUrl(value = '') {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:/i.test(raw) && !raw.includes('/storage/v1/object/public/avatars/') && !raw.includes('/storage/v1/object/sign/avatars/')) return raw;
+    const path = avatarPath(raw);
+    if (!path) return '';
+    const { data, error } = await db.storage.from('avatars').createSignedUrl(path, 60 * 60 * 4);
+    if (error) return '';
+    return data?.signedUrl || '';
+  }
+
   function statusMeta(ticket) {
     const resolution = String(ticket?.resolution || '').toLowerCase();
     if (resolution.includes('acceso aprobado')) return ['approved', 'Aprobada'];
@@ -114,7 +136,10 @@
     if (ticketsResult.error) throw ticketsResult.error;
     if (profilesResult.error) throw profilesResult.error;
     cachedTickets = (ticketsResult.data || []).filter(isCourseRequest);
-    cachedProfiles = profilesResult.data || [];
+    cachedProfiles = await Promise.all((profilesResult.data || []).map(async profile => ({
+      ...profile,
+      avatar_url: await signedAvatarUrl(profile.avatar_url)
+    })));
   }
 
   function stats() {
