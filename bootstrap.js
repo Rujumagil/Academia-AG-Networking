@@ -59,6 +59,68 @@
     throw lastError || new Error('No fue posible cargar la biblioteca de datos.');
   }
 
+  function installAcademyDataAdapter() {
+    if (window.__AG_ACADEMY_DATA_ADAPTER__) return;
+    if (!window.supabase?.createClient) return;
+
+    const cfg = window.SUPABASE_CONFIG || {};
+    const masterHost = (() => {
+      try { return new URL(String(cfg.url || '')).host; } catch (_) { return ''; }
+    })();
+
+    const tableMap = Object.freeze({
+      profiles: 'academy_profiles',
+      courses: 'academy_courses',
+      modules: 'academy_modules',
+      lessons: 'academy_lessons',
+      enrollments: 'academy_enrollments',
+      lesson_progress: 'academy_lesson_progress',
+      lesson_notes: 'academy_lesson_notes',
+      resources: 'academy_resources',
+      lesson_blocks: 'academy_lesson_blocks',
+      block_responses: 'academy_block_responses',
+      course_versions: 'academy_course_versions',
+      assessments: 'academy_assessments',
+      assessment_questions: 'academy_assessment_questions',
+      assessment_options: 'academy_assessment_options',
+      assessment_attempts: 'academy_assessment_attempts',
+      assessment_answers: 'academy_assessment_answers',
+      certificates: 'academy_certificates',
+      products: 'academy_products',
+      product_contents: 'academy_product_contents',
+      student_access: 'academy_student_access',
+      access_history: 'academy_access_history',
+      orders: 'academy_orders',
+      resource_access: 'academy_resource_access',
+      notifications: 'academy_notifications',
+      notification_reads: 'academy_notification_reads',
+      support_tickets: 'academy_support_tickets',
+      user_consents: 'academy_user_consents',
+      course_instructors: 'academy_course_instructors',
+      lesson_quizzes: 'academy_lesson_quizzes',
+      module_exam_attempts: 'academy_module_exam_attempts'
+    });
+
+    const originalCreateClient = window.supabase.createClient.bind(window.supabase);
+
+    window.supabase.createClient = function academyCreateClient(url, key, options) {
+      const client = originalCreateClient(url, key, options);
+      let sameProject = false;
+      try { sameProject = new URL(String(url || '')).host === masterHost; } catch (_) {}
+      if (!sameProject || !cfg.academyTableAdapter) return client;
+
+      const originalFrom = client.from.bind(client);
+      client.from = function academyFrom(name) {
+        return originalFrom(tableMap[name] || name);
+      };
+
+      client.__academyTableMap = tableMap;
+      return client;
+    };
+
+    window.__AG_ACADEMY_DATA_ADAPTER__ = { tableMap, masterHost };
+  }
+
   async function start() {
     const crmAdminEmbed = new URLSearchParams(location.search).get('crm_admin') === '1';
     renderStatus('Academia AG', 'Preparando tu acceso…');
@@ -71,7 +133,8 @@
       }
 
       await loadSupabaseLibrary();
-      await loadScript('app.js?v=20260821.63');
+      installAcademyDataAdapter();
+      await loadScript('app.js?v=20261011.64');
       await loadScript('utah-course-runtime.js?v=20260822.65');
       await loadScript('utah-module-exam-v2.js?v=20260820.48');
       await loadScript('utah-module2-exam-v2.js?v=20260820.49');
