@@ -106,7 +106,7 @@ function panel(title,subtitle,body,action){
   return '<section class="back-panel"><div class="back-panel-head"><div><span>'+esc(subtitle||'')+'</span><h2>'+esc(title)+'</h2></div>'+(action||'')+'</div>'+body+'</section>';
 }
 function metric(label,value,caption,tone){return '<article class="back-metric '+(tone||'')+'"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong><small>'+esc(caption||'')+'</small></article>';}
-function table(headers,rows){return '<div class="back-table"><div class="back-table-head">'+headers.map(function(h){return '<span>'+esc(h)+'</span>';}).join('')+'</div>'+rows.join('')+'</div>';}
+function table(headers,rows){return '<div class="back-table" style="--cols:'+headers.length+'"><div class="back-table-head">'+headers.map(function(h){return '<span>'+esc(h)+'</span>';}).join('')+'</div>'+rows.join('')+'</div>';}
 function row(cells,attrs){return '<div class="back-table-row" '+(attrs||'')+'>'+cells.map(function(c){return '<div>'+c+'</div>';}).join('')+'</div>';}
 
 function renderSummary(){
