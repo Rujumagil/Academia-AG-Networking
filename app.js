@@ -38,6 +38,7 @@ const state = {
   session: null,
   user: null,
   profile: null,
+  avatarSignedUrl: '',
   courses: [],
   resources: [],
   progressRows: [],
@@ -305,6 +306,7 @@ async function init() {
 
 function clearUserData() {
   state.profile = null;
+  state.avatarSignedUrl = '';
   state.courses = [];
   state.resources = [];
   state.progressRows = [];
@@ -351,6 +353,8 @@ async function loadApplicationData() {
     full_name: state.user.user_metadata?.full_name || '',
     role: 'student'
   };
+
+  await refreshAvatarSignedUrl();
 
   state.workspaces = [];
   state.workspaceMembers = [];
@@ -564,8 +568,48 @@ function displayName() {
     || 'Alumno';
 }
 
+function avatarStoragePath(value = '') {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const publicMarker = '/storage/v1/object/public/avatars/';
+  const signedMarker = '/storage/v1/object/sign/avatars/';
+  if (raw.includes(publicMarker)) return decodeURIComponent(raw.split(publicMarker)[1].split('?')[0]);
+  if (raw.includes(signedMarker)) return decodeURIComponent(raw.split(signedMarker)[1].split('?')[0]);
+  if (/^https?:/i.test(raw)) return '';
+  return raw.replace(/^\/+/, '');
+}
+
 function avatarUrl() {
-  return normalizeMediaUrl(state.profile?.avatar_url, 'icono-oficial.png');
+  if (state.avatarSignedUrl) return state.avatarSignedUrl;
+  const raw = String(state.profile?.avatar_url || '').trim();
+  if (/^https?:/i.test(raw) && !raw.includes('/storage/v1/object/public/avatars/')) return raw;
+  return 'icono-oficial.png';
+}
+
+async function refreshAvatarSignedUrl() {
+  state.avatarSignedUrl = '';
+  const raw = String(state.profile?.avatar_url || '').trim();
+  if (!raw) return '';
+
+  if (/^https?:/i.test(raw) && !raw.includes('/storage/v1/object/public/avatars/') && !raw.includes('/storage/v1/object/sign/avatars/')) {
+    state.avatarSignedUrl = raw;
+    return raw;
+  }
+
+  const path = avatarStoragePath(raw);
+  if (!path) return '';
+
+  const { data, error } = await db.storage
+    .from('avatars')
+    .createSignedUrl(path, 60 * 60 * 12);
+
+  if (error) {
+    console.warn('No se pudo firmar el avatar:', error);
+    return '';
+  }
+
+  state.avatarSignedUrl = data?.signedUrl || '';
+  return state.avatarSignedUrl;
 }
 
 function allLessons(course) {
@@ -3114,20 +3158,20 @@ async function saveAvatarImage() {
     if (uploadError) throw uploadError;
 
     setAvatarProgress(75);
-    const { data: publicData } = db.storage.from('avatars').getPublicUrl(filePath);
-    const publicUrl = `${publicData.publicUrl}?v=${Date.now()}`;
     const { data: profile, error: profileError } = await db
       .from('profiles')
-      .update({ avatar_url: publicUrl })
+      .update({ avatar_url: filePath })
       .eq('id', state.user.id)
       .select()
       .single();
     if (profileError) throw profileError;
 
-    setAvatarProgress(100);
     state.profile = profile;
+    const signedUrl = await refreshAvatarSignedUrl();
+
+    setAvatarProgress(100);
     const preview = document.querySelector('#profile-photo-preview');
-    if (preview) preview.src = publicUrl;
+    if (preview) preview.src = signedUrl || 'icono-oficial.png';
     await new Promise(resolve => setTimeout(resolve, 250));
     closeAvatarEditor();
     showToast('Fotografía actualizada correctamente.', 'success');
