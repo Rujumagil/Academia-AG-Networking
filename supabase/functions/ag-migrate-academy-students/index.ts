@@ -8,7 +8,17 @@ const cors = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+function getAdminKey() {
+  try {
+    const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.default) return String(parsed.default);
+    }
+  } catch (_) {}
+  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+}
+const SERVICE_ROLE_KEY = getAdminKey();
 const AG_WORKSPACE_ID = "fa4411f8-65c6-4762-8302-50789998e5b7";
 const SOURCE_PROJECT_REF = "wtxlvmpolxacxnibaexj";
 
@@ -83,23 +93,21 @@ Deno.serve(async (req: Request) => {
     deduped.set(email, { ...s, email, source_user_id: sourceUserId });
   }
 
-  const targetEmails = Array.from(deduped.keys());
-  const { data: targetProfiles, error: targetProfilesError } = await admin
-    .from("profiles")
-    .select("id,email")
-    .in("email", targetEmails);
-
-  if (targetProfilesError) {
-    console.error("AG_MIGRATION_TARGET_PROFILE_LOOKUP_FAILED", targetProfilesError);
-    return json(500, {
-      error: "No se pudieron consultar los usuarios destino.",
-      detail: targetProfilesError.message || "Error al consultar perfiles destino."
-    });
+  const allUsers: any[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) {
+      console.error("AG_MIGRATION_AUTH_LIST_FAILED", error);
+      return json(500, {
+        error: "No se pudieron consultar los usuarios destino.",
+        detail: error.message || "Error al consultar Auth."
+      });
+    }
+    const batch = data?.users ?? [];
+    allUsers.push(...batch);
+    if (batch.length < 1000) break;
   }
-
-  const usersByEmail = new Map(
-    (targetProfiles ?? []).map((u: any) => [normalizeEmail(u.email), u])
-  );
+  const usersByEmail = new Map(allUsers.map((u: any) => [normalizeEmail(u.email), u]));
 
   const sourceIds = Array.from(deduped.values()).map((s: any) => s.source_user_id);
   const { data: mappings, error: mappingsError } = await admin
@@ -158,7 +166,7 @@ Deno.serve(async (req: Request) => {
           targetUserId = createdUser?.user?.id ?? "";
           if (!targetUserId) throw new Error("No se recibió ID del usuario creado.");
           created = true;
-          usersByEmail.set(email, { id: targetUserId, email });
+          usersByEmail.set(email, createdUser.user);
         }
       }
 
