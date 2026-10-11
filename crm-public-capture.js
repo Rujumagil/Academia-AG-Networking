@@ -24,7 +24,7 @@ form.addEventListener('submit',async function(ev){
   if(!cfg.url||!cfg.publishableKey){show('El sistema de atención no está disponible en este momento.','error');return;}
   button.disabled=true;var original=button.textContent;button.textContent='Registrando solicitud…';if(result)result.classList.remove('is-visible');if(follow)follow.classList.remove('is-visible');
   try{
-    var response=await fetch(cfg.url+'/rest/v1/rpc/crm_create_public_candidate',{
+    var response=await fetch(cfg.url+'/rest/v1/rpc/ag_crm_create_public_candidate',{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':cfg.publishableKey,'Authorization':'Bearer '+cfg.publishableKey},
       body:JSON.stringify({
