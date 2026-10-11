@@ -44,6 +44,7 @@ var NAV=[
   ['candidates','Candidatos','◎'],
   ['followups','Seguimientos','◷'],
   ['student_pipeline','Pipeline alumnos','▦'],
+  ['reports','Reportes académicos','◫'],
   ['students','Alumnos','♙'],
   ['courses','Cursos','▤'],
   ['enrollments','Inscripciones','✓'],
@@ -622,6 +623,291 @@ function bindStudentPipelineFilters(){
   if(course)course.addEventListener('change',apply);
 }
 
+function academicReportData(){
+  var items=studentPipelineItems();
+  var now=Date.now();
+
+  function anchor(x){
+    return x.lastActivityAt || x.enrollment.enrolled_at || null;
+  }
+  function inactiveDays(x){
+    var value=anchor(x);
+    if(!value)return null;
+    var t=new Date(value).getTime();
+    if(!t)return null;
+    return Math.max(0,Math.floor((now-t)/86400000));
+  }
+
+  var activeItems=items.filter(function(x){
+    return x.enrollment.status==='active' || x.enrollment.status==='completed';
+  });
+  var avgProgress=activeItems.length
+    ? Math.round(activeItems.reduce(function(sum,x){return sum+Number(x.percent||0);},0)/activeItems.length)
+    : 0;
+
+  var uniqueStudents=new Set(items.map(function(x){return x.profile.id;}));
+  var inactive7=activeItems.filter(function(x){var d=inactiveDays(x);return d!==null&&d>=7;});
+  var inactive14=activeItems.filter(function(x){var d=inactiveDays(x);return d!==null&&d>=14;});
+  var recent7=activeItems.filter(function(x){var d=inactiveDays(x);return d!==null&&d<7;});
+  var certified=items.filter(function(x){return x.stage==='certified';});
+  var completed=items.filter(function(x){return x.stage==='completed'||x.stage==='certified';});
+
+  var byCourse=state.data.courses.map(function(course){
+    var list=items.filter(function(x){return x.course.id===course.id;});
+    var scored=list.filter(function(x){return x.examAverage!=null;});
+    return {
+      course:course,
+      enrollments:list.length,
+      averageProgress:list.length?Math.round(list.reduce(function(sum,x){return sum+Number(x.percent||0);},0)/list.length):0,
+      notStarted:list.filter(function(x){return x.stage==='not_started';}).length,
+      inProgress:list.filter(function(x){return x.stage==='in_progress';}).length,
+      completed:list.filter(function(x){return x.stage==='completed';}).length,
+      certified:list.filter(function(x){return x.stage==='certified';}).length,
+      inactive7:list.filter(function(x){var d=inactiveDays(x);return d!==null&&d>=7;}).length,
+      examAverage:scored.length?Math.round(scored.reduce(function(sum,x){return sum+Number(x.examAverage||0);},0)/scored.length):null
+    };
+  });
+
+  var moduleRisks=[];
+  state.data.courses.forEach(function(course){
+    var courseItems=items.filter(function(x){return x.course.id===course.id;});
+    var modules=state.data.modules
+      .filter(function(m){return m.course_id===course.id;})
+      .sort(function(a,b){return Number(a.position||0)-Number(b.position||0);});
+
+    modules.forEach(function(module,index){
+      var requiredLessons=state.data.lessons.filter(function(l){
+        return l.module_id===module.id && String(l.lesson_kind||'lesson').toLowerCase()!=='promo';
+      });
+      var lessonIds=new Set(requiredLessons.map(function(l){return l.id;}));
+      var started=0,completedCount=0,stalled7=0,stalled14=0;
+
+      courseItems.forEach(function(x){
+        var rows=state.data.lessonProgress.filter(function(p){
+          return p.user_id===x.profile.id && lessonIds.has(p.lesson_id);
+        });
+        var moduleStarted=rows.some(function(p){
+          return p.completed===true||Number(p.progress_seconds||0)>0||Number(p.watch_percentage||0)>0;
+        });
+        var done=requiredLessons.length>0 && requiredLessons.every(function(l){
+          return rows.some(function(p){return p.lesson_id===l.id&&p.completed===true;});
+        });
+        if(moduleStarted)started++;
+        if(done)completedCount++;
+
+        var current=x.currentModule && x.currentModule.id===module.id;
+        if(current){
+          var days=inactiveDays(x);
+          if(days!==null&&days>=7)stalled7++;
+          if(days!==null&&days>=14)stalled14++;
+        }
+      });
+
+      var type=String(module.section_type||'').toLowerCase();
+      var number=Number(module.academic_number||0);
+      var label=type==='introduction'?'Introducción':(type==='closing'?'Cierre':(number?'Módulo '+number:'Módulo '+(index+1)));
+      moduleRisks.push({
+        course:course,
+        module:module,
+        label:label,
+        started:started,
+        completed:completedCount,
+        stalled7:stalled7,
+        stalled14:stalled14,
+        completionRate:started?Math.round((completedCount/started)*100):0
+      });
+    });
+  });
+
+  var bestByUserModule={};
+  (state.data.moduleExamAttempts||[]).forEach(function(a){
+    var key=a.user_id+'|'+a.module_id;
+    var current=bestByUserModule[key];
+    if(!current||Number(a.percentage||0)>Number(current.percentage||0))bestByUserModule[key]=a;
+  });
+
+  var examModules=state.data.modules
+    .filter(function(m){return String(m.section_type||'').toLowerCase()==='academic';})
+    .map(function(module){
+      var attempts=(state.data.moduleExamAttempts||[]).filter(function(a){return a.module_id===module.id;});
+      var best=Object.keys(bestByUserModule)
+        .map(function(k){return bestByUserModule[k];})
+        .filter(function(a){return a.module_id===module.id;});
+      var course=state.data.courses.find(function(c){return c.id===module.course_id;})||{};
+      return {
+        module:module,
+        course:course,
+        attempts:attempts.length,
+        students:best.length,
+        average:best.length?Math.round(best.reduce(function(sum,a){return sum+Number(a.percentage||0);},0)/best.length):null,
+        passed:best.filter(function(a){return a.passed===true;}).length
+      };
+    });
+
+  return {
+    items:items,
+    activeItems:activeItems,
+    uniqueStudents:uniqueStudents.size,
+    avgProgress:avgProgress,
+    inactive7:inactive7,
+    inactive14:inactive14,
+    recent7:recent7,
+    certified:certified,
+    completed:completed,
+    byCourse:byCourse,
+    moduleRisks:moduleRisks,
+    examModules:examModules,
+    inactiveDays:inactiveDays
+  };
+}
+
+function renderReports(){
+  var r=academicReportData();
+
+  var metrics='<section class="back-metrics report-metrics">'+
+    metric('Alumnos',r.uniqueStudents,'perfiles con inscripción','navy')+
+    metric('Avance promedio',r.avgProgress+'%','promedio por inscripción','green')+
+    metric('Activos 7 días',r.recent7.length,'con actividad reciente','blue')+
+    metric('Sin actividad 7+d',r.inactive7.length,'requieren seguimiento','gold')+
+    metric('Sin actividad 14+d',r.inactive14.length,'prioridad alta','red')+
+    metric('Certificados',r.certified.length,r.completed.length+' cursos terminados','purple')+
+  '</section>';
+
+  var funnelTotal=Math.max(1,r.items.length);
+  var funnel=[
+    ['Inscritos',r.items.length,'#1e293b'],
+    ['Iniciaron',r.items.filter(function(x){return x.stage!=='not_started';}).length,'#005134'],
+    ['En curso',r.items.filter(function(x){return x.stage==='in_progress';}).length,'#64748b'],
+    ['Terminaron',r.completed.length,'#475569'],
+    ['Certificados',r.certified.length,'#0f766e']
+  ];
+  var funnelHtml='<div class="report-funnel">'+funnel.map(function(row){
+    var pct=Math.round((row[1]/funnelTotal)*100);
+    return '<div class="report-funnel-row"><div><strong>'+esc(row[0])+'</strong><span>'+row[1]+' · '+pct+'%</span></div><div class="report-funnel-track"><i style="width:'+pct+'%;background:'+row[2]+'"></i></div></div>';
+  }).join('')+'</div>';
+
+  var courseRows=r.byCourse.map(function(x){
+    return row([
+      '<strong>'+esc(x.course.title||'Curso')+'</strong>',
+      '<strong>'+x.enrollments+'</strong>',
+      '<strong>'+x.averageProgress+'%</strong><div class="report-mini-bar"><i style="width:'+x.averageProgress+'%"></i></div>',
+      x.notStarted+' / '+x.inProgress,
+      x.completed+' / '+x.certified,
+      '<span class="'+(x.inactive7?'report-risk':'')+'">'+x.inactive7+'</span>',
+      x.examAverage==null?'—':x.examAverage+'%'
+    ]);
+  });
+
+  var riskyModules=r.moduleRisks
+    .slice()
+    .sort(function(a,b){
+      return (b.stalled14*100+b.stalled7*10+(100-b.completionRate))-(a.stalled14*100+a.stalled7*10+(100-a.completionRate));
+    })
+    .slice(0,12);
+
+  var moduleRows=riskyModules.map(function(x){
+    var risk=x.stalled14>0?'Alta':(x.stalled7>0?'Media':'Baja');
+    return row([
+      '<strong>'+esc(x.label)+'</strong><small>'+esc(x.module.title||'')+'</small><small>'+esc(x.course.title||'')+'</small>',
+      x.started,
+      x.completed,
+      '<strong>'+x.completionRate+'%</strong><div class="report-mini-bar"><i style="width:'+x.completionRate+'%"></i></div>',
+      '<span class="'+(x.stalled7?'report-risk':'')+'">'+x.stalled7+'</span>',
+      '<span class="'+(x.stalled14?'report-risk high':'')+'">'+x.stalled14+'</span>',
+      badge(risk==='Alta'?'lost':(risk==='Media'?'pending':'active'),risk)
+    ]);
+  });
+
+  var examRows=r.examModules.map(function(x){
+    var passRate=x.students?Math.round((x.passed/x.students)*100):0;
+    return row([
+      '<strong>Módulo '+esc(x.module.academic_number||'')+'</strong><small>'+esc(x.module.title||'')+'</small>',
+      esc(x.course.title||''),
+      x.students,
+      x.attempts,
+      x.average==null?'—':x.average+'%',
+      x.students?passRate+'%':'—'
+    ]);
+  });
+
+  var inactiveRows=r.inactive14
+    .slice()
+    .sort(function(a,b){return r.inactiveDays(b)-r.inactiveDays(a);})
+    .slice(0,12)
+    .map(function(x){
+      var days=r.inactiveDays(x);
+      return row([
+        '<strong>'+esc(x.profile.full_name||x.profile.email||'Alumno')+'</strong><small>'+esc(x.profile.email||'')+'</small>',
+        esc(x.course.title||''),
+        x.percent+'%',
+        x.currentModule?esc(x.currentModule.title||''):'—',
+        '<strong class="report-risk high">'+days+' días</strong>',
+        '<button data-student-record="'+esc(x.profile.id)+'" data-student-course="'+esc(x.course.id)+'">Expediente</button>'
+      ]);
+    });
+
+  var actions='<div class="report-actions">'+
+    '<button id="report-export-csv">Exportar CSV</button>'+
+    '<button id="report-print">Imprimir reporte</button>'+
+  '</div>';
+
+  return '<section class="reports-heading">'+
+      '<div><span class="eyebrow">Inteligencia académica</span><h2>Centro de reportes</h2><p>Visión global de avance, actividad, abandono, evaluaciones y certificación de Academia AG.</p></div>'+
+      actions+
+    '</section>'+
+    metrics+
+    '<section class="back-grid two report-top-grid">'+
+      panel('Embudo académico','Conversión del alumno',funnelHtml)+
+      panel('Riesgo prioritario','14+ días sin actividad',inactiveRows.length?table(['Alumno','Curso','Avance','Módulo','Inactividad',''],inactiveRows):empty('No hay alumnos con 14 o más días sin actividad.'))+
+    '</section>'+
+    panel('Rendimiento por curso','Comparativo académico',courseRows.length?table(['Curso','Inscritos','Avance','No inició / En curso','Terminados / Cert.','7+d','Prom. eval.'],courseRows):empty('No hay cursos con inscripciones.'))+
+    panel('Módulos con mayor riesgo','Puntos de abandono o estancamiento',moduleRows.length?table(['Módulo','Iniciaron','Completaron','Finalización','7+d','14+d','Riesgo'],moduleRows):empty('No hay datos de módulos.'))+
+    panel('Evaluaciones opcionales','Resultados por módulo',examRows.length?table(['Módulo','Curso','Alumnos','Intentos','Promedio','Aprobación'],examRows):empty('No hay evaluaciones configuradas.'));
+}
+
+function exportAcademicReportCsv(){
+  var r=academicReportData();
+  var rows=[[
+    'Alumno','Correo','Teléfono','Curso','Etapa','Avance %','Lecciones completadas','Lecciones requeridas',
+    'Módulo actual','Última actividad','Días sin actividad','Evaluaciones realizadas','Promedio evaluaciones','Certificado'
+  ]];
+
+  r.items.forEach(function(x){
+    rows.push([
+      x.profile.full_name||'',
+      x.profile.email||'',
+      x.phone||'',
+      x.course.title||'',
+      pipelineStageLabel(x.stage),
+      x.percent,
+      x.completedLessons,
+      x.totalLessons,
+      x.currentModule?x.currentModule.title||'':'',
+      x.lastActivityAt?fmt(x.lastActivityAt):'',
+      r.inactiveDays(x)==null?'':r.inactiveDays(x),
+      x.examsDone,
+      x.examAverage==null?'':x.examAverage,
+      x.certificate?(x.certificate.credential_code||x.certificate.verification_code||'Emitido'):''
+    ]);
+  });
+
+  function csvCell(value){
+    var s=String(value==null?'':value);
+    return '"'+s.replace(/"/g,'""')+'"';
+  }
+
+  var csv='\uFEFF'+rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='AG-reporte-academico-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},500);
+}
+
 function renderStudentRecord(){
   var userId=state.recordUserId;
   if(!userId)return '<div class="back-warning large"><strong>Expediente no disponible</strong><span>No se especificó un alumno.</span></div>';
@@ -874,6 +1160,7 @@ function renderSection(){
   else if(state.section==='candidates')html=renderCandidates();
   else if(state.section==='followups')html=renderFollowups();
   else if(state.section==='student_pipeline')html=renderStudentPipeline();
+  else if(state.section==='reports')html=renderReports();
   else if(state.section==='student_record')html=renderStudentRecord();
   else if(state.section==='students')html=renderStudents();
   else if(state.section==='courses')html=renderCourses();
@@ -890,6 +1177,10 @@ function renderSection(){
 
 function bindSection(){
   if(state.section==='student_pipeline')bindStudentPipelineFilters();
+  var reportCsv=document.getElementById('report-export-csv');
+  if(reportCsv)reportCsv.onclick=exportAcademicReportCsv;
+  var reportPrint=document.getElementById('report-print');
+  if(reportPrint)reportPrint.onclick=function(){window.print();};
   document.querySelectorAll('[data-student-record]').forEach(function(b){b.onclick=function(){
     state.recordUserId=b.dataset.studentRecord;
     state.recordCourseId=b.dataset.studentCourse||null;
