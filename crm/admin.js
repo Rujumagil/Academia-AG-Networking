@@ -4,16 +4,19 @@
 var root=document.getElementById('crm-admin-app');
 var cfg=window.SUPABASE_CONFIG||{};
 var db=window.supabase&&window.supabase.createClient?window.supabase.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+var masterCfg=window.AG_CRM_MASTER_CONFIG||{};
+var crmDb=window.supabase&&window.supabase.createClient&&masterCfg.url&&masterCfg.publishableKey?window.supabase.createClient(masterCfg.url,masterCfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
 
 var state={
   user:null,profile:null,section:'summary',crmReady:true,
-  data:{profiles:[],courses:[],enrollments:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
+  data:{profiles:[],courses:[],modules:[],lessons:[],lessonProgress:[],enrollments:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
 };
 
 var NAV=[
   ['summary','Resumen','⌂'],
   ['candidates','Candidatos','◎'],
   ['followups','Seguimientos','◷'],
+  ['student_pipeline','Pipeline alumnos','▦'],
   ['students','Alumnos','♙'],
   ['courses','Cursos','▤'],
   ['enrollments','Inscripciones','✓'],
@@ -33,6 +36,59 @@ function badge(v,label){return '<span class="back-badge '+statusClass(v)+'">'+es
 function profileName(id){var p=state.data.profiles.find(function(x){return x.id===id;});return p?(p.full_name||p.email||'Usuario'):'—';}
 function courseName(id){var c=state.data.courses.find(function(x){return x.id===id;});return c?c.title:'—';}
 function productName(id){var p=state.data.products.find(function(x){return x.id===id;});return p?p.name:'—';}
+
+function normalizeEmail(v){return String(v||'').trim().toLowerCase();}
+function studentPhone(profile){
+  if(profile&&profile.phone)return String(profile.phone);
+  var email=normalizeEmail(profile&&profile.email);
+  if(!email)return '';
+  var c=state.data.candidates.find(function(x){return normalizeEmail(x.email)===email&&x.phone;});
+  return c?String(c.phone):'';
+}
+function phoneHtml(phone){
+  if(!phone)return '<span class="student-phone missing">Sin teléfono</span>';
+  return '<a class="student-phone" href="tel:'+esc(phone.replace(/[^+0-9]/g,''))+'">'+esc(phone)+'</a>';
+}
+function pipelineStageLabel(stage){
+  return {not_started:'No iniciado',in_progress:'En curso',completed:'Terminado',certified:'Certificado'}[stage]||stage;
+}
+function studentPipelineItems(){
+  var d=state.data;
+  return d.enrollments
+    .filter(function(e){return e.status!=='cancelled'&&e.status!=='expired';})
+    .map(function(e){
+      var profile=d.profiles.find(function(p){return p.id===e.user_id;})||{id:e.user_id,full_name:'Alumno',email:''};
+      var course=d.courses.find(function(x){return x.id===e.course_id;})||{id:e.course_id,title:'Curso'};
+      var modules=d.modules.filter(function(m){return m.course_id===e.course_id;}).sort(function(a,b){return Number(a.position||0)-Number(b.position||0);});
+      var moduleIds=new Set(modules.map(function(m){return m.id;}));
+      var lessons=d.lessons.filter(function(l){return moduleIds.has(l.module_id);});
+      var lessonIds=new Set(lessons.map(function(l){return l.id;}));
+      var progress=d.lessonProgress.filter(function(p){return p.user_id===e.user_id&&lessonIds.has(p.lesson_id);});
+      var progressByLesson={};
+      progress.forEach(function(p){progressByLesson[p.lesson_id]=p;});
+      var completedLessons=lessons.filter(function(l){var p=progressByLesson[l.id];return p&&p.completed===true;}).length;
+      var started=progress.some(function(p){return p.completed===true||Number(p.progress_seconds||0)>0;});
+      var total=lessons.length;
+      var percent=total?Math.min(100,Math.round((completedLessons/total)*100)):(e.status==='completed'?100:0);
+      var cert=d.certificates.find(function(x){return x.user_id===e.user_id&&x.course_id===e.course_id&&x.status!=='revoked';});
+      var finished=e.status==='completed'||(total>0&&completedLessons>=total);
+      var stage=cert?'certified':(finished?'completed':(started?'in_progress':'not_started'));
+      var currentModule=null;
+      if(stage==='not_started')currentModule=modules[0]||null;
+      else if(stage==='in_progress'){
+        currentModule=modules.find(function(m){
+          var ls=lessons.filter(function(l){return l.module_id===m.id;});
+          return ls.length&&ls.some(function(l){var p=progressByLesson[l.id];return !(p&&p.completed===true);});
+        })||modules[modules.length-1]||null;
+      }
+      return {
+        enrollment:e,profile:profile,course:course,stage:stage,percent:percent,
+        completedLessons:completedLessons,totalLessons:total,
+        currentModule:currentModule,modules:modules,certificate:cert,
+        phone:studentPhone(profile)
+      };
+    });
+}
 function empty(msg){return '<div class="back-empty"><strong>Sin registros</strong><span>'+esc(msg)+'</span></div>';}
 function sectionTitle(k){var x=NAV.find(function(i){return i[0]===k;});return x?x[1]:'Administración';}
 
@@ -49,26 +105,56 @@ async function safe(table,query){
   }catch(e){console.warn('[Back Office]',table,e);return [];}
 }
 
+async function safeMaster(table,query){
+  try{
+    var r=await query;
+    if(r.error){console.warn('[Back Office · master]',table,r.error);return [];}
+    return r.data||[];
+  }catch(e){console.warn('[Back Office · master]',table,e);return [];}
+}
+
 async function loadAll(){
   var r=await Promise.all([
     safe('profiles',db.from('profiles').select('*').order('created_at',{ascending:false})),
     safe('courses',db.from('courses').select('*').order('created_at',{ascending:false})),
+    safe('modules',db.from('modules').select('*').order('position',{ascending:true})),
+    safe('lessons',db.from('lessons').select('*').order('position',{ascending:true})),
+    safe('lesson_progress',db.from('lesson_progress').select('*').limit(10000)),
     safe('enrollments',db.from('enrollments').select('*').order('enrolled_at',{ascending:false})),
     safe('orders',db.from('orders').select('*').order('created_at',{ascending:false}).limit(1000)),
     safe('student_access',db.from('student_access').select('*').order('granted_at',{ascending:false}).limit(1000)),
     safe('products',db.from('products').select('*').order('created_at',{ascending:false})),
     safe('certificates',db.from('certificates').select('*').order('issued_at',{ascending:false}).limit(1000)),
-    safe('support_tickets',db.from('support_tickets').select('*').order('created_at',{ascending:false}).limit(1000)),
-    safe('crm_candidates',db.from('crm_candidates').select('*').order('created_at',{ascending:false}).limit(1000)),
-    safe('crm_tasks',db.from('crm_tasks').select('*').order('due_at',{ascending:true}).limit(1500))
+    safe('support_tickets',db.from('support_tickets').select('*').order('created_at',{ascending:false}).limit(1000))
   ]);
-  state.data={profiles:r[0],courses:r[1],enrollments:r[2],orders:r[3],accesses:r[4],products:r[5],certificates:r[6],tickets:r[7],candidates:r[8],tasks:r[9]};
+
+  var candidates=[],tasks=[];
+  state.crmReady=false;
+  if(crmDb){
+    try{
+      var ms=await crmDb.auth.getSession();
+      if(ms.data&&ms.data.session){
+        var cr=await Promise.all([
+          safeMaster('ag_crm_candidates',crmDb.from('ag_crm_candidates').select('*').order('created_at',{ascending:false}).limit(1500)),
+          safeMaster('ag_crm_tasks',crmDb.from('ag_crm_tasks').select('*').order('due_at',{ascending:true}).limit(2000))
+        ]);
+        candidates=cr[0];tasks=cr[1];state.crmReady=true;
+      }
+    }catch(e){console.warn('[Back Office · master session]',e);}
+  }
+
+  state.data={
+    profiles:r[0],courses:r[1],modules:r[2],lessons:r[3],lessonProgress:r[4],
+    enrollments:r[5],orders:r[6],accesses:r[7],products:r[8],certificates:r[9],
+    tickets:r[10],candidates:candidates,tasks:tasks
+  };
 }
 
 function navCount(id){
   var d=state.data;
   if(id==='candidates')return d.candidates.filter(function(x){return x.status==='active';}).length;
   if(id==='followups')return d.tasks.filter(function(x){return x.status==='pending';}).length;
+  if(id==='student_pipeline')return studentPipelineItems().length;
   if(id==='students')return d.profiles.filter(function(x){return x.role==='student';}).length;
   if(id==='courses')return d.courses.length;
   if(id==='enrollments')return d.enrollments.filter(function(x){return x.status==='active';}).length;
@@ -162,12 +248,70 @@ function renderFollowups(){
   return panel('Seguimientos pendientes','CRM comercial',rows.length?table(['Candidato / tarea','Tipo','Prioridad','Fecha','Estado',''],rows):empty('No hay seguimientos pendientes.'),'<a href="./">Abrir CRM</a>');
 }
 
+function renderStudentPipeline(){
+  var items=studentPipelineItems();
+  var counts={not_started:0,in_progress:0,completed:0,certified:0};
+  items.forEach(function(x){counts[x.stage]=(counts[x.stage]||0)+1;});
+
+  function card(x){
+    var moduleText='—';
+    if(x.stage==='certified')moduleText='Curso finalizado · certificado emitido';
+    else if(x.stage==='completed')moduleText='Curso finalizado · pendiente de certificado';
+    else if(x.currentModule){
+      var idx=x.modules.findIndex(function(m){return m.id===x.currentModule.id;})+1;
+      moduleText='Módulo '+idx+' de '+x.modules.length+' · '+(x.currentModule.title||'Sin título');
+    }else if(!x.totalLessons)moduleText='Contenido pendiente de configurar';
+
+    var cert=x.certificate
+      ? '<span class="student-cert ok">✓ Certificado '+esc(x.certificate.credential_code||'emitido')+'</span>'
+      : '<span class="student-cert">Sin certificado</span>';
+
+    return '<article class="student-pipeline-card">'+
+      '<div class="student-pipeline-person"><div><strong>'+esc(x.profile.full_name||x.profile.email||'Alumno')+'</strong><small>'+esc(x.profile.email||'')+'</small></div><span class="student-progress-number">'+x.percent+'%</span></div>'+
+      '<div class="student-phone-row"><span>Teléfono</span>'+phoneHtml(x.phone)+'</div>'+
+      '<div class="student-course">'+esc(x.course.title||'Curso')+'</div>'+
+      '<div class="student-progress"><i style="width:'+x.percent+'%"></i></div>'+
+      '<div class="student-module">'+esc(moduleText)+'</div>'+
+      '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones</span>'+cert+'</div>'+
+    '</article>';
+  }
+
+  var columns=[
+    ['not_started','No iniciado','Aún no comenzó'],
+    ['in_progress','En curso','Ya comenzó'],
+    ['completed','Terminado','Curso completado'],
+    ['certified','Certificado','Constancia emitida']
+  ];
+
+  var metrics='<section class="back-metrics student-pipeline-metrics">'+
+    metric('Alumnos / cursos',items.length,'inscripciones activas o terminadas','navy')+
+    metric('No iniciados',counts.not_started,'requieren activación','gold')+
+    metric('En curso',counts.in_progress,'avance registrado','blue')+
+    metric('Terminados',counts.completed,'pendientes de certificado','purple')+
+    metric('Certificados',counts.certified,'proceso completo','green')+
+  '</section>';
+
+  var board='<section class="student-pipeline-board">'+columns.map(function(col){
+    var list=items.filter(function(x){return x.stage===col[0];});
+    return '<div class="student-pipeline-column" data-pipeline-stage="'+col[0]+'">'+
+      '<div class="student-pipeline-head"><div><strong>'+esc(col[1])+'</strong><small>'+esc(col[2])+'</small></div><b>'+list.length+'</b></div>'+
+      '<div class="student-pipeline-list">'+(list.length?list.map(card).join(''):'<div class="student-pipeline-empty">Sin alumnos</div>')+'</div>'+
+    '</div>';
+  }).join('')+'</section>';
+
+  var note='<div class="back-note student-pipeline-note"><strong>Teléfonos</strong><span>Se muestra el teléfono guardado en el perfil cuando exista; mientras Academia termina de migrarse al Supabase maestro, también se cruza por correo con el CRM AG. Los alumnos antiguos sin teléfono registrado aparecerán como “Sin teléfono”.</span></div>';
+
+  return panel('Pipeline de alumnos','Academia AG · progreso por curso',metrics+board+note,'<a href="../academia.html?crm_admin=1#workspace/general">Abrir Academia</a>');
+}
+
 function renderStudents(){
   var students=state.data.profiles.filter(function(x){return x.role==='student';});
   var rows=students.map(function(s){
     var active=state.data.enrollments.filter(function(e){return e.user_id===s.id&&e.status==='active';}).length;
+    var phone=studentPhone(s);
     return row([
       '<strong>'+esc(s.full_name||'Alumno')+'</strong><small>'+esc(s.email||'')+'</small>',
+      phoneHtml(phone),
       badge(s.account_status||'active'),
       '<strong>'+active+'</strong><small>cursos activos</small>',
       esc(fmt(s.created_at)),
@@ -177,7 +321,7 @@ function renderStudents(){
       '</div>'
     ]);
   });
-  return panel('Alumnos','Usuarios de Academia AG',rows.length?table(['Alumno','Estado','Inscripciones','Registro','Acciones'],rows):empty('No hay alumnos registrados.'),'<a href="../importar-alumnos.html">Importar alumnos</a>');
+  return panel('Alumnos','Usuarios de Academia AG',rows.length?table(['Alumno','Teléfono','Estado','Inscripciones','Registro','Acciones'],rows):empty('No hay alumnos registrados.'),'<a href="../importar-alumnos.html">Importar alumnos</a>');
 }
 
 function renderCourses(){
@@ -270,6 +414,7 @@ function renderSection(){
   if(state.section==='summary')html=renderSummary();
   else if(state.section==='candidates')html=renderCandidates();
   else if(state.section==='followups')html=renderFollowups();
+  else if(state.section==='student_pipeline')html=renderStudentPipeline();
   else if(state.section==='students')html=renderStudents();
   else if(state.section==='courses')html=renderCourses();
   else if(state.section==='enrollments')html=renderEnrollments();
