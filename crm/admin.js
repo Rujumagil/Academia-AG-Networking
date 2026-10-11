@@ -34,7 +34,8 @@ var crmDb=db;
 
 var state={
   user:null,profile:null,section:'summary',crmReady:true,
-  data:{profiles:[],courses:[],modules:[],lessons:[],lessonProgress:[],enrollments:[],resources:[],lessonBlocks:[],courseVersions:[],assessments:[],assessmentQuestions:[],assessmentOptions:[],lessonQuizzes:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
+  recordUserId:null,recordCourseId:null,
+  data:{profiles:[],courses:[],modules:[],lessons:[],lessonProgress:[],enrollments:[],resources:[],lessonBlocks:[],courseVersions:[],assessments:[],assessmentQuestions:[],assessmentOptions:[],lessonQuizzes:[],moduleExamAttempts:[],orders:[],accesses:[],products:[],certificates:[],tickets:[],candidates:[],tasks:[]}
 };
 
 var NAV=[
@@ -176,7 +177,7 @@ function studentPipelineItems(){
     });
 }
 function empty(msg){return '<div class="back-empty"><strong>Sin registros</strong><span>'+esc(msg)+'</span></div>';}
-function sectionTitle(k){var x=NAV.find(function(i){return i[0]===k;});return x?x[1]:'Administración';}
+function sectionTitle(k){if(k==='student_record')return 'Expediente académico';var x=NAV.find(function(i){return i[0]===k;});return x?x[1]:'Administración';}
 
 async function safe(table,query){
   try{
@@ -343,7 +344,7 @@ function shell(){
   root.innerHTML='<div class="back-shell">'+
     '<aside class="back-sidebar">'+
       '<div class="back-brand"><img src="../logo-completo-oficial.png" alt="AG Business Networking"><small>Back Office · CRM AG</small></div>'+
-      '<nav class="back-nav">'+NAV.map(function(n){return '<button data-section="'+n[0]+'" class="'+(state.section===n[0]?'active':'')+'"><span class="back-nav-icon">'+n[2]+'</span><span class="back-nav-label">'+n[1]+'</span><b>'+esc(navCount(n[0]))+'</b></button>';}).join('')+'</nav>'+
+      '<nav class="back-nav">'+NAV.map(function(n){var active=state.section===n[0]||(state.section==='student_record'&&n[0]==='student_pipeline');return '<button data-section="'+n[0]+'" class="'+(active?'active':'')+'"><span class="back-nav-icon">'+n[2]+'</span><span class="back-nav-label">'+n[1]+'</span><b>'+esc(navCount(n[0]))+'</b></button>';}).join('')+'</nav>'+
       '<div class="back-user"><strong>'+esc(name)+'</strong><small>'+esc(state.profile.email||'')+'</small><a href="./">CRM candidatos</a><button id="back-signout">Cerrar sesión</button></div>'+
     '</aside>'+
     '<section class="back-main">'+
@@ -352,7 +353,7 @@ function shell(){
     '</section>'+
   '</div>';
 
-  document.querySelectorAll('[data-section]').forEach(function(b){b.onclick=function(){state.section=b.dataset.section;location.hash=state.section;render();};});
+  document.querySelectorAll('[data-section]').forEach(function(b){b.onclick=function(){state.recordUserId=null;state.recordCourseId=null;state.section=b.dataset.section;location.hash=state.section;render();};});
   document.getElementById('back-signout').onclick=function(){db.auth.signOut();};
   document.getElementById('back-refresh').onclick=async function(){toast('Actualizando datos…');await loadAll();render();toast('Información actualizada.');};
   document.getElementById('back-mobile').onclick=function(){document.querySelector('.back-sidebar').classList.toggle('open');};
@@ -540,6 +541,7 @@ function renderStudentPipeline(){
       '<div class="'+activityClass+'"><span>Última actividad</span><strong>'+esc(relativeActivity(x.lastActivityAt))+'</strong></div>'+
       followup+
       academicDetail+
+      '<div class="student-record-actions"><button type="button" data-student-record="'+esc(x.profile.id)+'" data-student-course="'+esc(x.course.id)+'">Ver expediente académico</button></div>'+
       '<div class="student-card-foot"><span>'+x.completedLessons+' / '+x.totalLessons+' lecciones completadas</span>'+cert+'</div>'+
     '</article>';
   }
@@ -619,6 +621,137 @@ function bindStudentPipelineFilters(){
   if(course)course.addEventListener('change',apply);
 }
 
+function renderStudentRecord(){
+  var userId=state.recordUserId;
+  if(!userId)return '<div class="back-warning large"><strong>Expediente no disponible</strong><span>No se especificó un alumno.</span></div>';
+
+  var profile=state.data.profiles.find(function(p){return p.id===userId;})||null;
+  if(!profile)return '<div class="back-warning large"><strong>Alumno no encontrado</strong><span>El perfil no pertenece al workspace de AG o ya no está disponible.</span><button data-jump="student_pipeline">Volver al Pipeline</button></div>';
+
+  var items=studentPipelineItems().filter(function(x){return x.profile.id===userId;});
+  if(!items.length)return '<div class="back-warning large"><strong>Sin inscripción académica</strong><span>Este alumno todavía no tiene un curso asignado.</span><button data-jump="students">Volver a alumnos</button></div>';
+
+  var active=items.find(function(x){return state.recordCourseId&&x.course.id===state.recordCourseId;})||items[0];
+  state.recordCourseId=active.course.id;
+
+  function rel(value){
+    if(!value)return 'Sin actividad';
+    var time=new Date(value).getTime();
+    if(!time)return 'Sin actividad';
+    var days=Math.floor(Math.max(0,Date.now()-time)/86400000);
+    if(days===0)return 'Hoy';
+    if(days===1)return 'Ayer';
+    return 'Hace '+days+' días';
+  }
+
+  var cleanPhone=String(active.phone||'').replace(/[^0-9]/g,'');
+  var contacts='<div class="record-contact-actions">'+
+    (active.phone?'<a href="tel:'+esc(String(active.phone).replace(/[^+0-9]/g,''))+'">☎ Llamar</a>':'')+
+    (cleanPhone.length>=10?'<a href="https://wa.me/'+esc(cleanPhone)+'" target="_blank" rel="noopener">WA WhatsApp</a>':'')+
+    (profile.email?'<a href="mailto:'+esc(profile.email)+'">✉ Correo</a>':'')+
+  '</div>';
+
+  var courseTabs=items.length>1
+    ? '<div class="record-course-tabs">'+items.map(function(x){
+        return '<button data-record-course="'+esc(x.course.id)+'" class="'+(x.course.id===active.course.id?'active':'')+'">'+esc(x.course.title)+'</button>';
+      }).join('')+'</div>'
+    : '';
+
+  var modules=active.academicModules||[];
+  var completedModules=modules.filter(function(m){return m.percent===100;}).length;
+  var certificate=active.certificate;
+  var followups=state.data.tasks.filter(function(t){
+    return active.candidate&&t.candidate_id===active.candidate.id
+      && t.metadata
+      && t.metadata.automation==='academy_inactivity'
+      && String(t.metadata.academy_course_id||'')===String(active.course.id);
+  }).sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);});
+
+  var moduleRows=modules.map(function(m){
+    var best=m.bestExam;
+    var exam=m.examApplicable
+      ? (best
+        ? '<span class="record-exam '+(best.passed?'passed':'attempted')+'"><strong>'+Math.round(Number(best.percentage||0))+'%</strong><small>'+m.attempts+' intento'+(m.attempts===1?'':'s')+'</small></span>'
+        : '<span class="record-exam"><strong>—</strong><small>Sin intento</small></span>')
+      : '<span class="record-exam neutral"><strong>—</strong><small>No aplica</small></span>';
+
+    return '<article class="record-module-card '+(m.percent===100?'complete':'')+'">'+
+      '<div class="record-module-main"><span>'+esc(m.label)+'</span><strong>'+esc(m.module.title||'')+'</strong><small>'+m.completed+' de '+m.total+' lecciones</small></div>'+
+      '<div class="record-module-progress"><div><i style="width:'+m.percent+'%"></i></div><b>'+m.percent+'%</b></div>'+
+      exam+
+    '</article>';
+  }).join('');
+
+  var courseModuleIds=new Set(active.modules.map(function(m){return m.id;}));
+  var lessonMap={};
+  state.data.lessons.forEach(function(l){if(courseModuleIds.has(l.module_id))lessonMap[l.id]=l;});
+  var moduleMap={};
+  active.modules.forEach(function(m){moduleMap[m.id]=m;});
+
+  var recentProgress=state.data.lessonProgress
+    .filter(function(p){return p.user_id===userId&&lessonMap[p.lesson_id];})
+    .slice()
+    .sort(function(a,b){
+      return new Date(b.last_watched_at||b.updated_at||b.completed_at||0)-new Date(a.last_watched_at||a.updated_at||a.completed_at||0);
+    })
+    .slice(0,12);
+
+  var activityRows=recentProgress.map(function(p){
+    var lesson=lessonMap[p.lesson_id]||{};
+    var mod=moduleMap[lesson.module_id]||{};
+    var watch=Math.round(Number(p.watch_percentage||0));
+    return row([
+      '<strong>'+esc(lesson.title||'Lección')+'</strong><small>'+esc(mod.title||'')+'</small>',
+      p.completed?badge('completed','Completada'):badge('in_progress','En progreso'),
+      '<strong>'+watch+'%</strong><small>'+Math.round(Number(p.last_position_seconds||p.progress_seconds||0))+' s registrados</small>',
+      esc(fmt(p.last_watched_at||p.updated_at||p.completed_at))
+    ]);
+  });
+
+  var followupRows=followups.map(function(t){
+    return row([
+      '<strong>'+esc(t.title||'Seguimiento')+'</strong><small>'+esc(t.description||'')+'</small>',
+      badge(t.priority,t.priority),
+      badge(t.status,t.status),
+      esc(fmt(t.created_at)),
+      esc(fmt(t.completed_at))
+    ]);
+  });
+
+  var certCard=certificate
+    ? '<div class="record-certificate valid"><span>Certificado</span><strong>✓ Emitido y válido</strong><small>Código: '+esc(certificate.credential_code||certificate.verification_code||'—')+' · '+esc(fmt(certificate.issued_at))+'</small></div>'
+    : '<div class="record-certificate"><span>Certificado</span><strong>Pendiente</strong><small>Se emite automáticamente al cumplir los requisitos del curso.</small></div>';
+
+  var header='<section class="student-record-hero">'+
+    '<div class="student-record-breadcrumb"><button data-jump="student_pipeline">← Volver al Pipeline</button><button id="record-print">Imprimir expediente</button></div>'+
+    '<div class="student-record-identity">'+
+      '<div><span class="eyebrow">Expediente académico</span><h2>'+esc(profile.full_name||profile.email||'Alumno')+'</h2><p>'+esc(profile.email||'')+(active.phone?' · '+esc(active.phone):'')+'</p></div>'+
+      '<div>'+badge(profile.account_status||'active')+contacts+'</div>'+
+    '</div>'+
+    courseTabs+
+  '</section>';
+
+  var metrics='<section class="record-metrics">'+
+    metric('Avance del curso',active.percent+'%',active.completedLessons+' / '+active.totalLessons+' lecciones','green')+
+    metric('Secciones',completedModules+'/'+modules.length,'completadas','blue')+
+    metric('Evaluaciones',active.examsDone+'/'+active.examsAvailable,'opcionales realizadas','purple')+
+    metric('Promedio',active.examAverage==null?'—':active.examAverage+'%','mejores intentos','gold')+
+    metric('Actividad',rel(active.lastActivityAt),active.lastActivityAt?fmt(active.lastActivityAt):'sin registro','navy')+
+  '</section>';
+
+  var courseStatus='<section class="record-course-status">'+
+    '<div><span>Curso</span><strong>'+esc(active.course.title)+'</strong><small>'+pipelineStageLabel(active.stage)+' · inscripción '+esc(active.enrollment.status||'—')+'</small></div>'+
+    certCard+
+  '</section>';
+
+  return header+metrics+courseStatus+
+    panel('Avance por módulo','Detalle académico',moduleRows||empty('No hay módulos configurados.'))+
+    '<section class="back-grid two">'+
+      panel('Actividad reciente','Lecciones',activityRows.length?table(['Lección','Estado','Avance','Actividad'],activityRows):empty('El alumno aún no registra actividad.'))+
+      panel('Seguimientos','CRM académico',followupRows.length?table(['Seguimiento','Prioridad','Estado','Creado','Cerrado'],followupRows):empty('No hay seguimientos académicos para este curso.'))+
+    '</section>';
+}
+
 function renderStudents(){
   var students=state.data.profiles.filter(function(x){return x.role==='student';});
   var rows=students.map(function(s){
@@ -632,6 +765,7 @@ function renderStudents(){
       esc(fmt(s.created_at)),
       '<div class="back-actions">'+
         (s.account_status==='active'?'<button data-user-status="'+s.id+'" data-status="suspended">Suspender</button>':'<button data-user-status="'+s.id+'" data-status="active">Activar</button>')+
+        '<button data-student-record="'+s.id+'">Expediente</button>'+
         '<a href="../academia.html?crm_admin=1#workspace/general/students">Gestionar</a>'+
       '</div>'
     ]);
@@ -739,6 +873,7 @@ function renderSection(){
   else if(state.section==='candidates')html=renderCandidates();
   else if(state.section==='followups')html=renderFollowups();
   else if(state.section==='student_pipeline')html=renderStudentPipeline();
+  else if(state.section==='student_record')html=renderStudentRecord();
   else if(state.section==='students')html=renderStudents();
   else if(state.section==='courses')html=renderCourses();
   else if(state.section==='enrollments')html=renderEnrollments();
@@ -754,7 +889,21 @@ function renderSection(){
 
 function bindSection(){
   if(state.section==='student_pipeline')bindStudentPipelineFilters();
-  document.querySelectorAll('[data-jump]').forEach(function(b){b.onclick=function(){state.section=b.dataset.jump;location.hash=state.section;render();};});
+  document.querySelectorAll('[data-student-record]').forEach(function(b){b.onclick=function(){
+    state.recordUserId=b.dataset.studentRecord;
+    state.recordCourseId=b.dataset.studentCourse||null;
+    state.section='student_record';
+    location.hash='student/'+encodeURIComponent(state.recordUserId)+(state.recordCourseId?'/'+encodeURIComponent(state.recordCourseId):'');
+    render();
+  };});
+  document.querySelectorAll('[data-record-course]').forEach(function(b){b.onclick=function(){
+    state.recordCourseId=b.dataset.recordCourse;
+    location.hash='student/'+encodeURIComponent(state.recordUserId)+'/'+encodeURIComponent(state.recordCourseId);
+    renderSection();
+  };});
+  var recordPrint=document.getElementById('record-print');
+  if(recordPrint)recordPrint.onclick=function(){window.print();};
+  document.querySelectorAll('[data-jump]').forEach(function(b){b.onclick=function(){state.recordUserId=null;state.recordCourseId=null;state.section=b.dataset.jump;location.hash=state.section;render();};});
   document.querySelectorAll('[data-user-status]').forEach(function(b){b.onclick=async function(){var r=await db.rpc('admin_set_account_status',{target_user:b.dataset.userStatus,new_status:b.dataset.status});if(r.error)return toast(r.error.message,true);toast('Estado del alumno actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-course-status]').forEach(function(b){b.onclick=async function(){var r=await db.from('courses').update({status:b.dataset.status}).eq('id',b.dataset.courseStatus);if(r.error)return toast(r.error.message,true);toast('Curso actualizado.');await loadAll();render();};});
   document.querySelectorAll('[data-ticket-status]').forEach(function(s){s.onchange=async function(){var r=await db.from('support_tickets').update({status:s.value,updated_at:new Date().toISOString()}).eq('id',s.dataset.ticketStatus);if(r.error)return toast(r.error.message,true);toast('Ticket actualizado.');await loadAll();render();};});
@@ -796,12 +945,35 @@ async function boot(){
   }
   state.profile=p.data;
   var hash=location.hash.replace(/^#/,'');
-  if(NAV.some(function(n){return n[0]===hash;}))state.section=hash;
+  var studentMatch=hash.match(/^student\/([^/]+)(?:\/([^/]+))?$/);
+  if(studentMatch){
+    state.section='student_record';
+    state.recordUserId=decodeURIComponent(studentMatch[1]);
+    state.recordCourseId=studentMatch[2]?decodeURIComponent(studentMatch[2]):null;
+  }else if(NAV.some(function(n){return n[0]===hash;})){
+    state.section=hash;
+  }
   await loadAll();
   shell();
 }
 
-window.addEventListener('hashchange',function(){var h=location.hash.replace(/^#/,'');if(NAV.some(function(n){return n[0]===h;})){state.section=h;render();}});
+window.addEventListener('hashchange',function(){
+  var h=location.hash.replace(/^#/,'');
+  var studentMatch=h.match(/^student\/([^/]+)(?:\/([^/]+))?$/);
+  if(studentMatch){
+    state.section='student_record';
+    state.recordUserId=decodeURIComponent(studentMatch[1]);
+    state.recordCourseId=studentMatch[2]?decodeURIComponent(studentMatch[2]):null;
+    render();
+    return;
+  }
+  if(NAV.some(function(n){return n[0]===h;})){
+    state.recordUserId=null;
+    state.recordCourseId=null;
+    state.section=h;
+    render();
+  }
+});
 if(db)db.auth.onAuthStateChange(function(){setTimeout(boot,0);});
 boot();
 })();
