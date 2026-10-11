@@ -470,7 +470,9 @@ async function loadApplicationData() {
       studentAccessResult, accessHistoryResult, ordersResult, resourceAccessResult
     ] = await Promise.all([
       db.from('profiles').select('*').order('created_at', { ascending: false }),
-      db.from('enrollments').select('*').order('enrolled_at', { ascending: false }),
+      courseIds.length
+        ? db.from('enrollments').select('*').in('course_id', courseIds).order('enrolled_at', { ascending: false })
+        : Promise.resolve({ data: [], error: null }),
       db.from('products').select('*').eq('workspace_id', CONFIG.workspaceId).order('created_at', { ascending: false }),
       db.from('product_contents').select('*').order('created_at', { ascending: true }),
       db.from('student_access').select('*').order('granted_at', { ascending: false }),
@@ -488,14 +490,21 @@ async function loadApplicationData() {
       if (result.error) console.error(`${label} error:`, result.error);
     });
 
+    const agProducts = productsResult.data || [];
+    const agProductIds = new Set(agProducts.map(item => item.id));
+    const agResourceIds = new Set((state.resources || []).map(item => item.id));
+
     state.profiles = profilesResult.data || [];
     state.enrollments = enrollmentsResult.data || [];
-    state.products = productsResult.data || [];
-    state.productContents = productContentsResult.data || [];
-    state.studentAccess = studentAccessResult.data || [];
-    state.accessHistory = accessHistoryResult.data || [];
+    state.products = agProducts;
+    state.productContents = (productContentsResult.data || []).filter(item => agProductIds.has(item.product_id));
+    state.studentAccess = (studentAccessResult.data || []).filter(item => agProductIds.has(item.product_id));
+    state.accessHistory = (accessHistoryResult.data || []).filter(item => !item.product_id || agProductIds.has(item.product_id));
     state.orders = ordersResult.data || [];
-    state.resourceAccess = resourceAccessResult.data || [];
+    state.resourceAccess = (resourceAccessResult.data || []).filter(item =>
+      (item.product_id && agProductIds.has(item.product_id))
+      || (item.resource_id && agResourceIds.has(item.resource_id))
+    );
   }
 
   state.loading = false;
