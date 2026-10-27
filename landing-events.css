@@ -49,27 +49,6 @@ a.ag-social-link:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10
 @media(max-width:390px){.ag-social-link{flex-wrap:wrap}.ag-social-action{width:100%;margin-left:54px}.ag-events-reel{grid-auto-columns:90%}}
 @media(prefers-reduced-motion:reduce){.ag-events-reel{scroll-behavior:auto!important}.ag-reel-controls button,.ag-social-link{transition:none!important}}
 
-/* Eventos y convocatorias pasadas: galería con carteles originales completos */
-.ag-past-section{margin-top:54px}
-.ag-past-heading{display:flex;align-items:end;justify-content:space-between;gap:22px;margin-bottom:22px}
-.ag-past-heading h3{font:500 clamp(29px,3.2vw,42px)/1.1 Georgia,'Times New Roman',serif;letter-spacing:-.025em;color:#172036;margin:10px 0 0}
-.ag-past-heading p{color:#687387;font-size:14px;max-width:380px;margin:0}
-.ag-past-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-.ag-past-card{display:grid;grid-template-columns:minmax(160px,38%) minmax(0,1fr);border:1px solid rgba(23,32,54,.1);background:#fff;border-radius:23px;overflow:hidden;box-shadow:0 14px 34px rgba(10,25,43,.06)}
-.ag-past-poster{display:flex;justify-content:center;align-items:center;min-height:335px;background:#f6f2ed;overflow:hidden}
-.ag-past-poster img{display:block;max-width:100%;width:100%;height:100%;max-height:390px;object-fit:contain}
-.ag-past-poster:focus-visible,.ag-past-cta:focus-visible{outline:3px solid #87ad45;outline-offset:-3px}
-.ag-past-details{display:flex;flex-direction:column;align-items:flex-start;padding:26px 22px 24px;min-width:0}
-.ag-past-label{font-size:10px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;color:#006747}
-.ag-past-details h4{font:500 clamp(23px,2.2vw,30px)/1.12 Georgia,'Times New Roman',serif;color:#172036;margin:16px 0 13px}
-.ag-past-details p{font-size:13px;line-height:1.6;color:#657387;margin:0 0 15px}
-.ag-past-facts{font-size:12px;font-weight:700;color:#294d4b}
-.ag-past-cta{color:#005134;text-decoration:none;border-bottom:1px solid #005134;margin-top:auto;padding-top:25px;padding-bottom:4px;font-weight:800;font-size:12px}
-.ag-past-note{font-size:11px;color:#768394;line-height:1.5;margin:14px 0 0}
-@media(max-width:1100px){.ag-past-grid{grid-template-columns:1fr}.ag-past-card{grid-template-columns:minmax(180px,31%) minmax(0,1fr)}.ag-past-poster{min-height:300px}}
-@media(max-width:700px){.ag-past-section{margin-top:44px}.ag-past-heading{display:block}.ag-past-heading p{margin-top:12px}.ag-past-card{grid-template-columns:minmax(0,40%) minmax(0,1fr)}.ag-past-details{padding:20px 16px}.ag-past-details h4{font-size:25px}.ag-past-poster{min-height:300px}}
-@media(max-width:490px){.ag-past-card{grid-template-columns:1fr}.ag-past-poster{height:420px;min-height:0;padding:8px}.ag-past-poster img{max-height:100%}.ag-past-details{padding:23px}.ag-past-cta{margin-top:10px;padding-top:12px}}
-
 /* Carteles destacados: se muestran completos en el reel principal sin recortes */
 .ag-event-card-poster{padding:0;min-height:476px;background:#fff;color:#172036;border:1px solid rgba(23,32,54,.09)}
 .ag-event-card-poster::before,.ag-event-card-poster::after{display:none}
