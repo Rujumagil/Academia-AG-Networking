@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="landing-premium-v4.css?v=20260818.1">
   <link rel="stylesheet" href="landing-brand-official.css?v=20260818.2">
   <link rel="stylesheet" href="landing-cursos-v6.css?v=20260818.1">
+  <link rel="stylesheet" href="landing-events.css?v=20261027.1">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -31,6 +32,7 @@
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#servicios">Servicios</a>
         <a href="#academia">Academia</a>
+        <a href="#eventos">Eventos</a>
         <a href="#comunidad">Comunidad</a>
         <a href="#nosotros">Nosotros</a>
         <a href="#contacto">Contacto</a>
@@ -184,6 +186,48 @@
       </div>
     </section>
 
+
+    <section class="ag-events-section" id="eventos" aria-labelledby="ag-events-title">
+      <div class="container">
+        <div class="ag-events-heading reveal">
+          <div>
+            <span class="eyebrow">Agenda AG · próximos encuentros</span>
+            <h2 id="ag-events-title">Nos vemos en el próximo evento.</h2>
+            <p>Networking, talleres y experiencias que nos acercan. Descubre lo que viene y forma parte de la comunidad AG.</p>
+          </div>
+          <div class="ag-reel-controls" aria-label="Controles de eventos">
+            <button type="button" data-event-prev aria-label="Ver eventos anteriores">←</button>
+            <button type="button" data-event-next aria-label="Ver más eventos">→</button>
+          </div>
+        </div>
+        <div class="ag-events-reel" id="ag-events-reel" role="region" aria-label="Reel de próximos eventos" tabindex="0"></div>
+        <div class="ag-events-meta">
+          <p id="ag-events-caption" role="status" aria-live="polite">Consulta los próximos encuentros de AG Business Networking.</p>
+          <a href="#actividades">Explorar calendario de eventos <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="ag-social-panel reveal" id="social-follow">
+          <div class="ag-social-intro">
+            <span class="eyebrow">Conectados también en redes</span>
+            <h3>Síguenos y entérate primero.</h3>
+            <p>Publicaremos novedades, invitaciones, recordatorios y momentos de nuestros eventos. ¡Sé parte de lo que sigue!</p>
+          </div>
+          <div class="ag-social-grid">
+            <a class="ag-social-link ag-social-instagram" href="https://www.instagram.com/agbusinessnetworkingut/" target="_blank" rel="noopener noreferrer" aria-label="Seguir a AG Business Networking en Instagram">
+              <span class="ag-social-icon" aria-hidden="true">◎</span>
+              <span class="ag-social-name"><strong>Instagram</strong><small>@agbusinessnetworkingut</small></span>
+              <span class="ag-social-action">Seguir <span aria-hidden="true">↗</span></span>
+            </a>
+            <div class="ag-social-link ag-social-facebook ag-social-pending" aria-label="Facebook oficial de AG Business Networking, enlace pendiente">
+              <span class="ag-social-icon" aria-hidden="true">f</span>
+              <span class="ag-social-name"><strong>Facebook</strong><small>Próximos eventos y comunidad</small></span>
+              <span class="ag-social-action">Enlace por confirmar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="dual-section" id="comunidad">
       <div class="container">
         <div class="section-intro reveal">
@@ -285,7 +329,7 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div class="footer-brand"><img src="logo-completo-oficial.png" alt="AG Business Networking"><p>Sueña, conéctate y triunfa.</p></div>
-      <div><h3>Explora</h3><a href="#servicios">Servicios</a><a href="#como-funciona">Cómo funciona</a><a href="#academia">Academia</a><a href="#comunidad">Comunidad</a></div>
+      <div><h3>Explora</h3><a href="#servicios">Servicios</a><a href="#como-funciona">Cómo funciona</a><a href="#academia">Academia</a><a href="#eventos">Eventos</a><a href="#comunidad">Comunidad</a></div>
       <div><h3>Accesos</h3><a href="academia.html">Iniciar sesión</a><a href="academia.html#catalog">Cursos</a><a href="academia.html#verify">Verificar constancia</a></div>
       <div><h3>AG Business Networking</h3><p>Utah, Estados Unidos</p><a href="https://www.instagram.com/agbusinessnetworkingut/" target="_blank" rel="noopener">Instagram · @agbusinessnetworkingut</a></div>
     </div>
@@ -293,7 +337,7 @@
   </footer>
 
   <script src="crm/supabase-config.js?v=20261011.1"></script>
-  <script src="landing.js?v=20261011.1"></script>
+  <script src="landing.js?v=20261027.1"></script>
   <script src="landing-enhancements.js?v=20261011.1"></script>
   <script src="crm-public-capture.js?v=20261011.1"></script>
 </body>
