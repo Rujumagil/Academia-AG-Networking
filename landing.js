@@ -1,8 +1,4 @@
 (() => {
-  const COMPAS_PUBLIC_KEY = 'wc_aa7383fbaabaca8e3f7e4be26704a0c8c0fc';
-  const COMPAS_ATTRIBUTION_URL = 'https://app.proyectocompas.com/compas-attribution.js?v=1.1';
-  const COMPAS_CHAT_URL = 'https://app.proyectocompas.com/compas-chat.js';
-
   const menuButton = document.querySelector('.menu-toggle');
   const nav = document.querySelector('#main-nav');
   menuButton?.addEventListener('click', () => {
