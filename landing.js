@@ -141,8 +141,8 @@
       add(body, 'h3', 'ag-event-title', item.title);
       add(body, 'p', 'ag-event-description', item.description || (upcoming.length ? (item.place || 'Detalles por confirmar') : ''));
       if (upcoming.length && item.place) add(body, 'span', 'ag-event-place', '⌖ ' + item.place);
-      const action = add(card, 'a', 'ag-event-cta', upcoming.length ? 'Me interesa este evento ↗' : 'Seguir novedades ↗');
-      const href = upcoming.length && typeof item.url === 'string' && /^(https:\/\/|http:\/\/)/i.test(item.url) ? item.url : (upcoming.length ? '#contacto' : '#social-follow');
+      const action = add(card, 'a', 'ag-event-cta', upcoming.length ? 'Me interesa este evento ↗' : 'Ver eventos en Facebook ↗');
+      const href = upcoming.length && typeof item.url === 'string' && /^(https:\/\/|http:\/\/)/i.test(item.url) ? item.url : (upcoming.length ? '#contacto' : 'https://www.facebook.com/angie.galcar.773');
       action.href = href;
       if (href.startsWith('http')) {
         action.target = '_blank';
@@ -153,7 +153,7 @@
 
     caption.textContent = upcoming.length
       ? upcoming.length + (upcoming.length === 1 ? ' próximo evento confirmado. Desliza para conocerlo.' : ' próximos eventos confirmados. Desliza para descubrirlos.')
-      : 'Las fechas se anunciarán próximamente. Síguenos en redes para recibir las novedades.';
+      : 'Consulta los próximos eventos publicados en Facebook. Agregaremos las fechas al calendario cuando estén confirmadas.';
     const move = direction => {
       const card = reel.querySelector('.ag-event-card');
       if (!card) return;
