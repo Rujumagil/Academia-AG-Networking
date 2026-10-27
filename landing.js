@@ -112,6 +112,22 @@
       { category: 'Comunidad', title: 'Experiencias para conectar', description: 'Comparte ideas, participa y mantente cerca de la comunidad AG.', theme: 'sage' }
     ];
 
+    // Destacar actividades pasadas de la comunidad en el mismo reel visible.
+    const archive = [
+      {
+        category: 'Evento realizado · 23 oct 2026',
+        title: 'Fiesta de Sombreros de Bruja y Desfile',
+        poster: 'eventos/fiesta-sombreros-brujas-2026.webp',
+        alt: 'Cartel de Fiesta de Sombreros de Bruja y Desfile, 23 de octubre, Garden Village, Sandy Utah'
+      },
+      {
+        category: 'Convocatoria pasada · 17 oct 2026',
+        title: 'Giveaway · Tiempo para Nosotras',
+        poster: 'eventos/giveaway-tiempo-para-nosotras-2026.webp',
+        alt: 'Cartel del giveaway de dos boletos para Tiempo para Nosotras, 17 de octubre'
+      }
+    ];
+
     const add = (parent, tag, className, value) => {
       const node = document.createElement(tag);
       node.className = className;
@@ -121,8 +137,32 @@
     };
 
     reel.replaceChildren();
-    const items = upcoming.length ? upcoming : previews;
+    const items = upcoming.length ? [...upcoming, ...archive] : [...archive, previews[0]];
     items.forEach((item, index) => {
+      if (item.poster) {
+        const card = document.createElement('article');
+        card.className = 'ag-event-card ag-event-card-poster';
+        card.setAttribute('aria-label', 'Actividad pasada: ' + item.title);
+        const cover = add(card, 'a', 'ag-event-poster-link', '');
+        cover.href = item.poster;
+        cover.target = '_blank';
+        cover.rel = 'noopener noreferrer';
+        cover.setAttribute('aria-label', 'Ampliar cartel de ' + item.title);
+        const poster = document.createElement('img');
+        poster.src = item.poster;
+        poster.alt = item.alt;
+        poster.loading = 'lazy';
+        cover.appendChild(poster);
+        const info = add(card, 'div', 'ag-event-poster-copy', '');
+        add(info, 'span', 'ag-event-poster-badge', item.category);
+        add(info, 'h3', 'ag-event-poster-title', item.title);
+        const link = add(info, 'a', 'ag-event-poster-cta', 'Ver cartel completo ↗');
+        link.href = item.poster;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        reel.appendChild(card);
+        return;
+      }
       const theme = upcoming.length ? ['navy', 'green', 'sage'][index % 3] : item.theme;
       const card = document.createElement('article');
       card.className = 'ag-event-card ag-event-' + theme;
@@ -153,7 +193,7 @@
 
     caption.textContent = upcoming.length
       ? upcoming.length + (upcoming.length === 1 ? ' próximo evento confirmado. Desliza para conocerlo.' : ' próximos eventos confirmados. Desliza para descubrirlos.')
-      : 'Consulta los próximos eventos publicados en Facebook. Agregaremos las fechas al calendario cuando estén confirmadas.';
+      : 'Dos actividades anteriores de la comunidad. Para próximos eventos, consulta los anuncios en Facebook.';
     const move = direction => {
       const card = reel.querySelector('.ag-event-card');
       if (!card) return;
