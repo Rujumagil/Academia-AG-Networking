@@ -69,3 +69,15 @@ a.ag-social-link:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(10
 @media(max-width:1100px){.ag-past-grid{grid-template-columns:1fr}.ag-past-card{grid-template-columns:minmax(180px,31%) minmax(0,1fr)}.ag-past-poster{min-height:300px}}
 @media(max-width:700px){.ag-past-section{margin-top:44px}.ag-past-heading{display:block}.ag-past-heading p{margin-top:12px}.ag-past-card{grid-template-columns:minmax(0,40%) minmax(0,1fr)}.ag-past-details{padding:20px 16px}.ag-past-details h4{font-size:25px}.ag-past-poster{min-height:300px}}
 @media(max-width:490px){.ag-past-card{grid-template-columns:1fr}.ag-past-poster{height:420px;min-height:0;padding:8px}.ag-past-poster img{max-height:100%}.ag-past-details{padding:23px}.ag-past-cta{margin-top:10px;padding-top:12px}}
+
+/* Carteles destacados: se muestran completos en el reel principal sin recortes */
+.ag-event-card-poster{padding:0;min-height:476px;background:#fff;color:#172036;border:1px solid rgba(23,32,54,.09)}
+.ag-event-card-poster::before,.ag-event-card-poster::after{display:none}
+.ag-event-poster-link{display:grid;place-items:center;height:342px;background:#f7f3ee;overflow:hidden;flex:none}
+.ag-event-poster-link img{display:block;width:100%;height:100%;object-fit:contain}
+.ag-event-poster-link:focus-visible,.ag-event-poster-cta:focus-visible{outline:3px solid #87ad45;outline-offset:-3px}
+.ag-event-poster-copy{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:17px 22px 20px;flex:1}
+.ag-event-poster-badge{color:#006747;text-transform:uppercase;font-size:10px;font-weight:850;letter-spacing:.065em}
+.ag-event-poster-title{font:500 clamp(22px,2.1vw,29px)/1.1 Georgia,'Times New Roman',serif;margin:0;color:#172036}
+.ag-event-poster-cta{margin-top:auto;text-decoration:none;font-size:12px;font-weight:850;color:#005134;padding-top:9px;border-bottom:1px solid #005134}
+@media(max-width:700px){.ag-event-card-poster{min-height:452px}.ag-event-poster-link{height:328px}.ag-event-poster-copy{padding:15px 19px 18px}.ag-event-poster-title{font-size:24px}}
