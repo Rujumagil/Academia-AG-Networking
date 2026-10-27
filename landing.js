@@ -92,5 +92,85 @@
     renderCalendar();
   });
 
+
+  function renderEventReel() {
+    const reel = document.querySelector('#ag-events-reel');
+    const caption = document.querySelector('#ag-events-caption');
+    const previous = document.querySelector('[data-event-prev]');
+    const next = document.querySelector('[data-event-next]');
+    if (!reel || !caption || !previous || !next) return;
+
+    const today = isoDate(new Date());
+    const upcoming = events
+      .filter(event => event && /^\d{4}-\d{2}-\d{2}$/.test(event.date || '') && event.date >= today && event.title)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 9);
+
+    const previews = [
+      { category: 'Networking', title: 'Encuentros que crean oportunidades', description: 'Conoce emprendedores, amplía tu red y descubre nuevas alianzas en Utah.', theme: 'navy' },
+      { category: 'Formación', title: 'Talleres para seguir creciendo', description: 'Aprende de especialistas con herramientas útiles para tu vida y tu negocio.', theme: 'green' },
+      { category: 'Comunidad', title: 'Experiencias para conectar', description: 'Comparte ideas, participa y mantente cerca de la comunidad AG.', theme: 'sage' }
+    ];
+
+    const add = (parent, tag, className, value) => {
+      const node = document.createElement(tag);
+      node.className = className;
+      node.textContent = value;
+      parent.appendChild(node);
+      return node;
+    };
+
+    reel.replaceChildren();
+    const items = upcoming.length ? upcoming : previews;
+    items.forEach((item, index) => {
+      const theme = upcoming.length ? ['navy', 'green', 'sage'][index % 3] : item.theme;
+      const card = document.createElement('article');
+      card.className = 'ag-event-card ag-event-' + theme;
+      card.setAttribute('aria-label', (upcoming.length ? 'Próximo evento: ' : 'Próximamente: ') + item.title);
+      add(card, 'span', 'ag-event-overline', upcoming.length ? (item.category || 'Evento AG') : 'Próximamente · ' + item.category);
+      add(card, 'span', 'ag-event-number', String(index + 1).padStart(2, '0'));
+      const body = add(card, 'div', 'ag-event-body', '');
+      if (upcoming.length) {
+        const date = new Date(item.date + 'T12:00:00');
+        const label = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+        const time = add(body, 'time', 'ag-event-date', label);
+        time.dateTime = item.date;
+      } else {
+        add(body, 'span', 'ag-event-date', 'Fecha por anunciar');
+      }
+      add(body, 'h3', 'ag-event-title', item.title);
+      add(body, 'p', 'ag-event-description', item.description || (upcoming.length ? (item.place || 'Detalles por confirmar') : ''));
+      if (upcoming.length && item.place) add(body, 'span', 'ag-event-place', '⌖ ' + item.place);
+      const action = add(card, 'a', 'ag-event-cta', upcoming.length ? 'Me interesa este evento ↗' : 'Seguir novedades ↗');
+      const href = upcoming.length && typeof item.url === 'string' && /^(https:\/\/|http:\/\/)/i.test(item.url) ? item.url : (upcoming.length ? '#contacto' : '#social-follow');
+      action.href = href;
+      if (href.startsWith('http')) {
+        action.target = '_blank';
+        action.rel = 'noopener noreferrer';
+      }
+      reel.appendChild(card);
+    });
+
+    caption.textContent = upcoming.length
+      ? upcoming.length + (upcoming.length === 1 ? ' próximo evento confirmado. Desliza para conocerlo.' : ' próximos eventos confirmados. Desliza para descubrirlos.')
+      : 'Las fechas se anunciarán próximamente. Síguenos en redes para recibir las novedades.';
+    const move = direction => {
+      const card = reel.querySelector('.ag-event-card');
+      if (!card) return;
+      const gap = parseFloat(getComputedStyle(reel).gap) || 18;
+      reel.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    };
+    previous.addEventListener('click', () => move(-1));
+    next.addEventListener('click', () => move(1));
+    const syncControls = () => {
+      previous.disabled = reel.scrollLeft <= 4;
+      next.disabled = reel.scrollLeft + reel.clientWidth >= reel.scrollWidth - 4;
+    };
+    reel.addEventListener('scroll', syncControls, { passive: true });
+    window.addEventListener('resize', syncControls);
+    requestAnimationFrame(syncControls);
+  }
+
   renderCalendar();
+  renderEventReel();
 })();
