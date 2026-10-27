@@ -11,13 +11,13 @@
   const root = document.createElement('aside');
   root.className = 'ag-fly-chat';
   root.dataset.agFlyRoot = 'true';
-  root.setAttribute('aria-label', 'Compás Fly, asistencia de AG Networking');
+  root.setAttribute('aria-label', 'Habla con Andy, asistente de AG Networking');
   root.innerHTML =
-    '<button class="ag-fly-launcher" type="button" aria-label="Abrir chat con Compás Fly" aria-expanded="false" aria-controls="ag-fly-panel">' +
-      '<span class="ag-fly-launcher-symbol" aria-hidden="true">✦</span><span>Compás Fly</span>' +
+    '<button class="ag-fly-launcher" type="button" aria-label="Habla con Andy" aria-expanded="false" aria-controls="ag-fly-panel">' +
+      '<span class="ag-fly-launcher-symbol" aria-hidden="true">✦</span><span>Habla con Andy</span>' +
     '</button>' +
-    '<section class="ag-fly-panel" id="ag-fly-panel" role="dialog" aria-label="Chat de Compás Fly" hidden>' +
-      '<header class="ag-fly-header"><div><strong>Compás Fly</strong><small>Orientación de AG Business Networking</small></div>' +
+    '<section class="ag-fly-panel" id="ag-fly-panel" role="dialog" aria-label="Chat con Andy" hidden>' +
+      '<header class="ag-fly-header"><div><strong>Andy</strong><small>Asistente AG · Compás Fly</small></div>' +
       '<button class="ag-fly-close" type="button" aria-label="Cerrar chat">×</button></header>' +
       '<div class="ag-fly-feed" role="log" aria-live="polite" aria-relevant="additions text"></div>' +
       '<div class="ag-fly-quick" aria-label="Consultas frecuentes">' +
@@ -45,6 +45,17 @@
   let opened = false;
   let nativeReady = false;
 
+  function brandOfficialWidget(host) {
+    const shadow = host?.shadowRoot;
+    const title = shadow?.querySelector('.header strong');
+    const trigger = shadow?.querySelector('.launcher');
+    if (title) title.textContent = 'Andy · AG Networking';
+    if (trigger) {
+      trigger.setAttribute('aria-label', 'Habla con Andy');
+      trigger.title = 'Habla con Andy';
+    }
+  }
+
   function addBubble(kind, message, href, linkLabel) {
     const bubble = document.createElement('div');
     bubble.className = 'ag-fly-bubble is-' + kind;
@@ -70,7 +81,7 @@
     launcher.setAttribute('aria-expanded', String(opened));
     if (opened) {
       if (!log.children.length) {
-        addBubble('agent', '¡Hola! Te doy la bienvenida a AG Business Networking. Mientras conectamos el agente IA, puedo orientarte sobre nuestros cursos, eventos, membresía y servicios.');
+        addBubble('agent', '¡Hola! Soy Andy, asistente de AG Business Networking. Mientras conectamos el agente IA, puedo orientarte sobre nuestros cursos, eventos, membresía y servicios.');
       }
       input.focus();
     } else {
@@ -167,6 +178,7 @@
   // no se simula una conversación IA ni se envían mensajes sin autorización.
   async function connectOfficialWidget() {
     if (document.querySelector('compas-one-web-chat')) {
+      brandOfficialWidget(document.querySelector('compas-one-web-chat'));
       nativeReady = true;
       root.hidden = true;
       return;
@@ -187,6 +199,7 @@
         window.setTimeout(() => {
           const host = document.querySelector('compas-one-web-chat');
           if (!host?.shadowRoot?.querySelector('.launcher')) return;
+          brandOfficialWidget(host);
           nativeReady = true;
           root.hidden = true;
           const observer = new MutationObserver(() => {
