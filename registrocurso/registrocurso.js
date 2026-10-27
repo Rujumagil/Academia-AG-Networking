@@ -301,7 +301,19 @@
     addBubble(summaryText(), 'summary');
     setBusy(true, 'Registrando tu solicitud en AG…');
 
-    const campaign = campaignContext();
+    // El historial se envía únicamente cuando la persona completó el registro y autorizó su uso.
+    // Viaja en el JSON que la función existente del CRM ya guarda junto con esta solicitud.
+    const campaign = {
+      ...campaignContext(),
+      registration_chat_version: 1,
+      registration_chat_saved_at: new Date().toISOString(),
+      registration_chat: flow.log.slice(0, 100)
+        .filter(item => item && typeof item.text === 'string')
+        .map(item => ({
+          kind: ['agent', 'user', 'system', 'summary'].includes(item.kind) ? item.kind : 'system',
+          text: item.text.slice(0, 2200)
+        }))
+    };
 
     try {
       const response = await fetch(`${cfg.url}/rest/v1/rpc/ag_crm_register_course_interest`, {
