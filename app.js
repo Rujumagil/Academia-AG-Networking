@@ -289,7 +289,7 @@ async function init() {
 
     // Evita llamar a otras funciones de Supabase dentro del callback inmediato.
     setTimeout(async () => {
-      if (event === 'PASSWORD_RECOVERY' || state.recoveryMode) {
+      if (event === 'PASSWORD_RECOVERY' || (state.recoveryMode && session)) {
         state.recoveryMode = true;
         renderPasswordUpdate();
         return;
@@ -313,7 +313,13 @@ async function init() {
       route();
     }
   } else {
-    route();
+    if (state.recoveryMode) {
+      state.recoveryMode = false;
+      showToast('El enlace de recuperación no es válido o ya venció. Solicita uno nuevo.', 'error');
+      renderAuth('recover');
+    } else {
+      route();
+    }
   }
 
   if ('serviceWorker' in navigator) {
@@ -980,6 +986,11 @@ async function handlePasswordUpdate(event) {
   }
 
   state.recoveryMode = false;
+  if (new URLSearchParams(location.search).has('recovery')) {
+    const cleanUrl = new URL(location.href);
+    cleanUrl.searchParams.delete('recovery');
+    history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+  }
   showToast('Contraseña actualizada. Inicia sesión nuevamente.', 'success');
   await db.auth.signOut();
   renderAuth('login');
