@@ -269,9 +269,12 @@ function loadingScreen(message = 'Preparando tu aula...') {
 
 async function init() {
   loadingScreen();
+  const query = new URLSearchParams(location.search);
+  const fragment = new URLSearchParams(location.hash.replace(/^#/, ''));
   const recoveryRequested =
-    new URLSearchParams(location.search).get('type') === 'recovery'
-    || new URLSearchParams(location.hash.replace(/^#/, '')).get('type') === 'recovery';
+    query.get('recovery') === '1'
+    || query.get('type') === 'recovery'
+    || fragment.get('type') === 'recovery';
   state.recoveryMode = recoveryRequested;
 
   const { data, error } = await db.auth.getSession();
@@ -1042,7 +1045,7 @@ async function handleRecovery(event) {
 
   try {
     const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}${location.pathname}`
+      redirectTo: new URL('academia.html?recovery=1', location.href).href
     });
     if (error) throw error;
     showToast('Te enviamos un enlace de recuperación.', 'success');
