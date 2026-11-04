@@ -1614,7 +1614,7 @@ function renderCourses() {
       <div>
         <span class="eyebrow">Tu formación</span>
         <h1 class="page-title">Mis cursos</h1>
-        <p class="page-subtitle">Retoma tu aprendizaje, revisa tu avance y accede a todos los programas asignados a tu cuenta.</p>
+        <p class="page-subtitle">Consulta tus cursos autorizados y explora el catálogo. Los programas sin inscripción activa requieren revisión de acceso.</p>
       </div>
       <a class="btn btn-secondary" href="#catalog">Explorar nuevos cursos</a>
     </section>
@@ -1881,6 +1881,11 @@ function moduleMarkup(course, module, index, activeLessonId = null) {
 
 async function renderLesson(courseId, lessonId) {
   const course = findCourse(courseId);
+  // Mantener el mismo criterio de matrícula en rutas directas a lecciones.
+  // Supabase/RLS sigue siendo la autorización definitiva de datos.
+  if (course && !isAdmin() && !isInstructor() && !hasActiveCourseEnrollment(course)) {
+    return renderCourse(courseId);
+  }
   const found = course && findLesson(course, lessonId);
   if (!found) return renderCourse(courseId);
 
