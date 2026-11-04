@@ -1,0 +1,32 @@
+name: AG CRM Cloudflare bundle checks
+
+on:
+  push:
+    paths:
+      - 'scripts/build-ag-crm-cloudflare.sh'
+      - 'crm/**'
+      - 'academy-supabase-config.js'
+      - '.github/workflows/ag-crm-cloudflare-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-crm-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Cloudflare standalone CRM
+        run: bash scripts/build-ag-crm-cloudflare.sh
+      - name: Validate release files and isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html crm/admin.html crm/admin.js crm/index.html crm/crm.js crm/admin.css crm/crm.css crm/supabase-config.js academy-supabase-config.js logo-completo-oficial.png icon-192.png _headers; do
+            test -s "dist-ag-crm/$file" || { echo "Missing $file"; exit 1; }
+          done
+          test ! -d dist-ag-crm/supabase
+          ! find dist-ag-crm -type f -name '*.sql' | grep .
+          grep -q 'academy_profile_workspaces' dist-ag-crm/crm/admin.js
+          echo "Cloudflare bundle validated."
