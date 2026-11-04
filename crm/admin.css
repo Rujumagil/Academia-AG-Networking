@@ -270,3 +270,16 @@ button,input,select,textarea{font:inherit}
   .reports-heading,.back-panel,.back-metric{box-shadow:none!important}
   .back-main,.back-content{margin:0!important;padding:0!important;width:100%!important}
 }
+
+/* Asignación segura de cursos desde el CRM */
+.ag-assignment-overlay{position:fixed;inset:0;background:rgba(7,24,45,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
+.ag-assignment-card{width:min(520px,100%);padding:26px;background:#fff;border-radius:18px;box-shadow:0 24px 65px rgba(0,0,0,.25);display:grid;gap:12px}
+.ag-assignment-card h2{margin:0;color:#07182d;font-size:1.35rem}
+.ag-assignment-card p{margin:0;color:#667085;font-size:.9rem;line-height:1.5}
+.ag-assignment-card label{font-weight:700;font-size:.85rem;margin-top:8px}
+.ag-assignment-card select{width:100%;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#172033;padding:12px;min-width:0}
+.ag-assignment-card .ag-assignment-current{padding:12px;border-radius:10px;background:#f1f5f9;color:#334155}
+.ag-assignment-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.ag-assignment-actions button{border:1px solid #d7e0ea;border-radius:9px;background:#fff;padding:11px 15px;cursor:pointer}
+.ag-assignment-actions button[type=submit]{background:#005c42;color:white;border-color:#005c42;font-weight:700}
+.ag-assignment-actions button:disabled{opacity:.5;cursor:not-allowed}
