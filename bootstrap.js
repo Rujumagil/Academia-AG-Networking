@@ -134,7 +134,7 @@
 
       await loadSupabaseLibrary();
       installAcademyDataAdapter();
-      await loadScript('app.js?v=20261104.1');
+      await loadScript('app.js?v=20261104.2');
       await loadScript('utah-course-runtime.js?v=20260822.65');
       await loadScript('utah-module-exam-v2.js?v=20261011.54');
       await loadScript('utah-module2-exam-v2.js?v=20261011.55');
