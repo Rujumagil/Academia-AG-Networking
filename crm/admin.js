@@ -1065,11 +1065,72 @@ function renderStudents(){
       '<div class="back-actions">'+
         (s.account_status==='active'?'<button data-user-status="'+s.id+'" data-status="suspended">Suspender</button>':'<button data-user-status="'+s.id+'" data-status="active">Activar</button>')+
         '<button data-student-record="'+s.id+'">Expediente</button>'+
-        '<a href="../academia.html?crm_admin=1#workspace/general/students">Gestionar</a>'+
+        '<button type="button" data-assign-student="'+esc(s.id)+'">Asignar curso</button>'+
       '</div>'
     ]);
   });
   return panel('Alumnos','Usuarios de Academia AG',rows.length?table(['Alumno','Teléfono','Estado','Inscripciones','Registro','Acciones'],rows):empty('No hay alumnos registrados.'),'<a href="../importar-alumnos.html">Importar alumnos</a>');
+}
+
+function showAssignCourseDialog(preselectedUserId){
+  var students=state.data.profiles.filter(function(p){return p.role==='student'&&(!p.account_status||p.account_status==='active');});
+  var courses=state.data.courses.filter(function(c){return c.status==='published';});
+  if(!students.length||!courses.length)return toast('Necesitas un alumno activo y un curso publicado.',true);
+  var old=document.getElementById('ag-assign-course-dialog');
+  if(old)old.remove();
+  var overlay=document.createElement('div');
+  overlay.id='ag-assign-course-dialog';
+  overlay.className='ag-assignment-overlay';
+  overlay.innerHTML='<form class="ag-assignment-card" id="ag-course-assignment-form">'+
+    '<h2>Asignar acceso a curso</h2><p>La inscripción aparecerá en la academia del alumno. Esta acción no registra ningún pago.</p>'+
+    '<label for="ag-assignment-student">Alumno</label>'+
+    '<select id="ag-assignment-student" required>'+students.map(function(p){
+      return '<option value="'+esc(p.id)+'" '+(p.id===preselectedUserId?'selected':'')+'>'+esc(p.full_name||p.email)+' · '+esc(p.email||'')+'</option>';
+    }).join('')+'</select>'+
+    '<label for="ag-assignment-course">Curso publicado</label>'+
+    '<select id="ag-assignment-course" required>'+courses.map(function(c){
+      return '<option value="'+esc(c.id)+'">'+esc(c.title)+'</option>';
+    }).join('')+'</select>'+
+    '<p id="ag-assignment-current" class="ag-assignment-current"></p>'+
+    '<div class="ag-assignment-actions"><button type="button" id="ag-assignment-cancel">Cancelar</button>'+
+    '<button type="submit" id="ag-assignment-submit">Confirmar acceso</button></div>'+
+    '</form>';
+  document.body.appendChild(overlay);
+  var userSelect=overlay.querySelector('#ag-assignment-student');
+  var courseSelect=overlay.querySelector('#ag-assignment-course');
+  var submit=overlay.querySelector('#ag-assignment-submit');
+  var note=overlay.querySelector('#ag-assignment-current');
+  function updateNote(){
+    var found=state.data.enrollments.find(function(e){return e.user_id===userSelect.value&&e.course_id===courseSelect.value;});
+    var enrolled=found&&['active','completed'].includes(found.status);
+    note.textContent=enrolled?'Este alumno ya tiene una inscripción '+(found.status==='completed'?'completada.':'activa.'):'Se creará una inscripción activa para el curso seleccionado.';
+    submit.disabled=Boolean(enrolled);
+    submit.textContent=enrolled?'Acceso existente':'Confirmar acceso';
+  }
+  userSelect.onchange=updateNote;
+  courseSelect.onchange=updateNote;
+  overlay.querySelector('#ag-assignment-cancel').onclick=function(){overlay.remove();};
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  overlay.querySelector('form').onsubmit=async function(e){
+    e.preventDefault();
+    var uid=userSelect.value,cid=courseSelect.value;
+    var selectedStudent=students.find(function(p){return p.id===uid;});
+    var selectedCourse=courses.find(function(c){return c.id===cid;});
+    if(!selectedStudent||!selectedCourse)return;
+    if(!window.confirm('¿Dar acceso a '+(selectedStudent.full_name||selectedStudent.email)+' al curso '+selectedCourse.title+'?'))return;
+    submit.disabled=true;submit.textContent='Guardando...';
+    var result=await db.rpc('ag_admin_assign_course',{target_user:uid,target_course:cid});
+    if(result.error){
+      submit.disabled=false;submit.textContent='Confirmar acceso';
+      note.textContent=result.error.message;
+      return toast('No se pudo asignar el curso: '+result.error.message,true);
+    }
+    overlay.remove();
+    await loadAll();
+    render();
+    toast(result.data==='already_active'?'El alumno ya tenía acceso.':result.data==='already_completed'?'El alumno ya completó este curso.':'Curso asignado correctamente.');
+  };
+  updateNote();
 }
 
 function renderCourses(){
@@ -1096,7 +1157,8 @@ function renderEnrollments(){
     esc(fmt(e.completed_at)),
     esc(fmt(e.expires_at))
   ]);});
-  return panel('Inscripciones','Relación alumno · curso',rows.length?table(['Alumno','Curso','Estado','Inscripción','Completado','Vence'],rows):empty('No hay inscripciones.'));
+  var button='<button type="button" data-assign-student="">+ Asignar curso</button>';
+  return panel('Inscripciones','Relación alumno · curso',rows.length?table(['Alumno','Curso','Estado','Inscripción','Completado','Vence'],rows):empty('No hay inscripciones.'),button);
 }
 
 function renderPayments(){
@@ -1193,6 +1255,9 @@ function bindSection(){
   if(reportCsv)reportCsv.onclick=exportAcademicReportCsv;
   var reportPrint=document.getElementById('report-print');
   if(reportPrint)reportPrint.onclick=function(){window.print();};
+  document.querySelectorAll('[data-assign-student]').forEach(function(b){
+    b.onclick=function(){showAssignCourseDialog(b.dataset.assignStudent||'');};
+  });
   document.querySelectorAll('[data-student-record]').forEach(function(b){b.onclick=function(){
     state.recordUserId=b.dataset.studentRecord;
     state.recordCourseId=b.dataset.studentCourse||null;
