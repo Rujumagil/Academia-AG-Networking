@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Cloudflare standalone CRM
         run: bash scripts/build-ag-crm-cloudflare.sh
+      - name: Validate CRM JavaScript syntax
+        run: node --check dist-ag-crm/crm/admin.js && node --check dist-ag-crm/crm/crm.js
       - name: Validate release files and isolation
         shell: bash
         run: |
