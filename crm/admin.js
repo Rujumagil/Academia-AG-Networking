@@ -229,10 +229,22 @@ async function loadAll(){
     db.from('ag_academy_student_migration_map').select('target_user_id')
   );
 
+  // La inscripción no es requisito para aparecer como alumno en el administrador.
+  // La relación de workspace identifica alumnos registrados sin mezclar otras academias.
+  var workspaceStudents=await safeMaster(
+    'academy_profile_workspaces',
+    db.from('academy_profile_workspaces')
+      .select('user_id')
+      .eq('workspace_id',workspaceId)
+      .eq('relationship','student')
+      .eq('status','active')
+  );
+
   var agUserIds=new Set();
   if(state.user&&state.user.id)agUserIds.add(state.user.id);
   enrollments.forEach(function(x){if(x.user_id)agUserIds.add(x.user_id);});
   migrationMap.forEach(function(x){if(x.target_user_id)agUserIds.add(x.target_user_id);});
+  workspaceStudents.forEach(function(x){if(x.user_id)agUserIds.add(x.user_id);});
 
   var profileIds=Array.from(agUserIds);
   var profiles=profileIds.length
