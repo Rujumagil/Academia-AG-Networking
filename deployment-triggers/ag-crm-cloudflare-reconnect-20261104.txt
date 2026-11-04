@@ -1,0 +1,6 @@
+AG Networking CRM Cloudflare Pages integration check.
+Trigger: restore automatic deployment after GitHub app reauthorization.
+Branch: main.
+Expected build: bash scripts/build-ag-crm-cloudflare.sh
+Expected output: dist-ag-crm
+No database changes or user access grants.
