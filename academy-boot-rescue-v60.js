@@ -20,7 +20,7 @@
 
     let initFn = null;
     try {
-      if (typeof init === 'function') initFn = init;
+      if (typeof window.ACADEMIA_AG_START === 'function') initFn = window.ACADEMIA_AG_START;
     } catch (_) {}
 
     if (!initFn) return false;

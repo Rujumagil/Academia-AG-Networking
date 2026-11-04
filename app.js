@@ -5363,8 +5363,11 @@ function bindBlockBuilder(course, lesson, initialBlocks) {
 }
 
 window.addEventListener('hashchange', route);
-window.addEventListener('load', () => {
-  init().catch(error => {
+function startAcademyOnce() {
+  // bootstrap.js carga app.js de forma dinámica: window.load pudo ocurrir ya.
+  // Compartir la promesa evita carreras con academy-boot-rescue-v60.js.
+  if (window.__AG_ACADEMY_INIT_PROMISE__) return window.__AG_ACADEMY_INIT_PROMISE__;
+  window.__AG_ACADEMY_INIT_PROMISE__ = init().catch(error => {
     console.error('Fallo al iniciar Academia AG:', error);
     app.innerHTML = `
       <main class="login-screen">
@@ -5379,4 +5382,9 @@ window.addEventListener('load', () => {
         </section>
       </main>`;
   });
-});
+  return window.__AG_ACADEMY_INIT_PROMISE__;
+}
+
+window.ACADEMIA_AG_START = startAcademyOnce;
+if (document.readyState === 'complete') startAcademyOnce();
+else window.addEventListener('load', startAcademyOnce, { once: true });
