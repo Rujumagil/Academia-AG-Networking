@@ -434,6 +434,16 @@ async function loadApplicationData() {
     lessons = lessonsResult.data || [];
   }
 
+  // Las matrículas del propio alumno deben cargarse incluso cuando no sea admin.
+  // RLS permite SELECT solo de las inscripciones propias; no concede nuevos accesos.
+  const ownEnrollmentsResult = courseIds.length
+    ? await db.from('enrollments').select('*')
+        .eq('user_id', state.user.id)
+        .in('course_id', courseIds)
+    : { data: [], error: null };
+  if (ownEnrollmentsResult.error) console.error('Own enrollments error:', ownEnrollmentsResult.error);
+  state.enrollments = ownEnrollmentsResult.data || [];
+
   const progressResult = await db
     .from('lesson_progress')
     .select('*')
@@ -1770,11 +1780,47 @@ async function submitAssessment(event, assessmentId, questions) {
   renderEvaluations();
 }
 
+function hasActiveCourseEnrollment(course) {
+  if (!course || !state.user) return false;
+  return (state.enrollments || []).some(row =>
+    row.course_id === course.id
+    && ['active', 'completed'].includes(row.status)
+    && (!row.expires_at || new Date(row.expires_at).getTime() > Date.now())
+  );
+}
+
 function renderCourse(id) {
   const course = findCourse(id);
   if (!course) return renderCourses();
 
   const page = document.querySelector('#page');
+  // El catálogo puede mostrar un curso publicado, pero las lecciones están
+  // protegidas por matrículas (RLS). Nunca afirmar que se borraron sus módulos.
+  if (!isAdmin() && !isInstructor() && !hasActiveCourseEnrollment(course)) {
+    page.innerHTML = `
+      <a class="back-link" href="#courses">← Volver a mis cursos</a>
+      <section class="empty-module glass" role="status">
+        <h1 class="page-title">${escapeHtml(course.title)}</h1>
+        <h2>Acceso al curso pendiente</h2>
+        <p>Este curso está publicado, pero tu cuenta no tiene una inscripción activa que permita abrir sus clases.</p>
+        <p>Si ya realizaste tu inscripción, solicita a Academia AG que revise la autorización de tu cuenta.</p>
+        <a class="btn btn-primary" href="#help">Solicitar revisión de mi acceso</a>
+        <a class="btn btn-secondary" href="#catalog">Ver catálogo</a>
+      </section>`;
+    return;
+  }
+  if (!course.modules.length) {
+    page.innerHTML = `
+      <a class="back-link" href="#courses">← Volver a mis cursos</a>
+      <section class="empty-module glass" role="alert">
+        <h1 class="page-title">${escapeHtml(course.title)}</h1>
+        <h2>No pudimos cargar las clases</h2>
+        <p>Tu inscripción está reconocida, pero el contenido no pudo cargarse. Actualiza la página o contacta a soporte.</p>
+        <button class="btn btn-primary" type="button" onclick="location.reload()">Volver a cargar</button>
+        <a class="btn btn-secondary" href="#help">Reportar problema de acceso</a>
+      </section>`;
+    return;
+  }
   const progress = courseProgress(course);
 
   page.innerHTML = `
@@ -1804,7 +1850,7 @@ function renderCourse(id) {
       <aside class="module-panel glass">
         <h2>Contenido del curso</h2>
         ${course.modules.length ? course.modules.map((module, index) => moduleMarkup(course, module, index)).join('') : `
-          <div class="empty-module"><p>Este curso todavía no tiene módulos publicados.</p></div>`}
+          <div class="empty-module"><p>No se pudieron cargar los módulos de este curso. Si tienes una inscripción activa, contacta a soporte.</p></div>`}
       </aside>
     </section>`;
 }
