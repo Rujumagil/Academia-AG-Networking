@@ -28,6 +28,9 @@
     {
       date: '2026-11-14',
       title: '¡Aprende a conocer tu auto!',
+      poster: 'https://drive.google.com/thumbnail?id=1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a&sz=w1200',
+      posterLink: 'https://drive.google.com/file/d/1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a/view',
+      alt: 'Cartel original del taller de mecánica gratis de Angelica Gallardo y Optimus, 14 de noviembre de 2026',
       category: 'Taller de mecánica gratuito',
       description: 'Consejos sobre el cuidado y mantenimiento del auto y qué hacer en caso de accidente automovilístico. A partir de las 11:00 a. m. Organizan Angelica Gallardo y Optimus Auto Sales & Collision Care.',
       place: '3578 S 1950 W, Unit 1, West Valley City, UT 84119'
@@ -146,9 +149,9 @@
       if (item.poster) {
         const card = document.createElement('article');
         card.className = 'ag-event-card ag-event-card-poster';
-        card.setAttribute('aria-label', 'Actividad pasada: ' + item.title);
+        card.setAttribute('aria-label', (item.date ? 'Próximo evento: ' : 'Actividad pasada: ') + item.title);
         const cover = add(card, 'a', 'ag-event-poster-link', '');
-        cover.href = item.poster;
+        cover.href = item.posterLink || item.poster;
         cover.target = '_blank';
         cover.rel = 'noopener noreferrer';
         cover.setAttribute('aria-label', 'Ampliar cartel de ' + item.title);
@@ -161,7 +164,7 @@
         add(info, 'span', 'ag-event-poster-badge', item.category);
         add(info, 'h3', 'ag-event-poster-title', item.title);
         const link = add(info, 'a', 'ag-event-poster-cta', 'Ver cartel completo ↗');
-        link.href = item.poster;
+        link.href = item.posterLink || item.poster;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         reel.appendChild(card);
