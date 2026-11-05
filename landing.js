@@ -24,7 +24,15 @@
   document.querySelectorAll('.reveal').forEach(el => reveal.observe(el));
 
   // Las actividades reales se conectarán a Supabase. Mantener vacío evita publicar fechas no confirmadas.
-  const events = [];
+  const events = [
+    {
+      date: '2026-11-14',
+      title: '¡Aprende a conocer tu auto!',
+      category: 'Taller de mecánica gratuito',
+      description: 'Consejos sobre el cuidado y mantenimiento del auto y qué hacer en caso de accidente automovilístico. A partir de las 11:00 a. m. Organizan Angelica Gallardo y Optimus Auto Sales & Collision Care.',
+      place: '3578 S 1950 W, Unit 1, West Valley City, UT 84119'
+    }
+  ];
 
   const title = document.querySelector('#calendar-title');
   const days = document.querySelector('#calendar-days');
