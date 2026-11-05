@@ -1,6 +1,6 @@
-const CACHE = 'academia-ag-v20261104.2';
+const CACHE = 'academia-ag-v20261105.1';
 const STATIC_ASSETS = [
-  './','./index.html','./academia.html','./importar-alumnos.html','./404.html',
+  './','./index.html','./academia.html','./registro-taller-auto.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20261011.14','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
   './sidebar-enterprise.css?v=20260817.14','./sidebar-icons-premium.css?v=20260817.15','./mis-cursos-appletv.css?v=20260817.16',
   './evaluaciones-premium.css?v=20260817.17','./biblioteca-premium.css?v=20260817.18','./certificados-premium.css?v=20260817.19',
@@ -101,7 +101,16 @@ self.addEventListener('fetch', event => {
           if (response.ok && sameOrigin) caches.open(CACHE).then(cache => cache.put(event.request, response.clone()));
           return response;
         })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./academia.html') || caches.match('./index.html')))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (event.request.mode === 'navigate') {
+            const publicHome = await caches.match('./index.html');
+            if (publicHome) return publicHome;
+            return new Response('<!doctype html><html lang="es"><meta charset="utf-8"><title>Sin conexión · AG Business Networking</title><body><h1>No hay conexión</h1><p>Comprueba tu conexión e inténtalo nuevamente.</p><a href="/">Ir al inicio de AG Business Networking</a></body></html>', {status:503,headers:{'Content-Type':'text/html; charset=utf-8'}});
+          }
+          return Response.error();
+        })
     );
     return;
   }
