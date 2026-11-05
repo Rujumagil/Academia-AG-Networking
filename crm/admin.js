@@ -42,6 +42,7 @@ var state={
 var NAV=[
   ['summary','Resumen','⌂'],
   ['candidates','Candidatos','◎'],
+  ['event_registrations','Inscripciones a eventos','▣'],
   ['followups','Seguimientos','◷'],
   ['student_pipeline','Pipeline alumnos','▦'],
   ['reports','Reportes académicos','◫'],
@@ -341,6 +342,7 @@ async function loadAll(){
 function navCount(id){
   var d=state.data;
   if(id==='candidates')return d.candidates.filter(function(x){return x.status==='active';}).length;
+  if(id==='event_registrations')return d.candidates.filter(isEventRegistration).length;
   if(id==='followups')return d.tasks.filter(function(x){return x.status==='pending';}).length;
   if(id==='student_pipeline')return studentPipelineItems().length;
   if(id==='students')return d.profiles.filter(function(x){return x.role==='student';}).length;
@@ -420,6 +422,47 @@ function renderCandidates(){
   ]);});
   return panel('Candidatos','Pipeline comercial',rows.length?table(['Candidato','Interés','Etapa','Prioridad','Seguimiento',''],rows):empty('No hay candidatos registrados.'),'<a href="./">Pipeline visual</a>');
 }
+function isEventRegistration(c){
+  return c && c.candidate_type==='event' && (c.source==='event_landing' || /^Inscripción · Aprende a conocer tu auto · 2026-11-14$/i.test(String(c.interest||'')));
+}
+function eventPartySize(c){
+  var match=String(c.message||'').match(/Personas previstas:\s*([1-5])/i);
+  return match ? Number(match[1]) : null;
+}
+function renderEventRegistrations(){
+  if(!state.crmReady)return renderCandidates();
+  var registrations=state.data.candidates.filter(isEventRegistration);
+  var attendees=registrations.reduce(function(total,c){return total+(eventPartySize(c)||0);},0);
+  var confirmed=registrations.filter(function(c){return ['enrolled','won'].includes(c.stage);}).length;
+  var heading='<section class="back-metrics event-registration-metrics">'+
+    metric('Registros',registrations.length,'Inscripciones recibidas','green')+
+    metric('Asistentes previstos',attendees,'Sólo formularios con cantidad','blue')+
+    metric('Confirmados',confirmed,'Marcados como Inscrito o Ganado','green')+
+    metric('Pendientes',registrations.length-confirmed,'Por confirmar o contactar','gold')+
+    '</section>';
+  var rows=registrations.map(function(c){
+    var phone=String(c.phone||'');
+    var digits=phone.replace(/[^0-9]/g,'');
+    var action='<div class="back-actions">'+
+      (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
+      (digits.length>=10?'<a target="_blank" rel="noopener noreferrer" href="https://wa.me/'+esc(digits)+'">WhatsApp</a>':'')+
+      '<a href="./?event='+encodeURIComponent(c.id)+'" title="Abrir expediente en el CRM">Expediente</a></div>';
+    return row([
+      '<strong>'+esc(c.full_name)+'</strong><small>'+esc(c.interest||'Taller de mecánica')+'</small>',
+      esc(c.email||'—'),
+      esc(c.phone||'—'),
+      esc(eventPartySize(c)||'—'),
+      badge(c.stage,({new:'Nuevo',contacted:'Contactado',enrolled:'Confirmado',won:'Confirmado',lost:'Cancelado'})[c.stage]||c.stage),
+      esc(fmt(c.created_at)),
+      action
+    ]);
+  });
+  return heading+panel('¡Aprende a conocer tu auto!','14 de noviembre de 2026 · 11:00 a. m. · West Valley City',
+    rows.length?table(['Participante / evento','Correo','Teléfono','Personas','Etapa','Registro','Acciones'],rows):
+      empty('Aún no hay registros del formulario de este evento.'),
+    '<a href="../registro-taller-auto.html" target="_blank" rel="noopener">Ver landing</a>');
+}
+
 function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Servicio',event:'Evento',provider:'Proveedor',partner:'Alianza',other:'Otro'})[v]||v||'—';}
 
 function renderFollowups(){
@@ -1232,6 +1275,7 @@ function renderSection(){
   var html='';
   if(state.section==='summary')html=renderSummary();
   else if(state.section==='candidates')html=renderCandidates();
+  else if(state.section==='event_registrations')html=renderEventRegistrations();
   else if(state.section==='followups')html=renderFollowups();
   else if(state.section==='student_pipeline')html=renderStudentPipeline();
   else if(state.section==='reports')html=renderReports();
