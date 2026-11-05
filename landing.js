@@ -28,6 +28,7 @@
     {
       date: '2026-11-14',
       title: '¡Aprende a conocer tu auto!',
+      url: 'registro-taller-auto.html',
       poster: 'https://drive.google.com/thumbnail?id=1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a&sz=w1200',
       posterLink: 'https://drive.google.com/file/d/1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a/view',
       alt: 'Cartel original del taller de mecánica gratis de Angelica Gallardo y Optimus, 14 de noviembre de 2026',
@@ -76,7 +77,7 @@
     }
 
     const upcoming = events
-      .filter(event => new Date(`${event.date}T23:59:59`) >= new Date())
+      .filter(event => event.date >= isoDate(new Date()))
       .sort((a,b) => a.date.localeCompare(b.date))
       .slice(0,4);
 
@@ -167,6 +168,11 @@
         link.href = item.posterLink || item.poster;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
+        if (item.url) {
+          const register = add(info, 'a', 'ag-event-poster-cta', 'Inscribirme gratis →');
+          register.href = item.url;
+          register.setAttribute('aria-label', 'Registrarme al taller ' + item.title);
+        }
         reel.appendChild(card);
         return;
       }
