@@ -26,6 +26,14 @@
   // Las actividades reales se conectarán a Supabase. Mantener vacío evita publicar fechas no confirmadas.
   const events = [
     {
+      date: '2026-11-13',
+      title: 'Liderazgo de Jóvenes',
+      category: 'Conferencia · Liderazgo juvenil',
+      description: 'Un espacio para inspirar, conectar y desarrollar el potencial de las nuevas generaciones. Coach invitada: Lilian Juárez. Organiza: Angélica Gallardo. Horario: 6:30 p. m. – 9:00 p. m.',
+      place: '9980 S 300 W #400, Sandy, UT 84070',
+      url: 'https://www.instagram.com/angelicagallardoofficial/'
+    },
+    {
       date: '2026-11-14',
       title: '¡Aprende a conocer tu auto!',
       url: 'registro-taller-auto.html',
