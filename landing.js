@@ -28,6 +28,9 @@
     {
       date: '2026-11-13',
       title: 'Liderazgo de Jóvenes',
+      poster: 'https://drive.google.com/thumbnail?id=1eGzsa36zNM4Y9R872PwHPoA4N_MLaqHl&sz=w1200',
+      posterLink: 'https://drive.google.com/file/d/1eGzsa36zNM4Y9R872PwHPoA4N_MLaqHl/view',
+      alt: 'Cartel original del evento Liderazgo de Jóvenes, Angélica Gallardo y Lilian Juárez, 13 de noviembre de 2026',
       category: 'Conferencia · Liderazgo juvenil',
       description: 'Un espacio para inspirar, conectar y desarrollar el potencial de las nuevas generaciones. Coach invitada: Lilian Juárez. Organiza: Angélica Gallardo. Horario: 6:30 p. m. – 9:00 p. m.',
       place: '9980 S 300 W #400, Sandy, UT 84070',
