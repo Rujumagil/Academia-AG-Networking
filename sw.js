@@ -1,6 +1,6 @@
-const CACHE = 'academia-ag-v20261105.1';
+const CACHE = 'academia-ag-v20261106.2';
 const STATIC_ASSETS = [
-  './','./index.html','./academia.html','./registro-taller-auto.html','./importar-alumnos.html','./404.html',
+  './','./index.html','./academia.html','./registro-taller-auto.html','./registro-liderazgo-jovenes.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20261011.14','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
   './sidebar-enterprise.css?v=20260817.14','./sidebar-icons-premium.css?v=20260817.15','./mis-cursos-appletv.css?v=20260817.16',
   './evaluaciones-premium.css?v=20260817.17','./biblioteca-premium.css?v=20260817.18','./certificados-premium.css?v=20260817.19',
