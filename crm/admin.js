@@ -423,11 +423,20 @@ function renderCandidates(){
   return panel('Candidatos','Pipeline comercial',rows.length?table(['Candidato','Interés','Etapa','Prioridad','Seguimiento',''],rows):empty('No hay candidatos registrados.'),'<a href="./">Pipeline visual</a>');
 }
 function isEventRegistration(c){
-  return c && c.candidate_type==='event' && (c.source==='event_landing' || /^Inscripción · Aprende a conocer tu auto · 2026-11-14$/i.test(String(c.interest||'')));
+  return c && c.candidate_type === 'event' && (
+    c.source === 'event_landing' ||
+    /^Inscripción · (?:Aprende a conocer tu auto|Liderazgo de Jóvenes) · 2026-11-(?:13|14)$/i.test(String(c.interest||''))
+  );
 }
 function eventPartySize(c){
   var match=String(c.message||'').match(/Personas previstas:\s*([1-5])/i);
   return match ? Number(match[1]) : null;
+}
+function eventRegistrationKind(c){
+  var interest=String(c.interest||'').toLowerCase();
+  if(interest.indexOf('liderazgo de jóvenes')>=0 || interest.indexOf('liderazgo de jovenes')>=0) return 'liderazgo';
+  if(interest.indexOf('conocer tu auto')>=0) return 'auto';
+  return 'otros';
 }
 function renderEventRegistrations(){
   if(!state.crmReady)return renderCandidates();
@@ -436,31 +445,39 @@ function renderEventRegistrations(){
   var confirmed=registrations.filter(function(c){return ['enrolled','won'].includes(c.stage);}).length;
   var heading='<section class="back-metrics event-registration-metrics">'+
     metric('Registros',registrations.length,'Inscripciones recibidas','green')+
-    metric('Asistentes previstos',attendees,'Sólo formularios con cantidad','blue')+
+    metric('Asistentes previstos',attendees,'Según solicitudes recibidas','blue')+
     metric('Confirmados',confirmed,'Marcados como Inscrito o Ganado','green')+
     metric('Pendientes',registrations.length-confirmed,'Por confirmar o contactar','gold')+
     '</section>';
-  var rows=registrations.map(function(c){
-    var phone=String(c.phone||'');
-    var digits=phone.replace(/[^0-9]/g,'');
-    var action='<div class="back-actions">'+
-      (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
-      (digits.length>=10?'<a target="_blank" rel="noopener noreferrer" href="https://wa.me/'+esc(digits)+'">WhatsApp</a>':'')+
-      '<a href="./?event='+encodeURIComponent(c.id)+'" title="Abrir expediente en el CRM">Expediente</a></div>';
-    return row([
-      '<strong>'+esc(c.full_name)+'</strong><small>'+esc(c.interest||'Taller de mecánica')+'</small>',
-      esc(c.email||'—'),
-      esc(c.phone||'—'),
-      esc(eventPartySize(c)||'—'),
-      badge(c.stage,({new:'Nuevo',contacted:'Contactado',enrolled:'Confirmado',won:'Confirmado',lost:'Cancelado'})[c.stage]||c.stage),
-      esc(fmt(c.created_at)),
-      action
-    ]);
-  });
-  return heading+panel('¡Aprende a conocer tu auto!','14 de noviembre de 2026 · 11:00 a. m. · West Valley City',
-    rows.length?table(['Participante / evento','Correo','Teléfono','Personas','Etapa','Registro','Acciones'],rows):
-      empty('Aún no hay registros del formulario de este evento.'),
-    '<a href="../registro-taller-auto.html" target="_blank" rel="noopener">Ver landing</a>');
+
+  var eventDefinitions=[
+    {id:'liderazgo',title:'Liderazgo de Jóvenes',details:'13 de noviembre de 2026 · 6:30 p. m. a 9:00 p. m. · Sandy, Utah',url:'../registro-liderazgo-jovenes.html'},
+    {id:'auto',title:'¡Aprende a conocer tu auto!',details:'14 de noviembre de 2026 · 11:00 a. m. · West Valley City',url:'../registro-taller-auto.html'},
+    {id:'otros',title:'Otros eventos',details:'Solicitudes de otras convocatorias',url:null}
+  ];
+  return heading+eventDefinitions.map(function(event){
+    var eventRows=registrations.filter(function(c){return eventRegistrationKind(c)===event.id;});
+    if(event.id==='otros'&&!eventRows.length)return '';
+    var expected=eventRows.reduce(function(total,c){return total+(eventPartySize(c)||0);},0);
+    var rows=eventRows.map(function(c){
+      var phone=String(c.phone||'');
+      var digits=phone.replace(/[^0-9]/g,'');
+      var action='<div class="back-actions">'+
+        (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
+        (digits.length>=10?'<a target="_blank" rel="noopener noreferrer" href="https://wa.me/'+esc(digits)+'">WhatsApp</a>':'')+
+        '<a href="./?event='+encodeURIComponent(c.id)+'" title="Abrir expediente en el CRM">Expediente</a></div>';
+      return row([
+        '<strong>'+esc(c.full_name)+'</strong><small>'+esc(c.interest||event.title)+'</small>',
+        esc(c.email||'—'),esc(c.phone||'—'),esc(eventPartySize(c)||'—'),
+        badge(c.stage,({new:'Nuevo',contacted:'Contactado',enrolled:'Confirmado',won:'Confirmado',lost:'Cancelado'})[c.stage]||c.stage),
+        esc(fmt(c.created_at)),action
+      ]);
+    });
+    var footer=event.url?'<a href="'+esc(event.url)+'" target="_blank" rel="noopener">Ver landing del evento</a>':'';
+    return panel(event.title+' · '+eventRows.length+' solicitudes',event.details+' · '+expected+' asistentes previstos',
+      rows.length?table(['Participante / evento','Correo','Teléfono','Personas','Etapa','Registro','Acciones'],rows):
+        empty('Aún no hay solicitudes de este evento.'),footer);
+  }).join('');
 }
 
 function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Servicio',event:'Evento',provider:'Proveedor',partner:'Alianza',other:'Otro'})[v]||v||'—';}
