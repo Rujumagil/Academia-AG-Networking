@@ -23,7 +23,7 @@
   }, { threshold: .12 });
   document.querySelectorAll('.reveal').forEach(el => reveal.observe(el));
 
-  // Las actividades reales se conectarán a Supabase. Mantener vacío evita publicar fechas no confirmadas.
+  // Eventos publicados y confirmados por sus carteles. La integración dinámica con Supabase queda como siguiente mejora.
   const events = [
     {
       date: '2026-11-13',
@@ -34,12 +34,14 @@
       category: 'Conferencia · Liderazgo juvenil',
       description: 'Un espacio para inspirar, conectar y desarrollar el potencial de las nuevas generaciones. Coach invitada: Lilian Juárez. Organiza: Angélica Gallardo. Horario: 6:30 p. m. – 9:00 p. m.',
       place: '9980 S 300 W #400, Sandy, UT 84070',
-      url: 'https://www.instagram.com/angelicagallardoofficial/'
+      url: 'registro-liderazgo-jovenes.html',
+      ctaLabel: 'Solicitar registro →'
     },
     {
       date: '2026-11-14',
       title: '¡Aprende a conocer tu auto!',
       url: 'registro-taller-auto.html',
+      ctaLabel: 'Inscribirme gratis →',
       poster: 'https://drive.google.com/thumbnail?id=1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a&sz=w1200',
       posterLink: 'https://drive.google.com/file/d/1fRckJ8jxjdD3CCQwtBFi4jLPyWLRT87a/view',
       alt: 'Cartel original del taller de mecánica gratis de Angelica Gallardo y Optimus, 14 de noviembre de 2026',
@@ -93,7 +95,7 @@
       .slice(0,4);
 
     list.innerHTML = upcoming.length
-      ? upcoming.map(event => `<article class="event-card"><time datetime="${event.date}">${event.date}</time><h4>${event.title}</h4><p>${event.place || 'Ubicación por confirmar'}</p></article>`).join('')
+      ? upcoming.map(event => `<article class="event-card"><time datetime="${event.date}">${event.date}</time><h4>${event.title}</h4><p>${event.place || 'Ubicación por confirmar'}</p>${event.url ? `<a href="${event.url}">Ver detalles del evento →</a>` : ''}</article>`).join('')
       : '<div class="empty-events"><strong>Próximamente.</strong><br>Las fechas presenciales confirmadas se publicarán aquí. La estructura ya está lista para alimentarse desde Supabase.</div>';
   }
 
@@ -185,9 +187,10 @@
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         if (item.url) {
-          const register = add(info, 'a', 'ag-event-poster-cta', 'Inscribirme gratis →');
+          const isUpcoming = !item.date || item.date >= today;
+          const register = add(info, 'a', 'ag-event-poster-cta', isUpcoming ? (item.ctaLabel || 'Ver detalles →') : 'Ver información del evento →');
           register.href = item.url;
-          register.setAttribute('aria-label', 'Registrarme al taller ' + item.title);
+          register.setAttribute('aria-label', 'Ver ' + (isUpcoming ? 'registro de ' : 'información de ') + item.title);
         }
         reel.appendChild(card);
         return;
