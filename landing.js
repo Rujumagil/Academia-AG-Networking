@@ -156,7 +156,12 @@
     };
 
     reel.replaceChildren();
-    const items = upcoming.length ? [...upcoming, ...archive] : [...archive, previews[0]];
+    const pastEvents = events
+      .filter(event => event && event.poster && /^\d{4}-\d{2}-\d{2}$/.test(event.date || '') && event.date < today)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map(event => ({ ...event, category: 'Evento anterior · ' + event.date }));
+    const history = [...pastEvents, ...archive];
+    const items = upcoming.length ? [...upcoming, ...history] : [...history, previews[0]];
     items.forEach((item, index) => {
       if (item.poster) {
         const card = document.createElement('article');
