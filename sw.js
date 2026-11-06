@@ -1,4 +1,4 @@
-const CACHE = 'academia-ag-v20261106.2';
+const CACHE = 'academia-ag-v20261106.3';
 const STATIC_ASSETS = [
   './','./index.html','./academia.html','./registro-taller-auto.html','./registro-liderazgo-jovenes.html','./importar-alumnos.html','./404.html',
   './styles.css?v=20261011.14','./premium-learning.css?v=20260817.13','./home-course-cards.css?v=20260817.13',
