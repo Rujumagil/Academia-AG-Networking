@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 90) : "";
   const password = typeof body.password === "string" ? body.password : "";
-  if (!action || email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (!action || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return respond(origin, 400, "Comprueba los datos del formulario.");
   }
   if (action === "signup" && (name.length < 2 || password.length < 8 || password.length > 128 || body.legalAccepted !== true)) {
@@ -106,7 +106,7 @@ Deno.serve(async (req: Request) => {
         terms_accepted: true,
         refund_policy_accepted: true,
       } }
-    : { redirectTo: REDIRECT_URL };
+    : { redirectTo: REDIRECT_URL + "?recovery=1" };
 
   const { data, error } = action === "signup"
     ? await supabase.auth.admin.generateLink({ type: "signup", email, password, options })
