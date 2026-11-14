@@ -1006,6 +1006,21 @@ async function handlePasswordUpdate(event) {
   renderAuth('login');
 }
 
+async function requestInstitutionalAuth(payload) {
+  // No fallback a auth.signUp/resetPasswordForEmail: expondría la marca global Compás One.
+  const response = await fetch(CONFIG.url + '/functions/v1/ag-branded-auth', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': CONFIG.publishableKey
+    },
+    body: JSON.stringify(payload)
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.message || 'No pudimos enviar el correo institucional de AG.');
+  return json;
+}
+
 async function handleAuth(event, signup) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -1020,32 +1035,15 @@ async function handleAuth(event, signup) {
       if (password !== String(form.get('confirmPassword'))) {
         throw new Error('Las contraseñas no coinciden.');
       }
-      const { data, error } = await db.auth.signUp({
+      await requestInstitutionalAuth({
+        action: 'signup',
+        name: fullName,
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            academy_workspace_id: CONFIG.workspaceId || '',
-            academy_source: 'ag_business_networking',
-            legal_version: CONFIG.legalVersion || '2026-10',
-            legal_accepted_at: new Date().toISOString(),
-            privacy_accepted: true,
-            terms_accepted: true,
-            refund_policy_accepted: true
-          },
-          emailRedirectTo: `${location.origin}${location.pathname}`
-        }
+        legalAccepted: form.get('legalAcceptance') === 'on'
       });
-
-      if (error) throw error;
-
-      if (!data.session) {
-        showToast('Revisa tu correo para confirmar la cuenta.', 'success');
-        renderAuth('login');
-      } else {
-        showToast('Cuenta creada correctamente.', 'success');
-      }
+      showToast('Revisa tu correo institucional de AG para confirmar la cuenta.', 'success');
+      renderAuth('login');
     } else {
       const { error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -1065,10 +1063,7 @@ async function handleRecovery(event) {
   setFormBusy(event.currentTarget, true);
 
   try {
-    const { error } = await db.auth.resetPasswordForEmail(email, {
-      redirectTo: new URL('academia.html?recovery=1', location.href).href
-    });
-    if (error) throw error;
+    await requestInstitutionalAuth({ action: 'recovery', email });
     showToast('Te enviamos un enlace de recuperación.', 'success');
     renderAuth('login');
   } catch (error) {
