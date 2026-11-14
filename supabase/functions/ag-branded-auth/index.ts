@@ -12,7 +12,11 @@ const allowedOrigins = new Set([
   "https://rujumagil.github.io",
 ]);
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  (() => {
+    try { return JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}").default || ""; }
+    catch { return ""; }
+  })();
 const RESEND_KEY = Deno.env.get("AG_RESEND_API_KEY") ?? "";
 const FROM = "Academia AG Business Networking <soporte@agbusinessnetworking.com>";
 const REDIRECT_URL = "https://agbusinessnetworking.com/academia.html";
@@ -93,7 +97,11 @@ Deno.serve(async (req: Request) => {
   const key = "ag:" + action + ":" + await sha256(email) + ":" + Math.floor(Date.now() / 300000);
   const limit = await supabase.from("ag_auth_email_rate_limits").insert({ rate_key: key });
   if (limit.error) {
-    return respond(origin, 429, "Espera unos minutos antes de solicitar otro correo.");
+    if (limit.error.code === "23505") {
+      return respond(origin, 429, "Espera unos minutos antes de solicitar otro correo.");
+    }
+    console.error("AG mail rate limit storage unavailable", limit.error.code);
+    return respond(origin, 503, "El registro está temporalmente indisponible. Intenta más tarde.");
   }
   const options = action === "signup"
     ? { redirectTo: REDIRECT_URL, data: {
