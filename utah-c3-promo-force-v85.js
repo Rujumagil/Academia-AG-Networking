@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const RELEASE = '20260824.85';
+  const RELEASE = '20261119.86';
   const COURSE_ID = '7c4d9f60-8b0a-4b7b-9f2c-2d5e1a8c4f01';
   const MODULE3_ID = '7c4d9f60-1003-4b7b-9f2c-2d5e1a8c4001';
   const C3_DRIVE_ID = '1z-1qOwXlYr0hlTAEhyfZQCDjpJAigck4';
@@ -97,6 +97,18 @@
   }
 
   function apply() {
+    // Cloudflare Stream is the official source when Supabase supplies a valid UID.
+    // Preserve the original Drive fallback only for legacy records without Stream.
+    const lesson = promoLesson();
+    const provider = String(lesson?.stream_provider || '').toLowerCase();
+    const uid = String(lesson?.stream_uid || '').trim();
+    if (provider === 'cloudflare' && /^[a-f0-9]{32}$/i.test(uid)) {
+      const shell = document.querySelector('.lesson-layout .video-shell');
+      if (shell?.dataset.agC3PromoForce) delete shell.dataset.agC3PromoForce;
+      delete document.documentElement.dataset.agC3PromoForce;
+      document.documentElement.dataset.agC3PromoSource = 'cloudflare';
+      return;
+    }
     forceSourceOnState();
     renderForcedVideo();
   }
