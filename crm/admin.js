@@ -43,6 +43,7 @@ var NAV=[
   ['summary','Resumen','⌂'],
   ['candidates','Candidatos','◎'],
   ['event_registrations','Inscripciones a eventos','▣'],
+  ['cinema_dec_2026','Cine · 1 diciembre','◈'],
   ['followups','Seguimientos','◷'],
   ['student_pipeline','Pipeline alumnos','▦'],
   ['reports','Reportes académicos','◫'],
@@ -343,6 +344,7 @@ function navCount(id){
   var d=state.data;
   if(id==='candidates')return d.candidates.filter(function(x){return x.status==='active';}).length;
   if(id==='event_registrations')return d.candidates.filter(isEventRegistration).length;
+  if(id==='cinema_dec_2026')return d.candidates.filter(function(c){return isEventRegistration(c)&&eventRegistrationKind(c)==='cine';}).length;
   if(id==='followups')return d.tasks.filter(function(x){return x.status==='pending';}).length;
   if(id==='student_pipeline')return studentPipelineItems().length;
   if(id==='students')return d.profiles.filter(function(x){return x.role==='student';}).length;
@@ -429,13 +431,16 @@ function isEventRegistration(c){
   );
 }
 function eventPartySize(c){
-  var match=String(c.message||'').match(/Personas previstas:\s*([1-5])/i);
-  return match ? Number(match[1]) : null;
+  var text=String(c.message||'');
+  var match=text.match(/(?:Total de asistentes\s*\(incluye titular\)|Personas previstas):\s*([1-5])\b/i);
+  return match?Number(match[1]):null;
 }
+
 function eventRegistrationKind(c){
   var interest=String(c.interest||'').toLowerCase();
   if(interest.indexOf('liderazgo de jóvenes')>=0 || interest.indexOf('liderazgo de jovenes')>=0) return 'liderazgo';
   if(interest.indexOf('conocer tu auto')>=0) return 'auto';
+  if(/funci[oó]n de cine/i.test(interest)) return 'cine';
   return 'otros';
 }
 function renderEventRegistrations(){
@@ -453,6 +458,7 @@ function renderEventRegistrations(){
   var eventDefinitions=[
     {id:'liderazgo',title:'Liderazgo de Jóvenes',details:'13 de noviembre de 2026 · 6:30 p. m. a 9:00 p. m. · Sandy, Utah',url:'../registro-liderazgo-jovenes.html'},
     {id:'auto',title:'¡Aprende a conocer tu auto!',details:'14 de noviembre de 2026 · 11:00 a. m. · West Valley City',url:'../registro-taller-auto.html'},
+    {id:'cine',title:'Función especial de cine · 1 de diciembre',details:'1 diciembre 2026 · 6:30 p. m. · Megaplex Sandy · máximo 5 asistentes por registro',url:'../registro-cine-diciembre-2026.html'},
     {id:'otros',title:'Otros eventos',details:'Solicitudes de otras convocatorias',url:null}
   ];
   return heading+eventDefinitions.map(function(event){
@@ -478,6 +484,51 @@ function renderEventRegistrations(){
       rows.length?table(['Participante / evento','Correo','Teléfono','Personas','Etapa','Registro','Acciones'],rows):
         empty('Aún no hay solicitudes de este evento.'),footer);
   }).join('');
+}
+
+function renderCinemaRegistrations(){
+  if(!state.crmReady)return renderCandidates();
+  var items=state.data.candidates.filter(function(c){
+    return isEventRegistration(c)&&eventRegistrationKind(c)==='cine';
+  });
+  var total=items.reduce(function(n,c){return n+(eventPartySize(c)||0);},0);
+  var confirmed=items.filter(function(c){return c.stage==='enrolled'||c.stage==='won';});
+  var confirmedPeople=confirmed.reduce(function(n,c){return n+(eventPartySize(c)||0);},0);
+  var cancelled=items.filter(function(c){return c.stage==='lost';}).length;
+  var rows=items.map(function(c){
+    var count=eventPartySize(c);
+    var phone=String(c.phone||'');
+    var digits=phone.replace(/\D/g,'');
+    var confirmedItem=c.stage==='enrolled'||c.stage==='won';
+    var label=confirmedItem?'Confirmado':(c.stage==='lost'?'Cancelado':'Pendiente');
+    var actions='<div class="back-actions">'+
+      (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
+      (digits.length>=10?'<a href="https://wa.me/'+esc(digits)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':'')+
+      '<a href="./?event='+encodeURIComponent(c.id)+'">Abrir expediente</a></div>';
+    return row([
+      '<strong>'+esc(c.full_name)+'</strong>',
+      esc(c.phone||'—'),
+      esc(c.email||'—'),
+      count===null?'—':esc(count)+' total ('+esc(count-1)+' acompañantes)',
+      badge(c.stage,label),
+      esc(fmt(c.created_at)),
+      actions
+    ]);
+  });
+  var heading='<section class="back-metrics event-registration-metrics">'+
+    metric('Solicitudes',items.length,'Grupos registrados','green')+
+    metric('Asistentes solicitados',total,'Incluye al titular y acompañantes','blue')+
+    metric('Asistentes confirmados',confirmedPeople,confirmed.length+' grupos confirmados','green')+
+    metric('Pendientes',items.length-confirmed.length-cancelled,'Grupos por confirmar','gold')+
+    '</section>';
+  var action='<a href="../registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing ↗</a>';
+  return heading+panel(
+    'Función de cine · 1 diciembre 2026',
+    'Megaplex Sandy at Jordan Commons · 6:30 p. m. · Hasta 5 personas por registro · '+cancelled+' cancelaciones',
+    rows.length?table(['Nombre','Teléfono','Correo','Asistentes','Estado','Registrado','Acciones'],rows):
+      empty('Todavía no hay solicitudes para esta función. Los nuevos registros aparecerán aquí.'),
+    action
+  );
 }
 
 function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Servicio',event:'Evento',provider:'Proveedor',partner:'Alianza',other:'Otro'})[v]||v||'—';}
@@ -1293,6 +1344,7 @@ function renderSection(){
   if(state.section==='summary')html=renderSummary();
   else if(state.section==='candidates')html=renderCandidates();
   else if(state.section==='event_registrations')html=renderEventRegistrations();
+  else if(state.section==='cinema_dec_2026')html=renderCinemaRegistrations();
   else if(state.section==='followups')html=renderFollowups();
   else if(state.section==='student_pipeline')html=renderStudentPipeline();
   else if(state.section==='reports')html=renderReports();
