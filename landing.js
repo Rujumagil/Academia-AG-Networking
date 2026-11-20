@@ -26,6 +26,18 @@
   // Eventos publicados y confirmados por sus carteles. La integración dinámica con Supabase queda como siguiente mejora.
   const events = [
     {
+      date: '2026-12-01',
+      title: 'Función especial de cine · ¡Están invitados!',
+      poster: 'https://static.wixstatic.com/media/11f124_31e6a60e8af64f608631e7340af0203a~mv2.jpg',
+      posterLink: 'https://static.wixstatic.com/media/11f124_31e6a60e8af64f608631e7340af0203a~mv2.jpg',
+      alt: 'Invitación a función especial de cine de Angélica Gallardo, martes 1 de diciembre de 2026 a las 6:30 p. m. en Sandy, Utah',
+      category: 'Cine · 1 diciembre · 6:30 p. m.',
+      description: 'Función de cine como agradecimiento por su preferencia. Registro para máximo 5 asistentes, incluyendo al invitado principal.',
+      place: 'Megaplex Sandy at Jordan Commons · Sandy, Utah',
+      url: 'registro-cine-diciembre-2026.html',
+      ctaLabel: 'Registrar asistencia →'
+    },
+    {
       date: '2026-11-13',
       title: 'Liderazgo de Jóvenes',
       poster: 'https://drive.google.com/thumbnail?id=1eGzsa36zNM4Y9R872PwHPoA4N_MLaqHl&sz=w1200',
