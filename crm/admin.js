@@ -443,92 +443,69 @@ function eventRegistrationKind(c){
   if(/funci[oó]n de cine/i.test(interest)) return 'cine';
   return 'otros';
 }
+function eventFollowupState(c){
+  if(c.stage==='lost'||c.status==='archived')return 'lost';
+  if(c.stage==='enrolled'||c.stage==='won')return 'enrolled';
+  if(c.stage==='unreachable')return 'unreachable';
+  if(c.stage==='new'&&!c.last_contact_at)return 'new';
+  return 'contacted';
+}
+var EVENT_STATES={new:'Pendiente de contacto',contacted:'Contactado',enrolled:'Confirmado',unreachable:'Sin respuesta',lost:'Cancelado'};
+function eventCounts(items){
+  var count={new:0,contacted:0,enrolled:0,unreachable:0,lost:0,total:0,confirmedPeople:0};
+  items.forEach(function(c){var st=eventFollowupState(c),n=eventPartySize(c)||0;count[st]++;if(st!=='lost')count.total+=n;if(st==='enrolled')count.confirmedPeople+=n;});
+  return count;
+}
+function eventMetrics(items){
+  var c=eventCounts(items);
+  return '<section class="back-metrics event-registration-metrics">'+
+  metric('Registros',items.length,'Solicitudes recibidas','green')+
+  metric('Asistentes previstos',c.total,'Excluye cancelaciones','blue')+
+  metric('Pendientes de contactar',c.new,'Todavía sin contacto','gold')+
+  metric('Contactados',c.contacted,'Esperando confirmación','blue')+
+  metric('Confirmados',c.enrolled,c.confirmedPeople+' asistentes confirmados','green')+
+  metric('Sin respuesta',c.unreachable,'Requieren seguimiento','purple')+
+  metric('Cancelados',c.lost,'No asistirán','navy')+'</section>';
+}
+function eventCards(items){
+  if(!items.length)return empty('Aún no hay solicitudes de este evento.');
+  var emailCounts=new Map();
+  items.forEach(function(c){var k=normalizeEmail(c.email)+'|'+String(c.interest||'').trim().toLowerCase();if(c.email)emailCounts.set(k,(emailCounts.get(k)||0)+1);});
+  return '<div class="event-card-list">'+items.map(function(c){
+    var st=eventFollowupState(c),phone=String(c.phone||''),digits=phone.replace(/\D/g,''),count=eventPartySize(c);
+    var k=normalizeEmail(c.email)+'|'+String(c.interest||'').trim().toLowerCase();
+    var duplicate=c.email&&emailCounts.get(k)>1;
+    return '<article class="event-entry"><div class="event-entry-main"><strong>'+esc(c.full_name)+'</strong><span class="event-state '+st+'">'+esc(EVENT_STATES[st])+'</span>'+
+    (duplicate?'<span class="event-repeat">Correo compartido · revisar antes de cancelar</span>':'')+
+    '<small>Registrado: '+esc(fmt(c.created_at))+'</small></div>'+
+    '<div class="event-contact"><span>Correo</span><strong>'+esc(c.email||'—')+'</strong><span>Teléfono</span><strong>'+esc(phone||'—')+'</strong></div>'+
+    '<div class="event-contact"><span>Asistentes</span><strong>'+esc(count===null?'—':count)+'</strong><span>Último contacto</span><strong>'+esc(fmt(c.last_contact_at))+'</strong></div>'+
+    '<div class="event-entry-actions"><div class="back-actions">'+(c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
+    (digits.length>=10?'<a href="https://wa.me/'+esc(digits.length===10?'1'+digits:digits)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':'')+
+    '<a href="./?event='+encodeURIComponent(c.id)+'">Expediente</a></div>'+
+    (c.status==='archived'?'':'<label>Actualizar seguimiento<select data-event-stage="'+esc(c.id)+'">'+Object.keys(EVENT_STATES).map(function(s){return '<option value="'+s+'"'+(st===s?' selected':'')+'>'+esc(EVENT_STATES[s])+'</option>';}).join('')+'</select></label><button type="button" data-event-save="'+esc(c.id)+'">Guardar estado</button>')+'</div></article>';
+  }).join('')+'</div>';
+}
 function renderEventRegistrations(){
   if(!state.crmReady)return renderCandidates();
   var registrations=state.data.candidates.filter(isEventRegistration);
-  var attendees=registrations.reduce(function(total,c){return total+(eventPartySize(c)||0);},0);
-  var confirmed=registrations.filter(function(c){return ['enrolled','won'].includes(c.stage);}).length;
-  var heading='<section class="back-metrics event-registration-metrics">'+
-    metric('Registros',registrations.length,'Inscripciones recibidas','green')+
-    metric('Asistentes previstos',attendees,'Según solicitudes recibidas','blue')+
-    metric('Confirmados',confirmed,'Marcados como Inscrito o Ganado','green')+
-    metric('Pendientes',registrations.length-confirmed,'Por confirmar o contactar','gold')+
-    '</section>';
-
   var eventDefinitions=[
     {id:'liderazgo',title:'Liderazgo de Jóvenes',details:'13 de noviembre de 2026 · 6:30 p. m. a 9:00 p. m. · Sandy, Utah',url:'../registro-liderazgo-jovenes.html'},
     {id:'auto',title:'¡Aprende a conocer tu auto!',details:'14 de noviembre de 2026 · 11:00 a. m. · West Valley City',url:'../registro-taller-auto.html'},
     {id:'cine',title:'Función especial de cine · 1 de diciembre',details:'1 diciembre 2026 · 6:30 p. m. · Megaplex Sandy · máximo 5 asistentes por registro',url:'../registro-cine-diciembre-2026.html'},
     {id:'otros',title:'Otros eventos',details:'Solicitudes de otras convocatorias',url:null}
   ];
-  return heading+eventDefinitions.map(function(event){
-    var eventRows=registrations.filter(function(c){return eventRegistrationKind(c)===event.id;});
-    if(event.id==='otros'&&!eventRows.length)return '';
-    var expected=eventRows.reduce(function(total,c){return total+(eventPartySize(c)||0);},0);
-    var rows=eventRows.map(function(c){
-      var phone=String(c.phone||'');
-      var digits=phone.replace(/[^0-9]/g,'');
-      var action='<div class="back-actions">'+
-        (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
-        (digits.length>=10?'<a target="_blank" rel="noopener noreferrer" href="https://wa.me/'+esc(digits)+'">WhatsApp</a>':'')+
-        '<a href="./?event='+encodeURIComponent(c.id)+'" title="Abrir expediente en el CRM">Expediente</a></div>';
-      return row([
-        '<strong>'+esc(c.full_name)+'</strong><small>'+esc(c.interest||event.title)+'</small>',
-        esc(c.email||'—'),esc(c.phone||'—'),esc(eventPartySize(c)||'—'),
-        badge(c.stage,({new:'Nuevo',contacted:'Contactado',enrolled:'Confirmado',won:'Confirmado',lost:'Cancelado'})[c.stage]||c.stage),
-        esc(fmt(c.created_at)),action
-      ]);
-    });
-    var footer=event.url?'<a href="'+esc(event.url)+'" target="_blank" rel="noopener">Ver landing del evento</a>':'';
-    return panel(event.title+' · '+eventRows.length+' solicitudes',event.details+' · '+expected+' asistentes previstos',
-      rows.length?table(['Participante / evento','Correo','Teléfono','Personas','Etapa','Registro','Acciones'],rows):
-        empty('Aún no hay solicitudes de este evento.'),footer);
+  return eventMetrics(registrations)+eventDefinitions.map(function(event){
+    var items=registrations.filter(function(c){return eventRegistrationKind(c)===event.id;});
+    if(event.id==='otros'&&!items.length)return '';
+    var c=eventCounts(items),link=event.url?'<a href="'+esc(event.url)+'" target="_blank" rel="noopener noreferrer">Ver landing del evento</a>':'';
+    return panel(event.title+' · '+items.length+' solicitudes',event.details+' · '+c.total+' asistentes previstos',eventCards(items),link);
   }).join('');
 }
-
 function renderCinemaRegistrations(){
   if(!state.crmReady)return renderCandidates();
-  var items=state.data.candidates.filter(function(c){
-    return isEventRegistration(c)&&eventRegistrationKind(c)==='cine';
-  });
-  var total=items.reduce(function(n,c){return n+(eventPartySize(c)||0);},0);
-  var confirmed=items.filter(function(c){return c.stage==='enrolled'||c.stage==='won';});
-  var confirmedPeople=confirmed.reduce(function(n,c){return n+(eventPartySize(c)||0);},0);
-  var cancelled=items.filter(function(c){return c.stage==='lost';}).length;
-  var rows=items.map(function(c){
-    var count=eventPartySize(c);
-    var phone=String(c.phone||'');
-    var digits=phone.replace(/\D/g,'');
-    var confirmedItem=c.stage==='enrolled'||c.stage==='won';
-    var label=confirmedItem?'Confirmado':(c.stage==='lost'?'Cancelado':'Pendiente');
-    var actions='<div class="back-actions">'+
-      (c.email?'<a href="mailto:'+esc(c.email)+'">Correo</a>':'')+
-      (digits.length>=10?'<a href="https://wa.me/'+esc(digits)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':'')+
-      '<a href="./?event='+encodeURIComponent(c.id)+'">Abrir expediente</a></div>';
-    return row([
-      '<strong>'+esc(c.full_name)+'</strong>',
-      esc(c.phone||'—'),
-      esc(c.email||'—'),
-      count===null?'—':esc(count)+' total ('+esc(count-1)+' acompañantes)',
-      badge(c.stage,label),
-      esc(fmt(c.created_at)),
-      actions
-    ]);
-  });
-  var heading='<section class="back-metrics event-registration-metrics">'+
-    metric('Solicitudes',items.length,'Grupos registrados','green')+
-    metric('Asistentes solicitados',total,'Incluye al titular y acompañantes','blue')+
-    metric('Asistentes confirmados',confirmedPeople,confirmed.length+' grupos confirmados','green')+
-    metric('Pendientes',items.length-confirmed.length-cancelled,'Grupos por confirmar','gold')+
-    '</section>';
-  var action='<a href="../registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing ↗</a>';
-  return heading+panel(
-    'Función de cine · 1 diciembre 2026',
-    'Megaplex Sandy at Jordan Commons · 6:30 p. m. · Hasta 5 personas por registro · '+cancelled+' cancelaciones',
-    rows.length?table(['Nombre','Teléfono','Correo','Asistentes','Estado','Registrado','Acciones'],rows):
-      empty('Todavía no hay solicitudes para esta función. Los nuevos registros aparecerán aquí.'),
-    action
-  );
+  var items=state.data.candidates.filter(function(c){return isEventRegistration(c)&&eventRegistrationKind(c)==='cine';});
+  return eventMetrics(items)+panel('Función de cine · 1 diciembre 2026','Megaplex Sandy at Jordan Commons · 6:30 p. m. · Hasta 5 personas por registro',eventCards(items),'<a href="../registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing</a>');
 }
 
 function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Servicio',event:'Evento',provider:'Proveedor',partner:'Alianza',other:'Otro'})[v]||v||'—';}
@@ -1363,6 +1340,21 @@ function renderSection(){
 }
 
 function bindSection(){
+  document.querySelectorAll('[data-event-save]').forEach(function(b){
+    b.onclick=async function(){
+      var id=b.dataset.eventSave, select=b.parentElement.querySelector('[data-event-stage]');
+      if(!select)return;
+      b.disabled=true;select.disabled=true;
+      try{
+        var r=await db.rpc('ag_event_set_followup',{p_candidate:id,p_stage:select.value});
+        if(r.error)throw r.error;
+        toast('Seguimiento del evento actualizado.');
+        await loadAll();render();
+      }catch(e){toast(e.message||'No se pudo guardar el estado.',true);}
+      finally{b.disabled=false;select.disabled=false;}
+    };
+  });
+
   if(state.section==='student_pipeline')bindStudentPipelineFilters();
   var reportCsv=document.getElementById('report-export-csv');
   if(reportCsv)reportCsv.onclick=exportAcademicReportCsv;

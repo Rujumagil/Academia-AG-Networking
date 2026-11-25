@@ -50,7 +50,7 @@ function show(msg,ok){status.className='message show '+(ok?'ok':'error');status.
 form.addEventListener('submit',async function(e){
 e.preventDefault();
 if(!form.reportValidity())return;
-var data=new FormData(form),name=String(data.get('name')||'').trim(),phone=String(data.get('phone')||'').trim(),email=String(data.get('email')||'').trim(),count=Number(data.get('attendees')),consent=data.get('consent')==='on';
+var data=new FormData(form),name=String(data.get('name')||'').trim(),phone=String(data.get('phone')||'').trim(),email=String(data.get('email')||'').trim().toLowerCase(),count=Number(data.get('attendees')),consent=data.get('consent')==='on';
 if(!name||!phone||!email||!consent||!Number.isInteger(count)||count<1||count>5){show('Revisa los datos obligatorios antes de enviar.',false);return;}
 if(!cfg.url||!cfg.publishableKey){show('El registro no está disponible ahora. Vuelve a intentarlo más tarde.',false);return;}
 var params=new URLSearchParams(location.search),utm={};
@@ -64,6 +64,7 @@ p_message:'Evento: Aprende a conocer tu auto. Fecha: 14/11/2026 11:00 Utah. Pers
 p_source:'event_landing',p_page_url:location.href,p_utm:utm,p_consent:true,p_honeypot:String(data.get('website')||'')
 })});
 var payload=await res.json().catch(function(){return null;});
+      if(payload&&payload.code==='23505'&&payload.message==='AG_EVENT_ALREADY_REGISTERED'){show("Ya contamos con tu registro para este evento. No necesitas registrarte nuevamente. Si necesitas modificar tus datos o acompañantes, comunícate con AG Business Networking.",true);status.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
 if(!res.ok)throw new Error('No se pudo guardar el registro.');
 show('¡Registro recibido! Tus datos quedaron enviados al equipo de AG Business Networking. Conserva la fecha y dirección del taller.',true);form.reset();status.scrollIntoView({behavior:'smooth',block:'nearest'});
 }catch(error){console.error('AG_EVENT_REGISTRATION_FAILED',error);show('No pudimos registrar tus datos. Intenta de nuevo o contacta a AG Business Networking.',false);}

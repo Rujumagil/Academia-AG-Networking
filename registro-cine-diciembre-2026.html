@@ -126,7 +126,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     var data=new FormData(form);
     var name=String(data.get('name')||'').trim();
     var phone=String(data.get('phone')||'').trim();
-    var email=String(data.get('email')||'').trim();
+    var email=String(data.get('email')||'').trim().toLowerCase();
     var attendees=Number(data.get('attendees'));
     var consent=data.get('consent')==='on';
     var honeypot=String(data.get('website')||'');
@@ -159,6 +159,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
         })
       });
       var payload=await response.json().catch(function(){return null;});
+      if(payload&&payload.code==='23505'&&payload.message==='AG_EVENT_ALREADY_REGISTERED'){show("Ya contamos con tu registro para este evento. No necesitas registrarte nuevamente. Si necesitas modificar tus datos o acompañantes, comunícate con AG Business Networking.",true);status.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
       if(!response.ok||(payload&&payload.error))throw new Error('Error al guardar el registro.');
       show('¡Solicitud recibida! Registramos tu información para la función de cine del 1 de diciembre. AG Business Networking confirmará la disponibilidad y los siguientes pasos.',true);
       form.reset();
