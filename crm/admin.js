@@ -490,9 +490,9 @@ function renderEventRegistrations(){
   if(!state.crmReady)return renderCandidates();
   var registrations=state.data.candidates.filter(isEventRegistration);
   var eventDefinitions=[
-    {id:'liderazgo',title:'Liderazgo de Jóvenes',details:'13 de noviembre de 2026 · 6:30 p. m. a 9:00 p. m. · Sandy, Utah',url:'../registro-liderazgo-jovenes.html'},
-    {id:'auto',title:'¡Aprende a conocer tu auto!',details:'14 de noviembre de 2026 · 11:00 a. m. · West Valley City',url:'../registro-taller-auto.html'},
-    {id:'cine',title:'Función especial de cine · 1 de diciembre',details:'1 diciembre 2026 · 6:30 p. m. · Megaplex Sandy · máximo 5 asistentes por registro',url:'../registro-cine-diciembre-2026.html'},
+    {id:'liderazgo',title:'Liderazgo de Jóvenes',details:'13 de noviembre de 2026 · 6:30 p. m. a 9:00 p. m. · Sandy, Utah',url:'https://agbusinessnetworking.com/registro-liderazgo-jovenes.html'},
+    {id:'auto',title:'¡Aprende a conocer tu auto!',details:'14 de noviembre de 2026 · 11:00 a. m. · West Valley City',url:'https://agbusinessnetworking.com/registro-taller-auto.html'},
+    {id:'cine',title:'Función especial de cine · 1 de diciembre',details:'1 diciembre 2026 · 6:30 p. m. · Megaplex Sandy · máximo 5 asistentes por registro',url:'https://agbusinessnetworking.com/registro-cine-diciembre-2026.html'},
     {id:'otros',title:'Otros eventos',details:'Solicitudes de otras convocatorias',url:null}
   ];
   return eventMetrics(registrations)+eventDefinitions.map(function(event){
@@ -505,7 +505,7 @@ function renderEventRegistrations(){
 function renderCinemaRegistrations(){
   if(!state.crmReady)return renderCandidates();
   var items=state.data.candidates.filter(function(c){return isEventRegistration(c)&&eventRegistrationKind(c)==='cine';});
-  return eventMetrics(items)+panel('Función de cine · 1 diciembre 2026','Megaplex Sandy at Jordan Commons · 6:30 p. m. · Hasta 5 personas por registro',eventCards(items),'<a href="../registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing</a>');
+  return eventMetrics(items)+panel('Función de cine · 1 diciembre 2026','Megaplex Sandy at Jordan Commons · 6:30 p. m. · Hasta 5 personas por registro',eventCards(items),'<a href="https://agbusinessnetworking.com/registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing</a>');
 }
 
 function typesafe(v){return ({course:'Curso',membership:'Membresía',service:'Servicio',event:'Evento',provider:'Proveedor',partner:'Alianza',other:'Otro'})[v]||v||'—';}

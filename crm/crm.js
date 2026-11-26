@@ -73,7 +73,7 @@ function showCinemaRegistrations(){
   box.innerHTML='<div class="crm-list"><div class="crm-event-summary">'+
     '<strong>Función especial de cine · 1 de diciembre de 2026</strong>'+
     '<span>'+items.length+' registros · '+attendees+' asistentes solicitados · '+confirmedPeople+' confirmados · '+pending+' grupos pendientes · máximo 5 por registro</span>'+
-    '<a href="../registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing ↗</a> '+
+    '<a href="https://agbusinessnetworking.com/registro-cine-diciembre-2026.html" target="_blank" rel="noopener noreferrer">Abrir landing ↗</a> '+
     '<a href="admin.html#cinema_dec_2026">Vista administrativa ↗</a></div>'+
     (rows.length?rows.join(''):'<div class="crm-empty">Todavía no hay registros para la función de cine.</div>')+
     '</div>';
